@@ -6,7 +6,7 @@
 }
 
 :root {
-    /* Dark theme colors */
+    /* Dark theme colors - Aligned with HTML Style Guide */
     --bg-primary: #0d1117;
     --bg-secondary: #161b22;
     --bg-tertiary: #21262d;
@@ -15,9 +15,11 @@
     --text-muted: #6e7681;
     --positive: #00ff80;
     --negative: #ff4d4d;
-    --accent: #d4af37;
+    --chart-positive: #a6ff4d; /* Lighter green for upward candles as per style guide */
+    --accent: #d4af37; /* Muted yellow for inline metrics */
     --border: #30363d;
     --hover: rgba(255, 255, 255, 0.1);
+    --hover-row: rgba(255, 255, 255, 0.05); /* Specific hover for table rows */
     --shadow: rgba(0, 0, 0, 0.3);
 }
 
@@ -30,6 +32,10 @@ body {
 }
 
 .container {
+    /* 3-column layout as per HTML Style Guide:
+       - Left Panel (280px): Account summary and watchlist
+       - Center Panel (flex 1): Main candlestick chart with stock info  
+       - Right Panel (320px): Recent orders and open positions */
     display: grid;
     grid-template-columns: 280px 1fr 320px;
     gap: 12px;
@@ -118,12 +124,12 @@ body {
     height: calc(100vh - 100px);
 }
 
-/* Right Panel */
+/* Right Panel - Orders and Positions as per Style Guide */
 .right-panel {
     grid-column: 3;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 12px; /* Consistent 12px gap between widgets */
     height: calc(100vh - 100px);
 }
 
@@ -149,7 +155,7 @@ body {
 
 .balance-value {
     color: var(--text-primary);
-    font-size: 1.2rem;
+    font-size: 1.2rem; /* Larger font for balance as per style guide */
     font-weight: 700;
 }
 
@@ -179,6 +185,11 @@ body {
     align-items: center;
     padding: 8px 0;
     border-bottom: 1px solid var(--border);
+    transition: all 0.2s ease-in-out;
+}
+
+.watchlist-item:hover {
+    background: var(--hover-row); /* Subtle hover as per style guide */
 }
 
 .watchlist-item:last-child {
@@ -189,11 +200,13 @@ body {
     color: var(--text-primary);
     font-weight: 600;
     font-size: 0.9rem;
+    text-align: left; /* Left-aligned tickers as per style guide */
 }
 
 .price {
     font-weight: 600;
     font-size: 0.9rem;
+    text-align: right; /* Right-aligned numeric columns as per style guide */
 }
 
 .price.positive {
@@ -207,6 +220,7 @@ body {
 .change {
     font-size: 0.8rem;
     font-weight: 500;
+    text-align: right; /* Right-aligned numeric columns as per style guide */
 }
 
 .change.positive {
@@ -308,11 +322,11 @@ body {
 
 .card {
     background: var(--bg-tertiary);
-    border-radius: 8px;
+    border-radius: 8px; /* 8px rounded corners as per style guide */
     padding: 16px;
     box-shadow: 0 2px 4px var(--shadow);
     border: 1px solid var(--border);
-    transition: all 0.2s ease-in-out;
+    transition: all 0.2s ease-in-out; /* Smooth transitions as per style guide */
 }
 
 .card:hover {
@@ -469,7 +483,7 @@ body {
 }
 
 .data-table tbody tr:hover {
-    background: var(--hover);
+    background: var(--hover-row); /* Subtle row highlight as per style guide */
 }
 
 /* Button styles */
@@ -494,7 +508,7 @@ body {
 
 .btn-primary:hover {
     background: #00cc66;
-    box-shadow: 0 0 8px rgba(0, 255, 128, 0.3);
+    box-shadow: 0 0 8px rgba(0, 255, 128, 0.3); /* Subtle glow on hover as per style guide */
 }
 
 .btn-secondary {
@@ -515,7 +529,7 @@ body {
 
 .btn-danger:hover {
     background: #ff3333;
-    box-shadow: 0 0 8px rgba(255, 77, 77, 0.3);
+    box-shadow: 0 0 8px rgba(255, 77, 77, 0.3); /* Subtle glow on hover as per style guide */
 }
 
 .btn-sm {
@@ -754,6 +768,69 @@ body {
     .dashboard-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* Chart styles - As per HTML Style Guide */
+.chart-container {
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.chart-candle-up {
+    fill: var(--chart-positive); /* Lighter green for upward candles */
+    stroke: var(--chart-positive);
+}
+
+.chart-candle-down {
+    fill: var(--negative); /* Red for downward candles */
+    stroke: var(--negative);
+}
+
+.chart-volume-up {
+    fill: var(--chart-positive);
+    opacity: 0.3; /* Semi-transparent volume bars */
+}
+
+.chart-volume-down {
+    fill: var(--negative);
+    opacity: 0.3; /* Semi-transparent volume bars */
+}
+
+.ticker-header {
+    margin-bottom: 16px;
+}
+
+.ticker-price {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.ticker-metrics {
+    display: flex;
+    gap: 16px;
+    font-size: 0.9rem;
+    color: var(--accent); /* Muted yellow for O/H/L/C/V metrics */
+}
+
+.ticker-metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.ticker-metric-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+.ticker-metric-value {
+    font-weight: 600;
+    color: var(--accent);
 }
 
 /* Loading states */
