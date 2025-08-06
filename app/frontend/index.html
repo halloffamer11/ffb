@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FFB Application</title>
+    <link rel="stylesheet" href="/static/css/styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1><i class="fas fa-chart-line"></i> FFB Application</h1>
+            <nav class="nav">
+                <button class="nav-btn active" data-tab="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </button>
+                <button class="nav-btn" data-tab="data">
+                    <i class="fas fa-database"></i> Data Management
+                </button>
+                <button class="nav-btn" data-tab="calculations">
+                    <i class="fas fa-calculator"></i> Calculations
+                </button>
+            </nav>
+        </header>
+
+        <!-- Left Panel -->
+        <aside class="left-panel">
+            <div class="card">
+                <h3><i class="fas fa-user"></i> Account Summary</h3>
+                <div class="account-info">
+                    <div class="balance">
+                        <span class="balance-label">Total Balance</span>
+                        <span class="balance-value" id="total-balance">$0.00</span>
+                    </div>
+                    <div class="day-change">
+                        <span class="change-label">Today's Change</span>
+                        <span class="change-value positive" id="day-change">+$0.00</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3><i class="fas fa-list"></i> Watchlist</h3>
+                <div class="watchlist">
+                    <div class="watchlist-item">
+                        <span class="ticker">AAPL</span>
+                        <span class="price positive">$150.25</span>
+                        <span class="change positive">+2.5%</span>
+                    </div>
+                    <div class="watchlist-item">
+                        <span class="ticker">GOOGL</span>
+                        <span class="price negative">$2,850.10</span>
+                        <span class="change negative">-1.2%</span>
+                    </div>
+                    <div class="watchlist-item">
+                        <span class="ticker">TSLA</span>
+                        <span class="price positive">$750.80</span>
+                        <span class="change positive">+5.8%</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard Tab -->
+            <div id="dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <div class="card">
+                        <h3><i class="fas fa-chart-bar"></i> Data Overview</h3>
+                        <div class="stats">
+                            <div class="stat">
+                                <span class="stat-value" id="total-records">0</span>
+                                <span class="stat-label">Total Records</span>
+                            </div>
+                            <div class="stat">
+                                <span class="stat-value" id="categories">0</span>
+                                <span class="stat-label">Categories</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+                        <div id="recent-activity" class="activity-list">
+                            <p class="empty-state">No recent activity</p>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3><i class="fas fa-chart-pie"></i> Quick Stats</h3>
+                        <div id="quick-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">Average Value:</span>
+                                <span class="stat-value" id="avg-value">0</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Highest Value:</span>
+                                <span class="stat-value" id="max-value">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Management Tab -->
+            <div id="data" class="tab-content">
+                <div class="data-header">
+                    <h2>Data Management</h2>
+                    <button class="btn btn-primary" id="add-record-btn">
+                        <i class="fas fa-plus"></i> Add Record
+                    </button>
+                </div>
+                
+                <div class="data-filters">
+                    <input type="text" id="search-input" placeholder="Search records..." class="search-input">
+                    <select id="category-filter" class="filter-select">
+                        <option value="">All Categories</option>
+                    </select>
+                </div>
+                
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Title</th>
+                                <th>Value</th>
+                                <th>Category</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body">
+                            <!-- Data will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Calculations Tab -->
+            <div id="calculations" class="tab-content">
+                <div class="calculations-header">
+                    <h2>Calculations & Analysis</h2>
+                </div>
+                
+                <div class="calculations-grid">
+                    <div class="card">
+                        <h3>Basic Operations</h3>
+                        <div class="calc-form">
+                            <select id="operation-select" class="form-select">
+                                <option value="sum">Sum</option>
+                                <option value="average">Average</option>
+                                <option value="min">Minimum</option>
+                                <option value="max">Maximum</option>
+                                <option value="count">Count</option>
+                            </select>
+                            <textarea id="values-input" placeholder="Enter values (one per line or comma-separated)" class="form-textarea"></textarea>
+                            <button class="btn btn-primary" id="calculate-btn">Calculate</button>
+                        </div>
+                        <div id="basic-result" class="result-display"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Statistical Analysis</h3>
+                        <div class="calc-form">
+                            <textarea id="stats-input" placeholder="Enter values for statistical analysis" class="form-textarea"></textarea>
+                            <button class="btn btn-primary" id="stats-btn">Analyze</button>
+                        </div>
+                        <div id="stats-result" class="result-display"></div>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>Custom Formula</h3>
+                        <div class="calc-form">
+                            <input type="text" id="formula-input" placeholder="e.g., x + y * 2" class="form-input">
+                            <div id="variables-container">
+                                <div class="variable-input">
+                                    <input type="text" placeholder="Variable name" class="var-name">
+                                    <input type="number" placeholder="Value" class="var-value">
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" id="add-variable-btn">Add Variable</button>
+                            <button class="btn btn-primary" id="evaluate-btn">Evaluate</button>
+                        </div>
+                        <div id="formula-result" class="result-display"></div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Right Panel -->
+        <aside class="right-panel">
+            <div class="card">
+                <h3><i class="fas fa-history"></i> Recent Orders</h3>
+                <div class="orders-list">
+                    <div class="order-item">
+                        <div class="order-header">
+                            <span class="order-type buy">BUY</span>
+                            <span class="order-time">2:30 PM</span>
+                        </div>
+                        <div class="order-details">
+                            <span class="order-symbol">AAPL</span>
+                            <span class="order-shares">10 shares</span>
+                            <span class="order-price">$150.25</span>
+                        </div>
+                    </div>
+                    <div class="order-item">
+                        <div class="order-header">
+                            <span class="order-type sell">SELL</span>
+                            <span class="order-time">1:45 PM</span>
+                        </div>
+                        <div class="order-details">
+                            <span class="order-symbol">GOOGL</span>
+                            <span class="order-shares">5 shares</span>
+                            <span class="order-price">$2,850.10</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <h3><i class="fas fa-chart-line"></i> Open Positions</h3>
+                <div class="positions-list">
+                    <div class="position-item">
+                        <div class="position-header">
+                            <span class="position-symbol">TSLA</span>
+                            <span class="position-pnl positive">+$1,250.80</span>
+                        </div>
+                        <div class="position-details">
+                            <span class="position-shares">25 shares</span>
+                            <span class="position-avg">$750.80 avg</span>
+                        </div>
+                    </div>
+                    <div class="position-item">
+                        <div class="position-header">
+                            <span class="position-symbol">MSFT</span>
+                            <span class="position-pnl negative">-$320.50</span>
+                        </div>
+                        <div class="position-details">
+                            <span class="position-shares">15 shares</span>
+                            <span class="position-avg">$310.25 avg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- Modal for adding/editing records -->
+    <div id="record-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Add New Record</h3>
+                <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+                <form id="record-form">
+                    <div class="form-group">
+                        <label for="title-input">Title:</label>
+                        <input type="text" id="title-input" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="value-input">Value:</label>
+                        <input type="number" id="value-input" step="0.01" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="category-input">Category:</label>
+                        <input type="text" id="category-input" required class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="description-input">Description:</label>
+                        <textarea id="description-input" class="form-textarea"></textarea>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
