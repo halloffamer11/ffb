@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ffb.local/schemas/workspace.schema.json",
+  "title": "FFB Workspace",
+  "description": "Workspace file format (.ffdraft) for complete application state.",
+  "type": "object",
+  "required": [
+    "version",
+    "metadata",
+    "league",
+    "players",
+    "draftState",
+    "ui",
+    "history"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "metadata": {
+      "type": "object",
+      "required": ["created", "modified", "name", "checksum"],
+      "properties": {
+        "created": { "type": "integer", "minimum": 0 },
+        "modified": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string", "maxLength": 100 },
+        "checksum": { "type": "string", "minLength": 10 }
+      },
+      "additionalProperties": false
+    },
+    "league": {
+      "type": "object",
+      "description": "League settings including roster, scoring, and teams.",
+      "additionalProperties": true
+    },
+    "players": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "draftState": {
+      "type": "object",
+      "description": "Current draft state including picks, teams, budgets, and undo stack.",
+      "additionalProperties": true
+    },
+    "ui": {
+      "type": "object",
+      "description": "UI preferences like starred players and notes.",
+      "additionalProperties": true
+    },
+    "history": {
+      "type": "array",
+      "items": { "type": "object" }
+    }
+  },
+  "additionalProperties": false
+}
+
+
