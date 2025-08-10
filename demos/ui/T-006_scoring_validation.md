@@ -1,5 +1,11 @@
 # T-006 Scoring — Human Validation
 
+What this tests:
+- PPR, Half-PPR, and Standard presets
+- Pure points calculation across passing, rushing, receiving, INTs, fumbles
+- No injury-based adjustments (display-only per requirements)
+- Custom overrides supported (not exercised here)
+
 Steps (browser console):
 ```js
 (async () => {
@@ -11,5 +17,7 @@ Steps (browser console):
   console.log({ ppr, half, std, orderOK: ppr > half && half > std });
 })();
 ```
-Expected: orderOK === true.
+Expected:
+- ppr ≈ 37.0, half ≈ 34.5, std ≈ 32.0
+- orderOK === true
 

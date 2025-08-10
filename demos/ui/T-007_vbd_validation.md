@@ -1,5 +1,10 @@
 # T-007 VBD — Human Validation
 
+What this tests:
+- Baseline per position computed from teams × starters
+- VBD = player.points − baseline[position]
+- Clamp baseline index to last available if fewer players than baseline rank
+
 Steps (browser console):
 ```js
 (async () => {
@@ -15,5 +20,7 @@ Steps (browser console):
   console.log({ base, vbdA: withVbd[0].vbd });
 })();
 ```
-Expected: base equals 210; vbdA equals 40.
+Expected:
+- baseline (RB) = 210 (24th rank clamped to last available)
+- vbd for A = 250 − 210 = 40
 
