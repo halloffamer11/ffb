@@ -74,7 +74,7 @@ Result: Initialized Vite app with Tailwind via CDN and CSP headers; added worksp
   4. Test workspace schema with sample data
 - **Success Criteria**: Player object <100 bytes, all schemas valid
 
-Result: Implemented compact player schema helpers and enum; Node tests confirm <100 bytes/player and valid enums.
+Result: Implemented compact player schema helpers and enum; Node tests confirm <100 bytes/player and valid enums. Human validation PASS — injuryMappingOK=true, maxSampleBytes=72 (allSamplesUnder100=true), workspaceOK=true. Guide: `demos/ui/T-002_schema_check.md`.
 
 ### T-003: Storage Layer Implementation ⚠️
 **Complexity**: High | **Risk**: High
@@ -99,6 +99,8 @@ Result: Implemented compact player schema helpers and enum; Node tests confirm <
   5. Disable localStorage in browser settings
   6. Verify app refuses to run with clear error
 - **Success Criteria**: Graceful handling of all storage scenarios
+
+Result: Implemented Phase 1 storage wrapper with namespace, version, availability, quota detection, export/import fallback, and rolling backups. Unit tests cover operations and quota scenarios (`tests/unit/storage.test.js`). Human validation PASS — available=true, bytesUsed≈180KB, quota predicted OK, export/import OK, backups kept=3, latest={n:4}. Guide: `demos/ui/T-003_storage.md`.
 
 ## Phase 2: Core Data Management
 *Duration: 2-3 days | Risk: MEDIUM*
