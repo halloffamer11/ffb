@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-014a Debug Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-4">T-014a Debug Validation</h1>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <section class="md:col-span-1">
+        <h2 class="font-medium mb-2">League Settings</h2>
+        <iframe src="/demos/ui/T-012_settings.html" class="w-full h-96 border rounded"></iframe>
+      </section>
+
+      <section class="md:col-span-1">
+        <h2 class="font-medium mb-2">Data Management</h2>
+        <iframe src="/demos/ui/T-013_data_management.html" class="w-full h-96 border rounded"></iframe>
+      </section>
+
+      <section class="md:col-span-1">
+        <h2 class="font-medium mb-2">Golden & Validation</h2>
+        <div class="space-y-3">
+          <div class="space-x-2">
+            <button id="loadGolden" class="px-3 py-2 rounded bg-slate-600 text-white">Load Golden Data</button>
+            <label>Tolerance (%) <input id="tolerance" type="number" step="0.1" value="1.0" class="border p-1 w-24"></label>
+            <button id="run" class="px-3 py-2 rounded bg-blue-600 text-white">Run Validation</button>
+            <button id="exportMd" class="px-3 py-2 rounded bg-emerald-600 text-white">Export Markdown</button>
+          </div>
+          <div id="summary" class="text-sm"></div>
+          <div class="max-h-96 overflow-auto">
+            <table id="results" class="min-w-full bg-white rounded border text-sm">
+              <thead class="bg-slate-100"><tr><th class="text-left p-2">name</th><th class="text-left p-2">PtsΔ</th><th class="text-left p-2">VBDΔ</th><th class="text-left p-2">within</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <div>
+            <h3 class="font-medium">Missing</h3>
+            <pre id="missing" class="bg-white border rounded p-2 text-xs"></pre>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <script type="module">
+      import { createStorageAdapter } from '/src/adapters/storage.js';
+      import { loadSettings } from '/src/ui/settings.js';
+      import { loadPlayersFromWorkspace } from '/src/ui/dataManagement.js';
+      import { autoConfigure, calculatePoints } from '/src/core/scoring.js';
+      import { calculatePlayerVBD } from '/src/core/vbd.js';
+
+      const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+      const tbody = document.querySelector('#results tbody');
+      const summaryEl = document.getElementById('summary');
+      const missingEl = document.getElementById('missing');
+
+      let golden = [];
+      let lastResults = null;
+
+      document.getElementById('loadGolden').addEventListener('click', async () => {
+        const text = await fetch('/testdata/golden/debug_validation_set.csv').then(r => r.text());
+        golden = parseCsvToObjects(text);
+        alert(`Loaded golden: ${golden.length} rows`);
+      });
+
+      document.getElementById('run').addEventListener('click', () => {
+        const tolPct = Number(document.getElementById('tolerance').value || 1.0);
+        const tolerance = tolPct / 100.0;
+        const settings = loadSettings();
+        const players = loadPlayersFromWorkspace();
+        const scoring = autoConfigure(settings.scoringPreset);
+
+        // Compute points for current players if they have stat columns; otherwise assume points present
+        const current = players.map(p => ({ ...p, points: Number(p.points) || Number(p.pts) || 0 }));
+        const currentByName = Object.fromEntries(current.map(p => [p.name, p]));
+
+        const goldenWithPoints = golden.map(g => {
+          const pts = Number(g.expected_points_ppr) || calculatePoints(g, scoring);
+          return { ...g, points: pts };
+        });
+
+        const leagueSettings = { teams: settings.teams, starters: settings.roster };
+        const curWithVbd = calculatePlayerVBD(current, leagueSettings);
+        const goldWithVbd = calculatePlayerVBD(goldenWithPoints, leagueSettings);
+
+        const goldByName = Object.fromEntries(goldWithVbd.map(p => [p.name, p]));
+        const rows = [];
+        const missing = [];
+
+        for (const g of goldenWithPoints) {
+          const c = currentByName[g.name];
+          if (!c) { missing.push(g.name); continue; }
+          const gv = goldByName[g.name]?.vbd ?? 0;
+          const cv = curWithVbd.find(p => p.name === g.name)?.vbd ?? 0;
+          const ptsDelta = Math.abs((c.points || 0) - (g.points || 0));
+          const vbdDelta = Math.abs(cv - gv);
+          const within = (ptsDelta / Math.max(1, g.points || 1)) <= tolerance && (vbdDelta / Math.max(1, Math.abs(gv) || 1)) <= tolerance;
+          rows.push({ name: g.name, ptsDelta, vbdDelta, within });
+        }
+
+        const maePts = rows.reduce((a, r) => a + r.ptsDelta, 0) / (rows.length || 1);
+        const maeVbd = rows.reduce((a, r) => a + r.vbdDelta, 0) / (rows.length || 1);
+        const withinPct = rows.length ? (rows.filter(r => r.within).length / rows.length) * 100 : 0;
+
+        renderTable(rows);
+        summaryEl.textContent = JSON.stringify({ count: rows.length, maePts: round(maePts,2), maeVbd: round(maeVbd,2), withinPct: round(withinPct,1) }, null, 2);
+        missingEl.textContent = missing.join('\n');
+        lastResults = { rows, maePts, maeVbd, withinPct, missing, tolerance: tolPct };
+      });
+
+      document.getElementById('exportMd').addEventListener('click', () => {
+        if (!lastResults) { alert('Run validation first'); return; }
+        const md = toMarkdown(lastResults);
+        const blob = new Blob([md], { type: 'text/markdown' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `debug_validation_${Date.now()}.md`; a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      function renderTable(rows) {
+        tbody.innerHTML = '';
+        for (const r of rows) {
+          const tr = document.createElement('tr');
+          const within = r.within ? 'text-emerald-700' : 'text-rose-700';
+          tr.innerHTML = `<td class="p-2 border-t">${r.name}</td><td class="p-2 border-t">${r.ptsDelta.toFixed(2)}</td><td class="p-2 border-t">${r.vbdDelta.toFixed(2)}</td><td class="p-2 border-t ${within}">${r.within ? '✓' : '✗'}</td>`;
+          tbody.appendChild(tr);
+        }
+      }
+
+      function toMarkdown(res) {
+        const lines = [];
+        lines.push(`# Debug Validation Report`);
+        lines.push('');
+        lines.push(`Tolerance: ${res.tolerance}%`);
+        lines.push(`Count: ${res.rows.length}`);
+        lines.push(`MAE Points: ${round(res.maePts,2)}`);
+        lines.push(`MAE VBD: ${round(res.maeVbd,2)}`);
+        lines.push(`Within Tolerance: ${round(res.withinPct,1)}%`);
+        lines.push('');
+        lines.push('| Player | PtsΔ | VBDΔ | Within |');
+        lines.push('|---|---:|---:|:---:|');
+        for (const r of res.rows) lines.push(`| ${r.name} | ${r.ptsDelta.toFixed(2)} | ${r.vbdDelta.toFixed(2)} | ${r.within ? '✓' : '✗'} |`);
+        if (res.missing.length) {
+          lines.push('');
+          lines.push('## Missing in Current Data');
+          for (const m of res.missing) lines.push(`- ${m}`);
+        }
+        lines.push('');
+        lines.push('> Generated by T-014a Debug Validator');
+        return lines.join('\n');
+      }
+
+      function parseCsvToObjects(text) {
+        const [headerLine, ...lines] = text.trim().split(/\r?\n/);
+        const header = headerLine.split(',');
+        return lines.filter(Boolean).map(line => {
+          const vals = splitCsvLine(line);
+          const obj = {};
+          for (let i = 0; i < header.length; i += 1) obj[header[i]] = vals[i];
+          return obj;
+        });
+      }
+
+      function splitCsvLine(line) {
+        const res = []; let i = 0; let cur=''; let inQ=false;
+        while (i < line.length) {
+          const ch = line[i];
+          if (inQ) {
+            if (ch === '"' && line[i+1] === '"') { cur += '"'; i += 2; continue; }
+            if (ch === '"') { inQ = false; i += 1; continue; }
+            cur += ch; i += 1; continue;
+          } else {
+            if (ch === '"') { inQ = true; i += 1; continue; }
+            if (ch === ',') { res.push(cur); cur=''; i += 1; continue; }
+            cur += ch; i += 1; continue;
+          }
+        }
+        res.push(cur); return res;
+      }
+
+      function round(n, d=1) { const p = 10**d; return Math.round(n*p)/p; }
+    </script>
+  </body>
+  </html>
+
+

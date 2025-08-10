@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-013 Data Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-4">T-013 Data Management</h1>
+
+    <div class="space-x-2 mb-4">
+      <input id="fileInput" type="file" accept=".csv,text/csv" class="border p-2" />
+      <button id="loadBtn" class="px-3 py-2 rounded bg-slate-600 text-white">Load</button>
+      <button id="saveBtn" class="px-3 py-2 rounded bg-blue-600 text-white">Save to Workspace</button>
+      <button id="exportBtn" class="px-3 py-2 rounded bg-emerald-600 text-white">Export CSV</button>
+    </div>
+
+    <div id="errors" class="text-rose-600 whitespace-pre-wrap"></div>
+
+    <table id="grid" class="min-w-full bg-white rounded border text-sm">
+      <thead class="bg-slate-100"><tr><th class="text-left p-2">name</th><th class="text-left p-2">team</th><th class="text-left p-2">position</th><th class="text-left p-2">points</th><th class="text-left p-2">injury</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <script type="module">
+      import { loadPlayersFromFile, savePlayersToWorkspace, loadPlayersFromWorkspace } from '/src/ui/dataManagement.js';
+
+      const fileInput = document.getElementById('fileInput');
+      const gridBody = document.querySelector('#grid tbody');
+      const errors = document.getElementById('errors');
+      let current = [];
+
+      function render(rows) {
+        gridBody.innerHTML = '';
+        for (const r of rows) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td class="p-2 border-t">${r.name}</td><td class="p-2 border-t">${r.team}</td><td class="p-2 border-t">${r.position}</td><td class="p-2 border-t">${r.points}</td><td class="p-2 border-t">${r.injuryStatus ?? ''}</td>`;
+          gridBody.appendChild(tr);
+        }
+      }
+
+      document.getElementById('loadBtn').addEventListener('click', async () => {
+        const file = fileInput.files?.[0];
+        if (!file) { errors.textContent = 'Choose a CSV file first'; return; }
+        const res = await loadPlayersFromFile(file);
+        if (!res.ok) { errors.textContent = JSON.stringify(res.errors, null, 2); return; }
+        errors.textContent = '';
+        current = res.records;
+        render(current.slice(0, 20));
+      });
+
+      document.getElementById('saveBtn').addEventListener('click', () => {
+        if (!current.length) { errors.textContent = 'No data loaded'; return; }
+        const r = savePlayersToWorkspace(current);
+        errors.textContent = r.ok ? '' : `Save failed: ${r.error}`;
+        if (r.ok) alert('Saved to workspace');
+      });
+
+      document.getElementById('exportBtn').addEventListener('click', () => {
+        if (!current.length) { errors.textContent = 'No data to export'; return; }
+        const header = ['name','team','position','points','injury'];
+        const lines = [header.join(',')];
+        for (const r of current) lines.push([r.name, r.team, r.position, r.points, r.injuryStatus ?? ''].join(','));
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = 'players_export.csv'; a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // Load from workspace on page load
+      current = loadPlayersFromWorkspace();
+      if (current.length) render(current.slice(0, 20));
+    </script>
+  </body>
+  </html>
+
+

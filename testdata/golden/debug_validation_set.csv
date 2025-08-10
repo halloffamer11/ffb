@@ -1,0 +1,6 @@
+name,team,position,pass_att,pass_cmp,pass_yds,pass_tds,pass_int,rush_att,rush_yds,rush_tds,rec,rec_yds,rec_tds,fumbles,expected_points_ppr
+Patrick Mahomes,KC,QB,610,410,4925,38,11,55,320,3,0,0,0,4,0
+Christian McCaffrey,SF,RB,0,0,0,0,0,285,1320,12,78,670,5,3,0
+Justin Jefferson,MIN,WR,0,0,0,0,0,10,60,0,118,1675,12,2,0
+Travis Kelce,KC,TE,0,0,0,0,0,8,40,0,94,1060,9,1,0
+

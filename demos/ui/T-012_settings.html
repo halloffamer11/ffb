@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-012 League Settings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-4">T-012 League Settings</h1>
+
+    <form id="settingsForm" class="space-y-4 max-w-xl">
+      <div class="grid grid-cols-2 gap-4">
+        <label class="block">Teams
+          <input name="teams" type="number" min="8" max="14" value="12" class="border p-2 w-full" />
+        </label>
+        <label class="block">Budget
+          <input name="budget" type="number" min="50" max="1000" value="200" class="border p-2 w-full" />
+        </label>
+      </div>
+
+      <fieldset class="border p-3 rounded">
+        <legend class="font-medium">Roster Starters</legend>
+        <div class="grid grid-cols-4 gap-3">
+          <label>QB <input name="r_QB" type="number" value="1" class="border p-1 w-16" /></label>
+          <label>RB <input name="r_RB" type="number" value="2" class="border p-1 w-16" /></label>
+          <label>WR <input name="r_WR" type="number" value="2" class="border p-1 w-16" /></label>
+          <label>TE <input name="r_TE" type="number" value="1" class="border p-1 w-16" /></label>
+          <label>FLEX <input name="r_FLEX" type="number" value="0" class="border p-1 w-16" /></label>
+          <label>K <input name="r_K" type="number" value="0" class="border p-1 w-16" /></label>
+          <label>DST <input name="r_DST" type="number" value="0" class="border p-1 w-16" /></label>
+          <label>BENCH <input name="r_BENCH" type="number" value="6" class="border p-1 w-16" /></label>
+        </div>
+      </fieldset>
+
+      <div class="grid grid-cols-2 gap-4">
+        <label class="block">Scoring Preset
+          <select name="scoringPreset" class="border p-2 w-full">
+            <option value="PPR">PPR</option>
+            <option value="HALF">Half PPR</option>
+            <option value="STD">Standard</option>
+          </select>
+        </label>
+        <label class="block">Keeper Mode
+          <input name="keeperMode" type="checkbox" class="ml-2" />
+        </label>
+      </div>
+
+      <div>
+        <label class="block">Owners (one per line)
+          <textarea name="owners" rows="6" class="border p-2 w-full" placeholder="Team 1
+Team 2
+Team 3"></textarea>
+        </label>
+        <button id="genOwners" type="button" class="mt-2 px-3 py-2 rounded bg-slate-600 text-white">Generate Owners</button>
+      </div>
+
+      <div id="errors" class="text-rose-600 whitespace-pre-wrap"></div>
+      <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">Save Settings</button>
+    </form>
+
+    <h2 class="text-xl font-medium mt-6">Summary</h2>
+    <pre id="summary" class="bg-white border rounded p-3 text-sm overflow-auto"></pre>
+
+    <script type="module">
+      import { attachSettingsForm, loadSettings, saveSettings, generateOwnerNames } from '/src/ui/settings.js';
+      const form = document.getElementById('settingsForm');
+      attachSettingsForm('settingsForm', 'summary', 'errors');
+      document.getElementById('genOwners').addEventListener('click', () => {
+        const teams = Number(form.teams.value || 12);
+        const owners = generateOwnerNames(teams).map(o => o.name).join('\n');
+        form.owners.value = owners;
+      });
+    </script>
+  </body>
+  </html>
+
+
