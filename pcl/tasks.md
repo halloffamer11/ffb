@@ -5,7 +5,7 @@
 ## Phase 0: Performance Validation
 *Duration: 1 day | Risk: HIGH | Critical Path*
 
-### T-000: Performance Benchmark Suite ⚠️
+### T-000: Performance Benchmark Suite ⚠️ ✅
 **Complexity**: Medium | **Risk**: High
 - Create 300-player test dataset
 - Benchmark VBD calculation time with 300 players
@@ -25,6 +25,8 @@
   3. Verify all metrics meet targets in console output
   4. Document results in `demos/data/T-000_performance_results.md`
 - **Success Criteria**: All operations within target thresholds
+ 
+Result: Added Node smoke perf test and in-browser runner; initial checks pass and manual runner prints a summary table.
 
 ## Phase 1: Foundation Setup
 *Duration: 1-2 days | Risk: LOW*
