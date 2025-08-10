@@ -52,4 +52,12 @@ export function vbdChecksum(players, leagueSettings) {
   return sum;
 }
 
+/** Baseline helper for a single position */
+export function baselineForPosition(players, position, leagueSettings) {
+  const { teams, starters } = leagueSettings;
+  const list = players.filter(p => p.position === position).sort((a, b) => b.points - a.points);
+  const idx = Math.max(0, Math.min(list.length - 1, teams * (starters[position] ?? 0) - 1));
+  return list.length === 0 ? 0 : (list[idx]?.points ?? 0);
+}
+
 

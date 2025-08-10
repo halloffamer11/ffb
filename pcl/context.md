@@ -1,3 +1,6 @@
+  - 2025-08-10, role_executor, T-006 Scoring (implemented), Added `src/core/scoring.js` with presets (PPR/HALF/STD), overrides, and pure calculation; unit tests `tests/unit/scoring.test.js`; HITL guide `demos/ui/T-006_scoring_validation.md`.
+  - 2025-08-10, role_executor, T-007 VBD (extended), Added baseline helper and unit tests `tests/unit/vbd.test.js`; HITL guide `demos/ui/T-007_vbd_validation.md`.
+  - 2025-08-10, role_executor, T-008 Tiers (implemented), Added `src/core/tiers.js` and unit tests `tests/unit/tiers.test.js`; HITL guide `demos/ui/T-008_tiers_validation.md`.
   - 2025-08-10, role_executor, T-005 Golden Dataset Integration (in progress), Added transformation helpers `src/adapters/golden.js`, unit tests `tests/unit/golden.test.js`, and human validation guide `demos/ui/T-005_golden.md`. Updated golden sources to include 2024-season players with Kickers and DSTs.
   - 2025-08-10, role_executor, T-005 Human Validation Results, PASS — baseCount>0; fullCount=300; roundTrip.ok=true & count=300. Sources include 2024 players across offense, K, and DST. Link: `demos/ui/T-005_golden.md`.
 # Execution Context Ledger

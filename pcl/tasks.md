@@ -178,6 +178,8 @@ Result: Golden transform implemented; sample sources updated to 2024 with K/DST;
   5. Test custom scoring overrides
 - **Success Criteria**: Points calculation within 0.1 of expected
 
+Result: Implemented presets and custom overrides with pure calculation function; unit tests verify ordering and overrides. HITL guide added `demos/ui/T-006_scoring_validation.md`.
+
 ### ** T-006a: Workspace Implementation**
 **Complexity**: High | **Risk**: Medium
 *Added to Phase 2 per architectural decision*
@@ -234,6 +236,8 @@ Result: Golden transform implemented; sample sources updated to 2024 with K/DST;
   7. Confirm IR players excluded from baselines
 - **Success Criteria**: VBD within 1% of expected values
 
+Result: Baseline helper and VBD per-player implemented; unit tests cover baseline and VBD math; HITL guide `demos/ui/T-007_vbd_validation.md`.
+
 ### T-008: Position Tier Analysis
 **Complexity**: Medium | **Risk**: Medium
 - Implement delta-based tier breaks
@@ -254,6 +258,8 @@ Result: Golden transform implemented; sample sources updated to 2024 with K/DST;
   4. Draft players to create single-player tier
   5. Verify graceful handling
 - **Success Criteria**: Tiers match expected breakpoints
+
+Result: Tier computation via vbd deltas with stdDev×0.5 threshold; unit tests confirm inclusion; HITL guide `demos/ui/T-008_tiers_validation.md`.
 
 ### T-009a: Basic String Search
 **Complexity**: Low | **Risk**: Low
