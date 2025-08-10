@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-004 Import Preview</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-4">T-004 CSV Import — Preview</h1>
+    <div class="space-y-4">
+      <div class="space-x-2">
+        <input id="fileInput" type="file" accept=".csv,text/csv" class="border p-2" />
+        <button id="loadValid" class="px-3 py-2 bg-blue-600 text-white rounded">Load Sample: Valid</button>
+        <button id="loadCorrupt" class="px-3 py-2 bg-yellow-600 text-white rounded">Load Sample: Corrupt</button>
+        <button id="loadUtf8" class="px-3 py-2 bg-green-600 text-white rounded">Load Sample: UTF-8</button>
+        <button id="loadMissing" class="px-3 py-2 bg-rose-600 text-white rounded">Load Sample: Missing Cols</button>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <h2 class="font-medium mb-2">Summary</h2>
+          <pre id="summary" class="bg-white rounded border p-3 text-sm overflow-auto"></pre>
+        </div>
+        <div>
+          <h2 class="font-medium mb-2">Errors</h2>
+          <pre id="errors" class="bg-white rounded border p-3 text-sm overflow-auto"></pre>
+        </div>
+      </div>
+      <div>
+        <h2 class="font-medium mb-2">Sample Records</h2>
+        <table class="min-w-full bg-white rounded border text-sm" id="recordsTable">
+          <thead class="bg-slate-100"><tr><th class="text-left p-2">name</th><th class="text-left p-2">team</th><th class="text-left p-2">position</th><th class="text-left p-2">points</th><th class="text-left p-2">injuryStatus</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <script type="module">
+      import { importFromCsvText } from '/src/adapters/import.js';
+
+      const fileInput = document.getElementById('fileInput');
+      const summaryEl = document.getElementById('summary');
+      const errorsEl = document.getElementById('errors');
+      const tableBody = document.querySelector('#recordsTable tbody');
+
+      async function loadTextFromFile(file) {
+        return await file.text();
+      }
+
+      async function loadTextFromUrl(url) {
+        const res = await fetch(url);
+        return await res.text();
+      }
+
+      function renderResult(result) {
+        if (result.ok) {
+          summaryEl.textContent = JSON.stringify({ ok: true, count: result.records.length, header: result.header, sampleCount: result.sample.length }, null, 2);
+          errorsEl.textContent = '';
+          tableBody.innerHTML = '';
+          for (const r of result.sample) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="p-2 border-t">${r.name}</td><td class="p-2 border-t">${r.team}</td><td class="p-2 border-t">${r.position}</td><td class="p-2 border-t">${r.points}</td><td class="p-2 border-t">${r.injuryStatus ?? ''}</td>`;
+            tableBody.appendChild(tr);
+          }
+        } else {
+          summaryEl.textContent = JSON.stringify({ ok: false }, null, 2);
+          errorsEl.textContent = JSON.stringify(result.errors, null, 2);
+          tableBody.innerHTML = '';
+        }
+      }
+
+      async function handleText(text) {
+        const result = importFromCsvText(text);
+        renderResult(result);
+      }
+
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const text = await loadTextFromFile(file);
+        handleText(text);
+      });
+
+      document.getElementById('loadValid').addEventListener('click', async () => {
+        handleText(await loadTextFromUrl('/demos/data/T-004_valid.csv'));
+      });
+      document.getElementById('loadCorrupt').addEventListener('click', async () => {
+        handleText(await loadTextFromUrl('/demos/data/T-004_corrupt.csv'));
+      });
+      document.getElementById('loadUtf8').addEventListener('click', async () => {
+        handleText(await loadTextFromUrl('/demos/data/T-004_utf8_special.csv'));
+      });
+      document.getElementById('loadMissing').addEventListener('click', async () => {
+        handleText(await loadTextFromUrl('/demos/data/T-004_missing_cols.csv'));
+      });
+    </script>
+  </body>
+  </html>
+
+
