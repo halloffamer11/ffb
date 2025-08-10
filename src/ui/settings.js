@@ -75,17 +75,19 @@ function readForm(form) {
   for (const key of ['QB','RB','WR','TE','FLEX','K','DST','BENCH']) {
     roster[key] = Number(form[`r_${key}`].value || 0);
   }
+  // Read owners from grid if present
+  let owners = [];
+  const grid = document.getElementById('ownersGrid');
+  if (grid) {
+    owners = readOwnersGrid(grid).sort((a, b) => a.order - b.order);
+  }
   return {
     teams: Number(form.teams.value || 12),
     budget: Number(form.budget.value || 200),
     roster,
     scoringPreset: form.scoringPreset.value || 'PPR',
     keeperMode: !!form.keeperMode?.checked,
-    owners: String(form.owners?.value || '')
-      .split(/\r?\n/)
-      .map(s => s.trim())
-      .filter(Boolean)
-      .map((name, idx) => ({ id: idx + 1, name }))
+    owners
   };
 }
 
@@ -149,9 +151,13 @@ function coerceOwners(settings, teams) {
 }
 
 export function regenerateOwnersGrid(form, teams) {
-  const settings = { ...readForm(form) };
-  settings.owners = coerceOwners(settings, teams);
-  syncOwnersGrid(form, settings);
+  const owners = [];
+  for (let i = 1; i <= teams; i += 1) owners.push({ id: i, team: `Team ${i}`, name: `Owner ${i}`, order: i });
+  const s = { ...readForm(form), owners, teams };
+  saveSettings(s);
+  syncOwnersGrid(form, s);
+  const summary = document.getElementById('summary');
+  renderSummary(summary, s);
 }
 
 function persistOwnersToStorage(form, owners) {
