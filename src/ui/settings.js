@@ -43,7 +43,7 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
     const saved = loadSettings();
     hydrateForm(form, saved);
     renderSummary(summary, saved);
-    syncOwnersTable(form, saved);
+    syncOwnersGrid(form, saved);
   });
 
   // Keep owners list aligned as teams changes
@@ -168,7 +168,6 @@ function persistOwnersToStorage(form, owners) {
   renderSummary(summary, s);
 }
 
-// Export for UI to call
-export { regenerateOwnersGrid };
+// nothing else to export here (regenerateOwnersGrid already exported above)
 
 
