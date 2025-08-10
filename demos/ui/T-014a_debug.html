@@ -12,12 +12,12 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
       <section class="md:col-span-1">
         <h2 class="font-medium mb-2">League Settings</h2>
-        <iframe src="/demos/ui/T-012_settings.html" class="w-full h-96 border rounded"></iframe>
+        <iframe src="./T-012_settings.html" class="w-full h-96 border rounded"></iframe>
       </section>
 
       <section class="md:col-span-1">
         <h2 class="font-medium mb-2">Data Management</h2>
-        <iframe src="/demos/ui/T-013_data_management.html" class="w-full h-96 border rounded"></iframe>
+        <iframe src="./T-013_data_management.html" class="w-full h-96 border rounded"></iframe>
       </section>
 
       <section class="md:col-span-1">
@@ -60,7 +60,7 @@
       let lastResults = null;
 
       document.getElementById('loadGolden').addEventListener('click', async () => {
-        const text = await fetch('/testdata/golden/debug_validation_set.csv').then(r => r.text());
+        const text = await fetch('../../testdata/golden/debug_validation_set.csv').then(r => r.text());
         golden = parseCsvToObjects(text);
         alert(`Loaded golden: ${golden.length} rows`);
       });
