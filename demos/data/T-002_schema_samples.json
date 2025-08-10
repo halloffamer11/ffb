@@ -1,0 +1,26 @@
+{
+  "environment": "Schema samples for T-002",
+  "playersPacked": [
+    { "i": 1, "n": "Patrick Mahomes", "p": 0, "t": "KC", "b": 10, "s": 0, "pts": 355.4 },
+    { "i": 2, "n": "Christian McCaffrey", "p": 1, "t": "SF", "b": 9,  "s": 0, "pts": 330.2 },
+    { "i": 3, "n": "Justin Jefferson",  "p": 2, "t": "MIN","b": 6,  "s": 1, "pts": 300.5 },
+    { "i": 4, "n": "Travis Kelce",       "p": 3, "t": "KC", "b": 10, "s": 4, "pts": 250.0 }
+  ],
+  "injuryStatusLegend": { "HEALTHY": 0, "Q": 1, "D": 2, "O": 3, "IR": 4, "PUP": 5, "NA": 6 },
+  "workspaceSample": {
+    "version": "1.0.0",
+    "metadata": { "created": 1690000000000, "modified": 1690000000000, "name": "Sample League", "checksum": "sha256-sample" },
+    "league": {
+      "format": { "teams": 12, "budget": 200, "type": "auction" },
+      "roster": { "QB": 1, "RB": 2, "WR": 2, "TE": 1, "FLEX": 1, "K": 0, "DST": 0, "BENCH": 6 },
+      "scoring": { "preset": "PPR", "overrides": {} },
+      "keepers": []
+    },
+    "players": [],
+    "draftState": { "phase": "KEEPER", "picks": [], "teams": {}, "undoStack": [] },
+    "ui": { "starredPlayers": [], "playerNotes": {}, "columnSettings": {} },
+    "history": []
+  }
+}
+
+
