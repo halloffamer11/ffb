@@ -154,6 +154,8 @@ Result: CSV import core implemented and validated. Human validation PASS — val
   5. Export and compare to original
 - **Success Criteria**: Lossless import/export of golden data
 
+Result: Golden transform implemented; sample sources updated to 2024 with K/DST; padding to 300; export/import round-trip verified. Human validation PASS — baseCount>0, fullCount=300, roundTrip count=300. Guide: `demos/ui/T-005_golden.md`.
+
 ### T-006: Scoring System Implementation
 **Complexity**: Medium | **Risk**: Low
 - Implement PPR scoring calculations
