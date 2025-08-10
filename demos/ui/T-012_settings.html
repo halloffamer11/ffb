@@ -62,6 +62,12 @@ Team 3"></textarea>
     <h2 class="text-xl font-medium mt-6">Summary</h2>
     <pre id="summary" class="bg-white border rounded p-3 text-sm overflow-auto"></pre>
 
+    <h2 class="text-xl font-medium mt-6">Owners (Draft Order)</h2>
+    <table class="min-w-full bg-white rounded border text-sm">
+      <thead class="bg-slate-100"><tr><th class="text-left p-2 w-16">#</th><th class="text-left p-2">Owner/Team Name</th><th class="text-left p-2 w-32">Reorder</th></tr></thead>
+      <tbody id="ownersTable"></tbody>
+    </table>
+
     <script type="module">
       import { attachSettingsForm, loadSettings, saveSettings, generateOwnerNames } from '/src/ui/settings.js';
       const form = document.getElementById('settingsForm');
@@ -70,6 +76,8 @@ Team 3"></textarea>
         const teams = Number(form.teams.value || 12);
         const owners = generateOwnerNames(teams).map(o => o.name).join('\n');
         form.owners.value = owners;
+        // Trigger sync
+        form.dispatchEvent(new Event('submit'));
       });
     </script>
   </body>
