@@ -49,10 +49,13 @@
       <div>
         <div class="flex items-center justify-between">
           <h3 class="font-medium">Owners & Draft Order</h3>
-          <button id="genOwners" type="button" class="px-3 py-2 rounded bg-slate-600 text-white">Generate Owners</button>
+          <div class="space-x-2">
+            <button id="genOwners" type="button" class="px-3 py-2 rounded bg-slate-600 text-white">Generate Owners</button>
+            <button id="resetOwners" type="button" class="px-3 py-2 rounded bg-rose-600 text-white">Reset Owners</button>
+          </div>
         </div>
         <table class="min-w-full bg-white rounded border text-sm mt-2">
-          <thead class="bg-slate-100"><tr><th class="text-left p-2">Team Name</th><th class="text-left p-2">Owner Name</th><th class="text-left p-2 w-32">Draft #</th></tr></thead>
+          <thead class="bg-slate-100"><tr><th class="text-left p-2 w-24">Draft #</th><th class="text-left p-2">Team Name</th><th class="text-left p-2">Owner Name</th></tr></thead>
           <tbody id="ownersGrid"></tbody>
         </table>
       </div>
@@ -67,12 +70,16 @@
     
 
     <script type="module">
-      import { attachSettingsForm, generateOwnerNames, regenerateOwnersGrid } from '../../src/ui/settings.js';
+      import { attachSettingsForm, regenerateOwnersGrid } from '../../src/ui/settings.js';
       const form = document.getElementById('settingsForm');
       attachSettingsForm('settingsForm', 'summary', 'errors');
       document.getElementById('genOwners').addEventListener('click', () => {
         const teams = Number(form.teams.value || 12);
-        regenerateOwnersGrid(form, teams);
+        regenerateOwnersGrid(form, teams, false);
+      });
+      document.getElementById('resetOwners').addEventListener('click', () => {
+        const teams = Number(form.teams.value || 12);
+        regenerateOwnersGrid(form, teams, true);
       });
     </script>
   </body>

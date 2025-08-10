@@ -116,9 +116,9 @@ function syncOwnersGrid(form, settings) {
   owners.forEach((o, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td class="p-2 border-t text-slate-600">${idx + 1}</td>
       <td class="p-2 border-t"><input type="text" value="${o.team || `Team ${idx+1}`}" class="border p-1 w-full" data-field="team" data-idx="${idx}" /></td>
-      <td class="p-2 border-t"><input type="text" value="${o.name || `Owner ${idx+1}`}" class="border p-1 w-full" data-field="name" data-idx="${idx}" /></td>
-      <td class="p-2 border-t"><input type="number" min="1" class="border p-1 w-20" value="${idx + 1}" data-field="order" data-idx="${idx}" /></td>`;
+      <td class="p-2 border-t"><input type="text" value="${o.name || `Owner ${idx+1}`}" class="border p-1 w-full" data-field="name" data-idx="${idx}" /></td>`;
     grid.appendChild(tr);
   });
 
@@ -136,7 +136,7 @@ function readOwnersGrid(grid) {
   idxs.forEach(i => {
     const team = grid.querySelector(`input[data-idx="${i}"][data-field="team"]`)?.value?.trim() || `Team ${Number(i)+1}`;
     const name = grid.querySelector(`input[data-idx="${i}"][data-field="name"]`)?.value?.trim() || `Owner ${Number(i)+1}`;
-    const order = Number(grid.querySelector(`input[data-idx="${i}"][data-field="order"]`)?.value || (Number(i)+1));
+    const order = Number(i) + 1;
     rows.push({ id: Number(i)+1, team, name, order });
   });
   return rows;
@@ -150,9 +150,26 @@ function coerceOwners(settings, teams) {
   return owners;
 }
 
-export function regenerateOwnersGrid(form, teams) {
-  const owners = [];
-  for (let i = 1; i <= teams; i += 1) owners.push({ id: i, team: `Team ${i}`, name: `Owner ${i}`, order: i });
+export function regenerateOwnersGrid(form, teams, reset = false) {
+  const currentSettings = loadSettings();
+  const grid = document.getElementById('ownersGrid');
+  const existing = grid ? readOwnersGrid(grid).sort((a,b) => a.order - b.order) : (currentSettings.owners || []);
+
+  let owners;
+  if (reset) {
+    owners = [];
+  } else {
+    owners = existing.slice(0, Math.min(existing.length, teams));
+  }
+
+  // Extend or trim to target size while preserving existing names
+  while (owners.length < teams) {
+    const idx = owners.length;
+    owners.push({ id: idx + 1, team: `Team ${idx + 1}`, name: `Owner ${idx + 1}`, order: idx + 1 });
+  }
+  owners = owners.slice(0, teams);
+  owners.forEach((o, idx) => { o.id = idx + 1; o.order = idx + 1; if (!o.team) o.team = `Team ${idx + 1}`; if (!o.name) o.name = `Owner ${idx + 1}`; });
+
   const s = { ...readForm(form), owners, teams };
   saveSettings(s);
   syncOwnersGrid(form, s);
