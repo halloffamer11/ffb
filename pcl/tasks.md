@@ -132,6 +132,8 @@ Result: Implemented Phase 1 storage wrapper with namespace, version, availabilit
   5. Verify special characters display properly
 - **Success Criteria**: All test files handled appropriately
 
+Result: CSV import core implemented and validated. Human validation PASS — valid OK; BOM/CRLF/quotes preserved; UTF-8 diacritics parsed; missing columns and invalid numbers reported; corrupt CSV flagged. Preview: `demos/ui/T-004_import_preview.html`; Guide: `demos/ui/T-004_import.md`.
+
 ### T-005: Golden Dataset Integration
 **Complexity**: Low | **Risk**: Low
 - Load provided test CSV files
