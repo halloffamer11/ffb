@@ -1,0 +1,10 @@
+stat,points_per,unit
+tackle_solo,1,evt
+tackle_assist,0.5,evt
+sack,3,evt
+interception,3,evt
+forced_fumble,2,evt
+fumble_recovery,2,evt
+pass_defended,1,evt
+tackle_for_loss,1,evt
+def_td,6,td

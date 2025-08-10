@@ -1,0 +1,6 @@
+player_name,position,team,season,pass_att,pass_cmp,pass_yds,pass_tds,pass_int,rush_att,rush_yds,rush_tds,rec,rec_yds,rec_tds,fumbles,first_down
+Patrick Mahomes,QB,KC,2025,610,410,4925,38,11,55,320,3,0,0,0,4,90
+Christian McCaffrey,RB,SF,2025,0,0,0,0,0,285,1320,12,78,670,5,3,90
+Justin Jefferson,WR,MIN,2025,0,0,0,0,0,10,60,0,118,1675,12,2,95
+Travis Kelce,TE,KC,2025,0,0,0,0,0,8,40,0,94,1060,9,1,70
+Marvin Harrison Jr,WR,ARI,2025,0,0,0,0,0,6,40,0,92,1275,10,2,78

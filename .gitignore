@@ -1,0 +1,13 @@
+# general
+.DS_Store
+*.swp
+.env
+.env.*
+# node
+node_modules/
+dist/
+# python
+.venv/
+__pycache__/
+# misc
+coverage/

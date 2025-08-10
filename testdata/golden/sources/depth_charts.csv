@@ -1,0 +1,7 @@
+team,position,player_name,depth,designation,target_share_proj
+KC,QB,Patrick Mahomes,1,starter,
+KC,TE,Travis Kelce,1,starter,0.22
+MIN,WR,Justin Jefferson,1,starter,0.3
+SF,RB,Christian McCaffrey,1,starter,0.15
+ARI,WR,Marvin Harrison Jr,1,starter,0.26
+KC,WR,Rashee Rice,2,backup,0.16

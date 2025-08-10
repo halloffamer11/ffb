@@ -1,0 +1,11 @@
+stat,points_per,unit,notes
+pass_yd,0.04,yard,25yd=1pt
+pass_td,4,td,
+pass_int,-2,turnover,
+rush_yd,0.1,yard,
+rush_td,6,td,
+rec,1,reception,"PPR (HALF=0.5, STD=0)"
+rec_yd,0.1,yard,
+rec_td,6,td,
+fumble_lost,-2,turnover,
+first_down,0.5,first_down,optional bonus
