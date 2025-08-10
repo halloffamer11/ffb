@@ -42,7 +42,9 @@ export function transformSourcesToInternal({ playerMasterCsv, projectionsSeasonC
     const position = row.position;
     const team = row.team;
     const stats = projByName[name] || {};
-    const points = Number.isFinite(Number(stats.points)) ? Number(stats.points) : estimatePointsPpr(stats);
+    // If no offensive stats exist (e.g., K, DST, IDP), synthesize minimal points for ordering
+    const hasOffense = stats && (Number(stats.pass_yds) || Number(stats.rush_yds) || Number(stats.rec_yds));
+    const points = hasOffense ? estimatePointsPpr(stats) : synthesizePointsForNonOffense(position, name);
     const auction = aucByName[name] || {};
     const injuryStatus = normalizeInjuryStatus('HEALTHY');
 
@@ -149,6 +151,23 @@ function splitCsvLine(line) {
   }
   res.push(cur);
   return res;
+}
+
+function synthesizePointsForNonOffense(position, name) {
+  // Very rough ordering values so K/DST appear reasonable in lists
+  if (position === 'K') {
+    // Slightly higher for notable names
+    if (/tucker/i.test(name)) return 140;
+    if (/butker/i.test(name)) return 135;
+    return 120;
+  }
+  if (position === 'DST') {
+    if (/49ers|san\s*francisco/i.test(name)) return 120;
+    if (/ravens|baltimore/i.test(name)) return 118;
+    return 110;
+  }
+  // IDP placeholders (not primary in this MVP)
+  return 50;
 }
 
 

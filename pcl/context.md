@@ -1,4 +1,4 @@
-  - 2025-08-10, role_executor, T-005 Golden Dataset Integration (in progress), Added transformation helpers `src/adapters/golden.js`, unit tests `tests/unit/golden.test.js`, and human validation guide `demos/ui/T-005_golden.md`.
+  - 2025-08-10, role_executor, T-005 Golden Dataset Integration (in progress), Added transformation helpers `src/adapters/golden.js`, unit tests `tests/unit/golden.test.js`, and human validation guide `demos/ui/T-005_golden.md`. Updated golden sources to include 2024-season players with Kickers and DSTs.
 # Execution Context Ledger
 - Date, actor, decision, rationale, links
 

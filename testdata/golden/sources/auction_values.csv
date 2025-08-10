@@ -1,6 +1,10 @@
 player_name,position,site,format,budget_ref,auction_value,as_of
-Christian McCaffrey,RB,ESPN,PPR,200,68,2025-08-01
-Justin Jefferson,WR,Yahoo,PPR,200,63,2025-08-01
-Patrick Mahomes,QB,NFL,STD,200,28,2025-08-01
-Travis Kelce,TE,Consensus,PPR,200,31,2025-08-01
-Marvin Harrison Jr,WR,Projected,PPR,200,52,2025-08-01
+Christian McCaffrey,RB,ESPN,PPR,200,68,2024-08-01
+Justin Jefferson,WR,Yahoo,PPR,200,63,2024-08-01
+Patrick Mahomes,QB,NFL,STD,200,28,2024-08-01
+Travis Kelce,TE,Consensus,PPR,200,31,2024-08-01
+Marvin Harrison Jr,WR,Projected,PPR,200,52,2024-08-01
+Justin Tucker,K,Consensus,PPR,200,3,2024-08-01
+Harrison Butker,K,Consensus,PPR,200,2,2024-08-01
+San Francisco 49ers,DST,Consensus,STD,200,2,2024-08-01
+Baltimore Ravens,DST,Consensus,STD,200,2,2024-08-01
