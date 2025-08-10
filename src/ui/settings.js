@@ -28,7 +28,7 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
   const current = loadSettings();
   hydrateForm(form, current);
   renderSummary(summary, current);
-  syncOwnersTable(form, current);
+  syncOwnersGrid(form, current);
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -49,12 +49,7 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
   // Keep owners list aligned as teams changes
   form.teams.addEventListener('input', () => {
     const t = Number(form.teams.value || 12);
-    const owners = String(form.owners?.value || '')
-      .split(/\r?\n/).map(s => s.trim()).filter(Boolean);
-    while (owners.length < t) owners.push(`Team ${owners.length + 1}`);
-    while (owners.length > t) owners.pop();
-    form.owners.value = owners.join('\n');
-    syncOwnersTable(form, { ...readForm(form), owners: owners.map((name, idx) => ({ id: idx + 1, name })) });
+    regenerateOwnersGrid(form, t);
   });
 }
 
@@ -72,15 +67,7 @@ function hydrateForm(form, s) {
   }
   form.scoringPreset.value = s.scoringPreset;
   if (form.keeperMode) form.keeperMode.checked = !!s.keeperMode;
-  if (form.owners) {
-    const owners = (s.owners || []).map(o => o.name || '');
-    if (!owners.length) {
-      const t = Number(form.teams.value || 12);
-      form.owners.value = generateOwnerNames(t).map(o => o.name).join('\n');
-    } else {
-      form.owners.value = owners.join('\n');
-    }
-  }
+  // Owners grid will be synced below
 }
 
 function readForm(form) {
@@ -119,60 +106,63 @@ function renderSummary(el, s) {
   el.textContent = JSON.stringify(s, null, 2);
 }
 
-function syncOwnersTable(form, settings) {
-  const table = document.getElementById('ownersTable');
-  if (!table) return;
-  table.innerHTML = '';
-  const owners = settings.owners && settings.owners.length
-    ? settings.owners
-    : generateOwnerNames(Number(form.teams.value || 12));
+function syncOwnersGrid(form, settings) {
+  const grid = document.getElementById('ownersGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+  const owners = coerceOwners(settings, Number(form.teams.value || 12));
   owners.forEach((o, idx) => {
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="p-2 border-t text-slate-500">${idx + 1}</td>
-      <td class="p-2 border-t"><input type="text" value="${o.name}" class="border p-1 w-full" data-idx="${idx}" /></td>
-      <td class="p-2 border-t">
-        <button type="button" data-up="${idx}" class="px-2 py-1 border rounded mr-1">↑</button>
-        <button type="button" data-down="${idx}" class="px-2 py-1 border rounded">↓</button>
-      </td>`;
-    table.appendChild(tr);
+      <td class="p-2 border-t"><input type="text" value="${o.team || `Team ${idx+1}`}" class="border p-1 w-full" data-field="team" data-idx="${idx}" /></td>
+      <td class="p-2 border-t"><input type="text" value="${o.name || `Owner ${idx+1}`}" class="border p-1 w-full" data-field="name" data-idx="${idx}" /></td>
+      <td class="p-2 border-t"><input type="number" min="1" class="border p-1 w-20" value="${idx + 1}" data-field="order" data-idx="${idx}" /></td>`;
+    grid.appendChild(tr);
   });
 
-  // Input edits
-  table.querySelectorAll('input[type="text"]').forEach(inp => {
-    inp.addEventListener('input', () => {
-      const idx = Number(inp.dataset.idx);
-      const lines = Array.from(table.querySelectorAll('input[type="text"]').values()).map(i => i.value.trim());
-      form.owners.value = lines.join('\n');
-    });
-  });
-
-  // Reorder
-  table.querySelectorAll('button[data-up]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const i = Number(btn.dataset.up);
-      if (i <= 0) return;
-      reorderOwnerRows(table, i, i - 1, form);
-    });
-  });
-  table.querySelectorAll('button[data-down]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const i = Number(btn.dataset.down);
-      reorderOwnerRows(table, i, i + 1, form);
-    });
-  });
+  grid.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+    const rows = readOwnersGrid(grid);
+    const sorted = rows.sort((a, b) => a.order - b.order);
+    // Update grid display and persist to form through saveSettings on submit
+    persistOwnersToStorage(form, sorted);
+  }));
 }
 
-function reorderOwnerRows(table, from, to, form) {
-  const inputs = Array.from(table.querySelectorAll('input[type="text"]').values());
-  if (to < 0 || to >= inputs.length) return;
-  const names = inputs.map(i => i.value.trim());
-  const [moved] = names.splice(from, 1);
-  names.splice(to, 0, moved);
-  form.owners.value = names.join('\n');
-  // Re-render
-  const owners = names.map((name, idx) => ({ id: idx + 1, name }));
-  syncOwnersTable(form, { ...readForm(form), owners });
+function readOwnersGrid(grid) {
+  const rows = [];
+  const idxs = new Set(Array.from(grid.querySelectorAll('input[data-idx]')).map(i => i.dataset.idx));
+  idxs.forEach(i => {
+    const team = grid.querySelector(`input[data-idx="${i}"][data-field="team"]`)?.value?.trim() || `Team ${Number(i)+1}`;
+    const name = grid.querySelector(`input[data-idx="${i}"][data-field="name"]`)?.value?.trim() || `Owner ${Number(i)+1}`;
+    const order = Number(grid.querySelector(`input[data-idx="${i}"][data-field="order"]`)?.value || (Number(i)+1));
+    rows.push({ id: Number(i)+1, team, name, order });
+  });
+  return rows;
 }
+
+function coerceOwners(settings, teams) {
+  let owners = Array.isArray(settings.owners) ? settings.owners.slice() : [];
+  while (owners.length < teams) owners.push({ id: owners.length + 1, team: `Team ${owners.length + 1}`, name: `Owner ${owners.length + 1}`, order: owners.length + 1 });
+  while (owners.length > teams) owners.pop();
+  owners.forEach((o, idx) => { if (o.order == null) o.order = idx + 1; if (!o.team) o.team = `Team ${idx+1}`; });
+  return owners;
+}
+
+export function regenerateOwnersGrid(form, teams) {
+  const settings = { ...readForm(form) };
+  settings.owners = coerceOwners(settings, teams);
+  syncOwnersGrid(form, settings);
+}
+
+function persistOwnersToStorage(form, owners) {
+  const s = readForm(form);
+  s.owners = owners.map((o, idx) => ({ id: idx + 1, team: o.team, name: o.name, order: o.order }));
+  saveSettings(s);
+  const summary = document.getElementById('summary');
+  renderSummary(summary, s);
+}
+
+// Export for UI to call
+export { regenerateOwnersGrid };
 
 
