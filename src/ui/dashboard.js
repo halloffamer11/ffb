@@ -65,7 +65,7 @@ export function initDashboard(root) {
       el.dataset.id = w.id;
       el.innerHTML = `
         <div class="w-full h-full flex flex-col relative">
-          <div class="flex items-center gap-2 px-2 py-1 border-b bg-slate-50 ${state.edit ? 'cursor-grab' : ''}">
+          <div class="widget-header flex items-center gap-2 px-2 py-1 border-b bg-slate-50 ${state.edit ? 'cursor-grab' : ''}">
             <span class="text-sm font-medium mr-auto select-none">${def.name}</span>
             ${state.edit ? `
               <div class=\"flex items-center gap-1 text-xs select-none\">
@@ -90,8 +90,12 @@ export function initDashboard(root) {
 
       // Events
       if (state.edit) {
-        const header = el.querySelector('div');
-        header.addEventListener('pointerdown', (e) => startDrag(e, w.id));
+        const header = el.querySelector('.widget-header');
+        header.addEventListener('pointerdown', (e) => {
+          // Ignore drags starting from controls or resize edges
+          if (e.target.closest('button') || e.target.closest('.edge-right') || e.target.closest('.edge-bottom')) return;
+          startDrag(e, w.id);
+        });
         el.querySelector('.btn-del')?.addEventListener('click', (e) => { e.stopPropagation(); delWidget(w.id); });
         el.querySelector('.btn-w-dec')?.addEventListener('click', (e) => { e.stopPropagation(); adjustSizeButtons(w.id, -1, 0); });
         el.querySelector('.btn-w-inc')?.addEventListener('click', (e) => { e.stopPropagation(); adjustSizeButtons(w.id, +1, 0); });
@@ -208,16 +212,16 @@ export function initDashboard(root) {
   function adjustSizeButtons(id, dW, dH) {
     const w = state.dash.widgets.find(x => x.id === id); if (!w) return;
     const def = WidgetRegistry[w.type];
-    const newW = clamp(def.minW, def.maxW, w.w + dW);
-    const newH = clamp(def.minH, def.maxH, w.h + dH);
-    w.w = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), newW);
-    w.h = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), newH);
+    const newW = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), w.w + dW);
+    const newH = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), w.h + dH);
+    w.w = newW;
+    w.h = newH;
     if (collidesAny(state.dash.widgets, w.id)) { // revert on overlap
-      w.w = clamp(def.minW, def.maxW, w.w - dW);
-      w.h = clamp(def.minH, def.maxH, w.h - dH);
+      w.w = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), w.w - dW);
+      w.h = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), w.h - dH);
     }
+    render(); // reflect immediately
     saveDashboard(state.dash);
-    render();
   }
 
   function pointerCell(e, container) {
