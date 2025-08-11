@@ -33,4 +33,4 @@
 
 # USDAD
 - see [[USDAD Methodology]]
-- Ask first when unsure. If requirements or edge cases\.
+- Ask first when unsure. If requirements or edge cases.
