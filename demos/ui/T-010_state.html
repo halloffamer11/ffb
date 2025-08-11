@@ -25,7 +25,7 @@
           </div>
           <div class="flex gap-2 flex-wrap items-center">
             <button id="btnAddPick" class="px-2 py-1 border rounded">Add Pick (id=1, $25)</button>
-            <button id="btnEditPick" class="px-2 py-1 border rounded">Edit Pick #0 → $30</button>
+            <button id="btnEditPick" class="px-2 py-1 border rounded">Edit Pick #1 → $30</button>
             <button id="btnAddMany" class="px-2 py-1 border rounded">Add 12 Picks (Perf)</button>
           </div>
           <div class="flex gap-2 flex-wrap items-center">
@@ -108,7 +108,7 @@
         picksEl.innerHTML = '';
         rows.forEach((r, idx) => {
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td class="p-2 border-t">${idx}</td><td class="p-2 border-t">${r.playerId}</td><td class="p-2 border-t">${r.teamId}</td><td class="p-2 border-t">${r.price}</td>`;
+          tr.innerHTML = `<td class="p-2 border-t">${idx + 1}</td><td class="p-2 border-t">${r.playerId}</td><td class="p-2 border-t">${r.teamId}</td><td class="p-2 border-t">${r.price}</td>`;
           picksEl.appendChild(tr);
         });
       }

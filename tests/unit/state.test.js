@@ -50,7 +50,7 @@ function createStubStorage() {
   const store = new DraftStore({ storageAdapter: st });
   store.dispatch({ type: 'DRAFT_PICK_ADD', payload: { playerId: 1, teamId: 3, price: 25 } });
   const before = store.getState().draft.picks.length;
-  store.dispatch({ type: 'DRAFT_PICK_EDIT', payload: { index: 0, update: { price: 30 } } });
+  store.dispatch({ type: 'DRAFT_PICK_EDIT', payload: { index: 1, update: { price: 30 } } });
   const after = store.getState().draft.picks[0].price;
   assertOkay('pick added then edited', before === 1 && after === 30);
 }

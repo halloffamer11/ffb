@@ -105,8 +105,10 @@ export class DraftStore {
       }
       case 'DRAFT_PICK_EDIT': {
         const { index, update } = payload || {};
-        if (Number.isInteger(index) && index >= 0 && index < this.state.draft.picks.length) {
-          this.state.draft.picks[index] = { ...this.state.draft.picks[index], ...update };
+        // Accept 1-based index from UI; convert to 0-based internally
+        const zeroIdx = Number.isInteger(index) ? (index - 1) : NaN;
+        if (Number.isInteger(zeroIdx) && zeroIdx >= 0 && zeroIdx < this.state.draft.picks.length) {
+          this.state.draft.picks[zeroIdx] = { ...this.state.draft.picks[zeroIdx], ...update };
         }
         break;
       }
