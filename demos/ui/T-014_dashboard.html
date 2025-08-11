@@ -12,6 +12,14 @@
       .panel .panel-header { user-select: none; }
       .panel.active .panel-header { background-color: #ecfdf5; /* emerald-50 */ border-color: #a7f3d0; }
       .panel.collapsed .panel-header { background-color: #f1f5f9; /* slate-100 */ color: #64748b; }
+      /* Grid sizing */
+      #dashGrid { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: 6rem; }
+      /* Resizer */
+      .resizer { position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; cursor: nwse-resize; background: rgba(100,116,139,0.25); border-radius: 2px; }
+      .panel { position: relative; }
+      /* Fullscreen */
+      .panel.fullscreen { position: fixed !important; inset: 0 !important; z-index: 50 !important; width: 100vw !important; height: 100vh !important; border-radius: 0 !important; }
+      .panel.fullscreen .panel-body { height: calc(100vh - 3rem); overflow: auto; }
     </style>
   </head>
   <body class="bg-slate-50 text-slate-900 min-h-screen">
@@ -43,67 +51,67 @@
       <section id="view-dashboard" class="view">
         <div id="dashGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 grid-flow-row-dense gap-4">
           <!-- Panel: Search & Select (fixed full width) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem] md:col-span-2 xl:col-span-3" data-panel="search" draggable="true" data-size="l" data-collapsed="false">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem]" data-panel="search" draggable="true" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="12" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Search & Select</span>
-              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
-              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <iframe src="./T-009c_search.html?hud=0" class="w-full h-[28rem] md:h-[30rem] border rounded"></iframe>
             </div>
+            <div class="resizer" title="Drag to resize"></div>
           </div>
 
           <!-- Panel: Player Analysis (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="6" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Player Analysis</span>
-              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
-              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Analysis details will appear here after selection.</p>
             </div>
+            <div class="resizer" title="Drag to resize"></div>
           </div>
 
           <!-- Panel: Position Tiers (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false" data-col="7" data-row="7" data-w="6" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Position Tiers</span>
-              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
-              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Tier visualization placeholder.</p>
             </div>
+            <div class="resizer" title="Drag to resize"></div>
           </div>
 
           <!-- Panel: My Roster (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="6" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">My Roster</span>
-              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
-              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Roster composition summary.</p>
             </div>
+            <div class="resizer" title="Drag to resize"></div>
           </div>
 
           <!-- Panel: Budget Tracker (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false" data-col="7" data-row="10" data-w="6" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Budget Tracker</span>
-              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
-              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Remaining budget and max bid.</p>
             </div>
+            <div class="resizer" title="Drag to resize"></div>
           </div>
         </div>
       </section>
@@ -156,19 +164,17 @@
 
       // ===== MVP panel controls: collapse, resize, drag/snap (simple) =====
       const grid = document.getElementById('dashGrid');
-      const LS_KEY = 'dashboardLayoutV1';
+      const LS_KEY = 'dashboardLayoutV2';
+      const COLS = 12;
+      const ROW_H = 96; // px (6rem)
 
-      function applySize(panel, size) {
-        panel.dataset.size = size;
-        panel.classList.remove('md:col-span-1','md:col-span-2','xl:col-span-1','xl:col-span-2','xl:col-span-3','min-h-[16rem]','min-h-[20rem]','min-h-[24rem]');
-        // sizes: s=1col, m=2col, l=full
-        if (size === 's') {
-          panel.classList.add('md:col-span-1','xl:col-span-1','min-h-[16rem]');
-        } else if (size === 'm') {
-          panel.classList.add('md:col-span-2','xl:col-span-2','min-h-[20rem]');
-        } else {
-          panel.classList.add('md:col-span-2','xl:col-span-3','min-h-[24rem]');
-        }
+      function applyGridPosition(panel) {
+        const col = clamp(1, COLS, Number(panel.dataset.col || 1));
+        const row = Math.max(1, Number(panel.dataset.row || 1));
+        const w = clamp(1, COLS - col + 1, Number(panel.dataset.w || 1));
+        const h = Math.max(1, Number(panel.dataset.h || 1));
+        panel.style.gridColumn = `${col} / span ${w}`;
+        panel.style.gridRow = `${row} / span ${h}`;
       }
 
       function applyCollapsed(panel, collapsed) {
@@ -178,32 +184,23 @@
       }
 
       function saveLayout() {
-        const order = Array.from(grid.querySelectorAll('.panel')).map(p => p.dataset.panel);
-        const sizes = {}; const collapsed = {};
-        order.forEach(id => {
-          const p = grid.querySelector(`.panel[data-panel="${id}"]`);
-          sizes[id] = p?.dataset.size || 's';
-          collapsed[id] = p?.dataset.collapsed === 'true';
-        });
-        localStorage.setItem(LS_KEY, JSON.stringify({ order, sizes, collapsed }));
+        const panels = Array.from(grid.querySelectorAll('.panel'));
+        const state = panels.map(p => ({ id: p.dataset.panel, col: Number(p.dataset.col), row: Number(p.dataset.row), w: Number(p.dataset.w), h: Number(p.dataset.h), collapsed: p.dataset.collapsed === 'true' }));
+        localStorage.setItem(LS_KEY, JSON.stringify(state));
       }
 
       function loadLayout() {
         try {
           const raw = localStorage.getItem(LS_KEY);
           if (!raw) return;
-          const { order, sizes, collapsed } = JSON.parse(raw);
-          if (Array.isArray(order)) {
-            order.forEach(id => {
-              const p = grid.querySelector(`.panel[data-panel="${id}"]`);
-              if (p) grid.appendChild(p);
-            });
-          }
-          const panels = Array.from(grid.querySelectorAll('.panel'));
-          panels.forEach(p => {
-            const id = p.dataset.panel;
-            if (sizes && sizes[id]) applySize(p, sizes[id]);
-            if (collapsed) applyCollapsed(p, !!collapsed[id]);
+          const state = JSON.parse(raw);
+          if (!Array.isArray(state)) return;
+          state.forEach(s => {
+            const p = grid.querySelector(`.panel[data-panel="${s.id}"]`);
+            if (!p) return;
+            p.dataset.col = s.col; p.dataset.row = s.row; p.dataset.w = s.w; p.dataset.h = s.h;
+            applyGridPosition(p);
+            applyCollapsed(p, !!s.collapsed);
           });
         } catch {}
       }
@@ -219,38 +216,143 @@
           e.preventDefault();
           const id = e.dataTransfer.getData('text/panel');
           const src = grid.querySelector(`.panel[data-panel="${id}"]`);
-          if (src && src !== panel) {
-            const rect = panel.getBoundingClientRect();
-            const after = (e.clientX - rect.left) > rect.width / 2;
-            if (after) {
-              grid.insertBefore(src, panel.nextSibling);
-            } else {
-              grid.insertBefore(src, panel);
-            }
-            saveLayout();
-          }
+          if (!src) return;
+          const targetCell = pointToCell(e.clientX, e.clientY);
+          movePanelToCellOrSwap(src, targetCell.col, targetCell.row);
+          saveLayout();
         });
-        const btnDown = panel.querySelector('.btn-size-down');
-        const btnUp = panel.querySelector('.btn-size-up');
         const header = panel.querySelector('.panel-header');
-        if (btnDown) btnDown.addEventListener('click', () => {
-          const order = ['s','m','l'];
-          const idx = Math.max(0, order.indexOf(panel.dataset.size || 's') - 1);
-          applySize(panel, order[idx]); saveLayout();
-        });
-        if (btnUp) btnUp.addEventListener('click', () => {
-          const order = ['s','m','l'];
-          const idx = Math.min(order.length - 1, order.indexOf(panel.dataset.size || 's') + 1);
-          applySize(panel, order[idx]); saveLayout();
-        });
         if (header) header.addEventListener('click', () => {
           const collapsed = panel.dataset.collapsed === 'true' ? false : true;
           applyCollapsed(panel, collapsed); saveLayout();
         });
+        const expandBtn = panel.querySelector('.btn-expand');
+        if (expandBtn) expandBtn.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          const isFull = panel.classList.contains('fullscreen');
+          if (isFull) {
+            panel.classList.remove('fullscreen');
+            expandBtn.textContent = 'Expand';
+            // restore grid position
+            applyGridPosition(panel);
+          } else {
+            panel.classList.add('fullscreen');
+            expandBtn.textContent = 'Close';
+            panel.style.gridColumn = '';
+            panel.style.gridRow = '';
+          }
+        });
+
+        // Resizer
+        const resizer = panel.querySelector('.resizer');
+        if (resizer) resizer.addEventListener('mousedown', (e) => startResize(e, panel));
+        if (header) header.addEventListener('mousedown', (e) => startDrag(e, panel));
       }
 
+      function startDrag(e, panel) {
+        if (panel.classList.contains('fullscreen')) return;
+        const start = getPanelState(panel);
+        const origin = grid.getBoundingClientRect();
+        const offsetCols = Math.round(((e.clientX - origin.left) / (origin.width / COLS))) - start.col;
+        const offsetRows = Math.round(((e.clientY - origin.top) / ROW_H)) - start.row;
+        function onMove(ev) {
+          const cell = pointToCell(ev.clientX, ev.clientY);
+          const col = clamp(1, COLS - start.w + 1, cell.col - offsetCols);
+          const row = Math.max(1, cell.row - offsetRows);
+          panel.dataset.col = col; panel.dataset.row = row;
+          applyGridPosition(panel);
+        }
+        function onUp(ev) {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          // finalize and handle swap if needed
+          const p = getPanelState(panel);
+          if (checkOverlap(panel)) {
+            // try swap with first overlapping of same size
+            const other = findOverlapSameSize(panel);
+            if (other) swapPanels(panel, other); else { restorePanel(panel, start); }
+          }
+          saveLayout();
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      }
+
+      function startResize(e, panel) {
+        if (panel.classList.contains('fullscreen')) return;
+        e.stopPropagation();
+        const start = getPanelState(panel);
+        const origin = grid.getBoundingClientRect();
+        function onMove(ev) {
+          const x = ev.clientX - origin.left; const y = ev.clientY - origin.top;
+          const rightCol = clamp(start.col, COLS, Math.ceil(x / (origin.width / COLS)));
+          const bottomRow = Math.max(start.row, Math.ceil(y / ROW_H));
+          const w = clamp(1, COLS - start.col + 1, rightCol - start.col + 1);
+          const h = Math.max(1, bottomRow - start.row + 1);
+          panel.dataset.w = w; panel.dataset.h = h;
+          applyGridPosition(panel);
+        }
+        function onUp() {
+          document.removeEventListener('mousemove', onMove);
+          document.removeEventListener('mouseup', onUp);
+          if (checkOverlap(panel)) {
+            // revert if resize overlaps
+            panel.dataset.w = start.w; panel.dataset.h = start.h; applyGridPosition(panel);
+          }
+          saveLayout();
+        }
+        document.addEventListener('mousemove', onMove);
+        document.addEventListener('mouseup', onUp);
+      }
+
+      function getPanelState(panel) {
+        return { id: panel.dataset.panel, col: Number(panel.dataset.col), row: Number(panel.dataset.row), w: Number(panel.dataset.w), h: Number(panel.dataset.h) };
+      }
+      function rectOf(panel) {
+        const p = getPanelState(panel);
+        return { left: p.col, right: p.col + p.w - 1, top: p.row, bottom: p.row + p.h - 1 };
+      }
+      function overlaps(a, b) {
+        return !(a.left > b.right || a.right < b.left || a.top > b.bottom || a.bottom < b.top);
+      }
+      function checkOverlap(panel) {
+        const ra = rectOf(panel);
+        const others = Array.from(grid.querySelectorAll('.panel')).filter(x => x !== panel);
+        return others.some(o => overlaps(ra, rectOf(o)));
+      }
+      function findOverlapSameSize(panel) {
+        const ra = rectOf(panel); const pa = getPanelState(panel);
+        const others = Array.from(grid.querySelectorAll('.panel')).filter(x => x !== panel);
+        return others.find(o => { const rb = rectOf(o); const pb = getPanelState(o); return overlaps(ra, rb) && pb.w === pa.w && pb.h === pa.h; });
+      }
+      function swapPanels(a, b) {
+        const pa = getPanelState(a); const pb = getPanelState(b);
+        a.dataset.col = pb.col; a.dataset.row = pb.row;
+        b.dataset.col = pa.col; b.dataset.row = pa.row;
+        applyGridPosition(a); applyGridPosition(b);
+      }
+      function restorePanel(panel, s) { panel.dataset.col = s.col; panel.dataset.row = s.row; panel.dataset.w = s.w; panel.dataset.h = s.h; applyGridPosition(panel); }
+
+      function movePanelToCellOrSwap(panel, col, row) {
+        const s = getPanelState(panel);
+        col = clamp(1, COLS - s.w + 1, col); row = Math.max(1, row);
+        panel.dataset.col = col; panel.dataset.row = row; applyGridPosition(panel);
+        if (checkOverlap(panel)) {
+          const other = findOverlapSameSize(panel);
+          if (other) swapPanels(panel, other); else restorePanel(panel, s);
+        }
+      }
+
+      function pointToCell(clientX, clientY) {
+        const origin = grid.getBoundingClientRect();
+        const col = clamp(1, COLS, Math.ceil((clientX - origin.left) / (origin.width / COLS)));
+        const row = Math.max(1, Math.ceil((clientY - origin.top) / ROW_H));
+        return { col, row };
+      }
+      function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
+
       // Initialize panel behaviors
-      Array.from(grid.querySelectorAll('.panel')).forEach(p => wirePanelControls(p));
+      Array.from(grid.querySelectorAll('.panel')).forEach(p => { applyGridPosition(p); wirePanelControls(p); });
       loadLayout();
     </script>
   </body>
