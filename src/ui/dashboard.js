@@ -8,10 +8,10 @@ const GRID_COLS = 8;
 const SAVE_DEBOUNCE_MS = 500;
 
 export const WidgetRegistry = {
-  search: { name: 'Search & Select', minW: 2, minH: 2, maxW: 8, maxH: 4, defaultW: 8, defaultH: 2 },
-  tiers: { name: 'Position Tiers', minW: 2, minH: 2, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
-  roster: { name: 'My Roster', minW: 2, minH: 2, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
-  budget: { name: 'Budget Tracker', minW: 2, minH: 2, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 }
+  search: { name: 'Search & Select', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 8, defaultH: 2 },
+  tiers: { name: 'Position Tiers', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
+  roster: { name: 'My Roster', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
+  budget: { name: 'Budget Tracker', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 }
 };
 
 const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
@@ -32,9 +32,13 @@ function loadDashboard() {
 }
 
 let saveTimer = null;
-function saveDashboard(dash) {
+  function saveDashboard(dash) {
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => { store.set('dashboard', dash); }, SAVE_DEBOUNCE_MS);
+    saveTimer = setTimeout(() => {
+      // Skip autosave while drag is active to avoid iframe reloads/refresh loops
+      if (document.body.classList.contains('dash-drag-active')) return;
+      store.set('dashboard', dash);
+    }, SAVE_DEBOUNCE_MS);
 }
 
 export function initDashboard(root) {
@@ -147,6 +151,8 @@ export function initDashboard(root) {
 
   function startDrag(e, id) {
     e.preventDefault();
+    // Suspend dashboard saves during drag to avoid iframe refresh or layout rebinds
+    document.body.classList.add('dash-drag-active');
     const start = pointerCell(e, grid);
     const w = state.dash.widgets.find(x => x.id === id);
     if (!w) return;
@@ -175,6 +181,8 @@ export function initDashboard(root) {
   function endDrag() {
     state.dragging = null;
     window.removeEventListener('pointermove', onDrag);
+    // resume saves now
+    document.body.classList.remove('dash-drag-active');
     saveDashboard(state.dash);
     render();
   }
@@ -197,7 +205,15 @@ export function initDashboard(root) {
       w.w = newW;
     }
     if (r.edge === 'bottom') {
-      const newH = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), cell.row - w.row + 1);
+      let newH = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), cell.row - w.row + 1);
+      // If increasing height causes collision, try decreasing stepwise to nearest fit
+      if (newH > prev.h) {
+        while (newH > prev.h) {
+          w.h = newH;
+          if (!collidesAny(state.dash.widgets, w.id)) break;
+          newH -= 1;
+        }
+      }
       w.h = newH;
     }
     if (collidesAny(state.dash.widgets, w.id)) { w.w = prev.w; w.h = prev.h; }
@@ -212,14 +228,20 @@ export function initDashboard(root) {
   function adjustSizeButtons(id, dW, dH) {
     const w = state.dash.widgets.find(x => x.id === id); if (!w) return;
     const def = WidgetRegistry[w.type];
-    const newW = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), w.w + dW);
-    const newH = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), w.h + dH);
-    w.w = newW;
-    w.h = newH;
-    if (collidesAny(state.dash.widgets, w.id)) { // revert on overlap
-      w.w = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), w.w - dW);
-      w.h = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), w.h - dH);
+    const prev = { w: w.w, h: w.h };
+    let newW = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), w.w + dW);
+    let newH = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), w.h + dH);
+    // For vertical increase, try step-down fit to avoid instant revert
+    if (newH > prev.h) {
+      let testH = newH;
+      while (testH > prev.h) {
+        w.h = testH; w.w = prev.w;
+        if (!collidesAny(state.dash.widgets, w.id)) { newH = testH; break; }
+        testH -= 1;
+      }
     }
+    w.w = newW; w.h = newH;
+    if (collidesAny(state.dash.widgets, w.id)) { w.w = prev.w; w.h = prev.h; }
     render(); // reflect immediately
     saveDashboard(state.dash);
   }
