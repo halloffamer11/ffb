@@ -3,17 +3,15 @@
 
 import { createStorageAdapter } from '../adapters/storage.js';
 
-// Canvas grid: 4 columns × 8 rows (fixed)
-const GRID_COLS = 4;
-const GRID_ROWS = 8;
+const GRID_ROWS = 4;
+const GRID_COLS = 8;
 const SAVE_DEBOUNCE_MS = 500;
 
 export const WidgetRegistry = {
-  // Constraints respect 4×8 grid: width ≤ 4, height ≤ 8
-  search: { name: 'Search & Select', minW: 1, minH: 1, maxW: 4, maxH: 8, defaultW: 4, defaultH: 2 },
-  tiers:  { name: 'Position Tiers',  minW: 1, minH: 1, maxW: 4, maxH: 8, defaultW: 2, defaultH: 2 },
-  roster: { name: 'My Roster',        minW: 1, minH: 1, maxW: 4, maxH: 8, defaultW: 2, defaultH: 2 },
-  budget: { name: 'Budget Tracker',   minW: 1, minH: 1, maxW: 4, maxH: 8, defaultW: 2, defaultH: 2 }
+  search: { name: 'Search & Select', minW: 2, minH: 2, maxW: 8, maxH: 4, defaultW: 8, defaultH: 2 },
+  tiers: { name: 'Position Tiers', minW: 2, minH: 2, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
+  roster: { name: 'My Roster', minW: 2, minH: 2, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
+  budget: { name: 'Budget Tracker', minW: 2, minH: 2, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 }
 };
 
 const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
@@ -25,9 +23,9 @@ function loadDashboard() {
   return {
     activeLayout: 'default',
     widgets: [
-      { id: 'w_search', type: 'search', row: 1, col: 1, w: 4, h: 2, config: {} },
-      { id: 'w_tiers',  type: 'tiers',  row: 3, col: 1, w: 2, h: 2, config: {} },
-      { id: 'w_roster', type: 'roster', row: 3, col: 3, w: 2, h: 2, config: {} }
+      { id: 'w_search', type: 'search', row: 1, col: 1, w: 8, h: 2, config: {} },
+      { id: 'w_tiers', type: 'tiers', row: 3, col: 1, w: 4, h: 2, config: {} },
+      { id: 'w_roster', type: 'roster', row: 3, col: 5, w: 4, h: 2, config: {} }
     ],
     layouts: { presets: {}, custom: {} }
   };
@@ -81,7 +79,9 @@ export function initDashboard(root) {
               <button class=\"btn-del text-xs px-2 py-1 border rounded\">Delete</button>
             ` : '<button class=\"btn-expand text-xs px-2 py-1 border rounded\">Expand</button>'}
           </div>
-          <div class="grow p-3 text-xs text-slate-600">${def.name} placeholder.</div>
+          <div class="grow p-0 text-xs text-slate-600 overflow-hidden">
+            ${renderWidgetContents(w.type)}
+          </div>
           ${state.edit ? `
             <div class=\"edge-right absolute right-[-6px] top-1/2 -translate-y-1/2 w-2 h-10 bg-slate-500/70 rounded cursor-ew-resize\" title=\"Resize horizontal\"></div>
             <div class=\"edge-bottom absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-10 h-2 bg-slate-500/70 rounded cursor-ns-resize\" title=\"Resize vertical\"></div>
@@ -110,8 +110,14 @@ export function initDashboard(root) {
     const overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 bg-black/30 z-[2000] flex items-center justify-center';
     const card = document.createElement('div');
-    card.className = 'bg-white w-[95vw] h-[95vh] rounded shadow-xl p-4 relative';
-    card.innerHTML = '<button class="absolute top-2 right-2 px-3 py-1 border rounded">Close</button><div class="text-slate-600">Expanded view</div>';
+    card.className = 'bg-white w-[95vw] h-[95vh] rounded shadow-xl p-2 relative overflow-hidden';
+    const w = state.dash.widgets.find(x => x.id === id);
+    const def = WidgetRegistry[w?.type] || { name: 'Widget' };
+    card.innerHTML = `<button class=\"absolute top-2 right-2 px-3 py-1 border rounded\">Close</button>
+      <div class=\"w-full h-full pt-8\">
+        <div class=\"absolute top-2 left-3 text-sm font-medium text-slate-700\">${def.name}</div>
+        <div class=\"w-full h-full overflow-hidden\">${renderWidgetContents(w?.type, true)}</div>
+      </div>`;
     card.querySelector('button').addEventListener('click', () => overlay.remove());
     overlay.appendChild(card);
     document.body.appendChild(overlay);
@@ -202,11 +208,14 @@ export function initDashboard(root) {
   function adjustSizeButtons(id, dW, dH) {
     const w = state.dash.widgets.find(x => x.id === id); if (!w) return;
     const def = WidgetRegistry[w.type];
-    const prev = { w: w.w, h: w.h };
-    const candidateW = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), w.w + dW);
-    const candidateH = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), w.h + dH);
-    w.w = candidateW; w.h = candidateH;
-    if (collidesAny(state.dash.widgets, w.id)) { w.w = prev.w; w.h = prev.h; }
+    const newW = clamp(def.minW, def.maxW, w.w + dW);
+    const newH = clamp(def.minH, def.maxH, w.h + dH);
+    w.w = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), newW);
+    w.h = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), newH);
+    if (collidesAny(state.dash.widgets, w.id)) { // revert on overlap
+      w.w = clamp(def.minW, def.maxW, w.w - dW);
+      w.h = clamp(def.minH, def.maxH, w.h - dH);
+    }
     saveDashboard(state.dash);
     render();
   }
@@ -260,5 +269,23 @@ export function initDashboard(root) {
 }
 
 function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
+
+// Map widget type to embedded content
+function renderWidgetContents(type, expanded = false) {
+  if (type === 'search') {
+    const url = '/demos/ui/T-009c_search.html?hud=0';
+    return `<iframe src="${url}" class="w-full h-full border-0" loading="lazy"></iframe>`;
+  }
+  if (type === 'tiers') {
+    return `<div class="w-full h-full p-3 overflow-auto text-slate-700">Tiers widget (coming soon)</div>`;
+  }
+  if (type === 'roster') {
+    return `<div class="w-full h-full p-3 text-slate-700">My Roster widget (coming soon)</div>`;
+  }
+  if (type === 'budget') {
+    return `<div class="w-full h-full p-3 text-slate-700">Budget Tracker widget (coming soon)</div>`;
+  }
+  return `<div class="w-full h-full p-3">${type || ''}</div>`;
+}
 
 
