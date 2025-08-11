@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>T-014 Dashboard Layout</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      /* Collapsed panel styling */
+      .panel.collapsed { min-height: 2.5rem !important; }
+      .panel.collapsed .panel-body { display: none; }
+      .panel .panel-header { user-select: none; }
+      .panel.active .panel-header { background-color: #ecfdf5; /* emerald-50 */ border-color: #a7f3d0; }
+      .panel.collapsed .panel-header { background-color: #f1f5f9; /* slate-100 */ color: #64748b; }
+    </style>
   </head>
   <body class="bg-slate-50 text-slate-900 min-h-screen">
     <header class="bg-white border-b">
@@ -33,14 +41,13 @@
 
       <!-- Tabs -->
       <section id="view-dashboard" class="view">
-        <div id="dashGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div id="dashGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 grid-flow-row-dense gap-4">
           <!-- Panel: Search & Select (fixed full width) -->
-          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[24rem] md:col-span-2 xl:col-span-3" data-panel="search" draggable="true" data-size="l" data-collapsed="false">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem] md:col-span-2 xl:col-span-3" data-panel="search" draggable="true" data-size="l" data-collapsed="false">
+            <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Search & Select</span>
               <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
               <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
-              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
             </div>
             <div class="panel-body p-3 grow">
               <iframe src="./T-009c_search.html?hud=0" class="w-full h-[28rem] md:h-[30rem] border rounded"></iframe>
@@ -48,12 +55,11 @@
           </div>
 
           <!-- Panel: Player Analysis (placeholder) -->
-          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false">
+            <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Player Analysis</span>
               <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
               <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
-              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
@@ -62,12 +68,11 @@
           </div>
 
           <!-- Panel: Position Tiers (placeholder) -->
-          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false">
+            <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Position Tiers</span>
               <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
               <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
-              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
@@ -76,12 +81,11 @@
           </div>
 
           <!-- Panel: My Roster (placeholder) -->
-          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false">
+            <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">My Roster</span>
               <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
               <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
-              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
@@ -90,12 +94,11 @@
           </div>
 
           <!-- Panel: Budget Tracker (placeholder) -->
-          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false">
+            <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Budget Tracker</span>
               <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
               <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
-              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
@@ -170,8 +173,8 @@
 
       function applyCollapsed(panel, collapsed) {
         panel.dataset.collapsed = String(collapsed);
-        const body = panel.querySelector('.panel-body');
-        if (body) body.classList.toggle('hidden', collapsed);
+        panel.classList.toggle('collapsed', collapsed);
+        panel.classList.toggle('active', !collapsed);
       }
 
       function saveLayout() {
@@ -206,6 +209,7 @@
       }
 
       function wirePanelControls(panel) {
+        // Drag and drop with before/after placement
         panel.addEventListener('dragstart', e => {
           e.dataTransfer.setData('text/panel', panel.dataset.panel);
           e.dataTransfer.effectAllowed = 'move';
@@ -216,13 +220,19 @@
           const id = e.dataTransfer.getData('text/panel');
           const src = grid.querySelector(`.panel[data-panel="${id}"]`);
           if (src && src !== panel) {
-            grid.insertBefore(src, panel);
+            const rect = panel.getBoundingClientRect();
+            const after = (e.clientX - rect.left) > rect.width / 2;
+            if (after) {
+              grid.insertBefore(src, panel.nextSibling);
+            } else {
+              grid.insertBefore(src, panel);
+            }
             saveLayout();
           }
         });
         const btnDown = panel.querySelector('.btn-size-down');
         const btnUp = panel.querySelector('.btn-size-up');
-        const btnCol = panel.querySelector('.btn-collapse');
+        const header = panel.querySelector('.panel-header');
         if (btnDown) btnDown.addEventListener('click', () => {
           const order = ['s','m','l'];
           const idx = Math.max(0, order.indexOf(panel.dataset.size || 's') - 1);
@@ -233,7 +243,7 @@
           const idx = Math.min(order.length - 1, order.indexOf(panel.dataset.size || 's') + 1);
           applySize(panel, order[idx]); saveLayout();
         });
-        if (btnCol) btnCol.addEventListener('click', () => {
+        if (header) header.addEventListener('click', () => {
           const collapsed = panel.dataset.collapsed === 'true' ? false : true;
           applyCollapsed(panel, collapsed); saveLayout();
         });
