@@ -50,11 +50,15 @@
       <section id="view-dashboard" class="view">
         <div id="dashGrid" class="grid gap-4">
           <!-- Panel: Search & Select (fixed full width) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem]" data-panel="search" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="search" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Search & Select</span>
               <div class="flex items-center gap-1 text-xs">
-                <span class="text-slate-500">W</span>
+                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
+                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
+                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
+                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
+                <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
                 <span class="text-slate-500 ml-2">H</span>
@@ -70,11 +74,15 @@
           </div>
 
           <!-- Panel: Player Analysis (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="2" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="analysis" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="2" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Player Analysis</span>
               <div class="flex items-center gap-1 text-xs">
-                <span class="text-slate-500">W</span>
+                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
+                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
+                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
+                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
+                <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
                 <span class="text-slate-500 ml-2">H</span>
@@ -91,11 +99,15 @@
           </div>
 
           <!-- Panel: Position Tiers (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" data-size="m" data-collapsed="false" data-col="3" data-row="7" data-w="1" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="tiers" data-size="m" data-collapsed="false" data-col="3" data-row="7" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Position Tiers</span>
               <div class="flex items-center gap-1 text-xs">
-                <span class="text-slate-500">W</span>
+                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
+                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
+                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
+                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
+                <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
                 <span class="text-slate-500 ml-2">H</span>
@@ -112,11 +124,15 @@
           </div>
 
           <!-- Panel: My Roster (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="1" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="roster" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">My Roster</span>
               <div class="flex items-center gap-1 text-xs">
-                <span class="text-slate-500">W</span>
+                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
+                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
+                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
+                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
+                <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
                 <span class="text-slate-500 ml-2">H</span>
@@ -133,11 +149,15 @@
           </div>
 
           <!-- Panel: Budget Tracker (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" data-size="s" data-collapsed="false" data-col="2" data-row="10" data-w="1" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="budget" data-size="s" data-collapsed="false" data-col="2" data-row="10" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Budget Tracker</span>
               <div class="flex items-center gap-1 text-xs">
-                <span class="text-slate-500">W</span>
+                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
+                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
+                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
+                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
+                <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
                 <span class="text-slate-500 ml-2">H</span>
@@ -314,6 +334,15 @@
         });
 
         // Dragging disabled; no resizer hooks
+        // Move buttons
+        const btnL = panel.querySelector('.btn-left');
+        const btnR = panel.querySelector('.btn-right');
+        const btnU = panel.querySelector('.btn-up');
+        const btnD = panel.querySelector('.btn-down');
+        if (btnL) btnL.addEventListener('click', (ev) => { ev.stopPropagation(); movePanel(panel, -1, 0); });
+        if (btnR) btnR.addEventListener('click', (ev) => { ev.stopPropagation(); movePanel(panel, +1, 0); });
+        if (btnU) btnU.addEventListener('click', (ev) => { ev.stopPropagation(); movePanel(panel, 0, -1); });
+        if (btnD) btnD.addEventListener('click', (ev) => { ev.stopPropagation(); movePanel(panel, 0, +1); });
       }
 
       function startDrag(e, panel) {
@@ -394,14 +423,17 @@
       }
       function restorePanel(panel, s) { panel.dataset.col = s.col; panel.dataset.row = s.row; panel.dataset.w = s.w; panel.dataset.h = s.h; applyGridPosition(panel); }
 
-      function movePanelToCellOrSwap(panel, col, row) {
+      function movePanel(panel, dCol, dRow) {
         const s = getPanelState(panel);
-        col = clamp(1, COLS - s.w + 1, col); row = Math.max(1, row);
-        panel.dataset.col = col; panel.dataset.row = row; applyGridPosition(panel);
+        const newCol = clamp(1, COLS - s.w + 1, s.col + dCol);
+        const newRow = Math.max(1, s.row + dRow);
+        const prev = { ...s };
+        panel.dataset.col = newCol; panel.dataset.row = newRow; applyGridPosition(panel);
         if (checkOverlap(panel)) {
           const other = findOverlapSameSize(panel);
-          if (other) swapPanels(panel, other); else restorePanel(panel, s);
+          if (other) swapPanels(panel, other); else restorePanel(panel, prev);
         }
+        saveLayout();
       }
 
       function pointToCell(clientX, clientY) {
