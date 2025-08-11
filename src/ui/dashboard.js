@@ -51,25 +51,39 @@ export function initDashboard(root) {
   function render() {
     grid.classList.toggle('edit', state.edit);
     grid.innerHTML = '';
-    // draw subtle grid lines
-    grid.style.backgroundImage = `linear-gradient(rgba(148,163,184,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,0.15) 1px, transparent 1px)`;
+    // draw subtle grid lines (stronger in edit mode)
+    const lineOpacity = state.edit ? 0.35 : 0.12;
+    grid.style.backgroundImage = `linear-gradient(rgba(148,163,184,${lineOpacity}) 1px, transparent 1px), linear-gradient(90deg, rgba(148,163,184,${lineOpacity}) 1px, transparent 1px)`;
     grid.style.backgroundSize = `${100/GRID_COLS}% ${100/GRID_ROWS}%`;
 
     for (const w of state.dash.widgets) {
       const def = WidgetRegistry[w.type] || WidgetRegistry.search;
       const el = document.createElement('div');
-      el.className = `widget rounded border bg-white shadow-sm transition-all duration-300 ${state.edit ? 'ring-1 ring-emerald-200' : ''}`;
+      el.className = `widget rounded border bg-white transition-all duration-300 ${state.edit ? 'shadow-2xl shadow-black/30 ring-1 ring-slate-300' : 'shadow-sm'}`;
       el.style.gridColumn = `${w.col} / span ${w.w}`;
       el.style.gridRow = `${w.row} / span ${w.h}`;
       el.dataset.id = w.id;
       el.innerHTML = `
-        <div class="w-full h-full flex flex-col">
+        <div class="w-full h-full flex flex-col relative">
           <div class="flex items-center gap-2 px-2 py-1 border-b bg-slate-50 ${state.edit ? 'cursor-grab' : ''}">
-            <span class="text-sm font-medium mr-auto">${def.name}</span>
-            ${state.edit ? '<button class="btn-del text-xs px-2 py-1 border rounded">Delete</button>' : '<button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>'}
-            ${state.edit ? '<div class="resizers flex items-center gap-1"><div class="rz rz-right w-3 h-3 bg-slate-300 cursor-ew-resize"></div><div class="rz rz-bottom w-3 h-3 bg-slate-300 cursor-ns-resize"></div><div class="rz rz-corner w-3 h-3 bg-slate-500 cursor-nwse-resize"></div></div>' : ''}
+            <span class="text-sm font-medium mr-auto select-none">${def.name}</span>
+            ${state.edit ? `
+              <div class=\"flex items-center gap-1 text-xs select-none\">
+                <span class=\"text-slate-500\">W</span>
+                <button class=\"btn-w-dec px-2 py-1 border rounded\">−</button>
+                <button class=\"btn-w-inc px-2 py-1 border rounded\">+</button>
+                <span class=\"text-slate-500 ml-2\">H</span>
+                <button class=\"btn-h-dec px-2 py-1 border rounded\">−</button>
+                <button class=\"btn-h-inc px-2 py-1 border rounded\">+</button>
+              </div>
+              <button class=\"btn-del text-xs px-2 py-1 border rounded\">Delete</button>
+            ` : '<button class=\"btn-expand text-xs px-2 py-1 border rounded\">Expand</button>'}
           </div>
           <div class="grow p-3 text-xs text-slate-600">${def.name} placeholder.</div>
+          ${state.edit ? `
+            <div class=\"edge-right absolute right-[-6px] top-1/2 -translate-y-1/2 w-2 h-10 bg-slate-500/70 rounded cursor-ew-resize\" title=\"Resize horizontal\"></div>
+            <div class=\"edge-bottom absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-10 h-2 bg-slate-500/70 rounded cursor-ns-resize\" title=\"Resize vertical\"></div>
+          ` : ''}
         </div>`;
 
       // Events
@@ -77,9 +91,12 @@ export function initDashboard(root) {
         const header = el.querySelector('div');
         header.addEventListener('pointerdown', (e) => startDrag(e, w.id));
         el.querySelector('.btn-del')?.addEventListener('click', (e) => { e.stopPropagation(); delWidget(w.id); });
-        el.querySelector('.rz-right')?.addEventListener('pointerdown', (e) => startResize(e, w.id, 'right'));
-        el.querySelector('.rz-bottom')?.addEventListener('pointerdown', (e) => startResize(e, w.id, 'bottom'));
-        el.querySelector('.rz-corner')?.addEventListener('pointerdown', (e) => startResize(e, w.id, 'corner'));
+        el.querySelector('.btn-w-dec')?.addEventListener('click', (e) => { e.stopPropagation(); adjustSizeButtons(w.id, -1, 0); });
+        el.querySelector('.btn-w-inc')?.addEventListener('click', (e) => { e.stopPropagation(); adjustSizeButtons(w.id, +1, 0); });
+        el.querySelector('.btn-h-dec')?.addEventListener('click', (e) => { e.stopPropagation(); adjustSizeButtons(w.id, 0, -1); });
+        el.querySelector('.btn-h-inc')?.addEventListener('click', (e) => { e.stopPropagation(); adjustSizeButtons(w.id, 0, +1); });
+        el.querySelector('.edge-right')?.addEventListener('pointerdown', (e) => startResize(e, w.id, 'right'));
+        el.querySelector('.edge-bottom')?.addEventListener('pointerdown', (e) => startResize(e, w.id, 'bottom'));
       } else {
         el.querySelector('.btn-expand')?.addEventListener('click', () => expandWidget(w.id));
       }
@@ -182,6 +199,21 @@ export function initDashboard(root) {
     state.resizing = null;
     window.removeEventListener('pointermove', onResize);
     saveDashboard(state.dash);
+  }
+
+  function adjustSizeButtons(id, dW, dH) {
+    const w = state.dash.widgets.find(x => x.id === id); if (!w) return;
+    const def = WidgetRegistry[w.type];
+    const newW = clamp(def.minW, def.maxW, w.w + dW);
+    const newH = clamp(def.minH, def.maxH, w.h + dH);
+    w.w = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), newW);
+    w.h = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), newH);
+    if (collidesAny(state.dash.widgets, w.id)) { // revert on overlap
+      w.w = clamp(def.minW, def.maxW, w.w - dW);
+      w.h = clamp(def.minH, def.maxH, w.h - dH);
+    }
+    saveDashboard(state.dash);
+    render();
   }
 
   function pointerCell(e, container) {
