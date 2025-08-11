@@ -398,6 +398,8 @@ Result: Added `src/state/store.js` providing a pure, minimal store with pub/sub,
   7. Verify no performance impact during saves
 - **Success Criteria**: Seamless recovery from any crash
 
+Result: Added `src/adapters/backup.js` with attachAutoBackup(), envelope validation, and helpers; wired optional backup in debug page; unit tests `tests/unit/backup.test.js` confirm rolling 3 backups and envelope validation. HITL: backup keys visible via storage namespace; recovery UI to be added in later integration step.
+
 ## Phase 5: User Interface - Settings
 *Duration: 2 days | Risk: LOW*
 

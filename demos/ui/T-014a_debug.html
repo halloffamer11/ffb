@@ -53,6 +53,7 @@
 
     <script type="module">
       import { createStorageAdapter } from '/src/adapters/storage.js';
+      import { attachAutoBackup } from '/src/adapters/backup.js';
       import { loadSettings } from '/src/ui/settings.js';
       import { loadPlayersFromWorkspace, savePlayersToWorkspace } from '/src/ui/dataManagement.js';
       import { autoConfigure, calculatePoints } from '/src/core/scoring.js';
@@ -76,6 +77,16 @@
         runBtn.disabled = (cur.length === 0 || (golden.length || 0) === 0);
         runBtn.classList.toggle('opacity-50', runBtn.disabled);
       }
+
+      // Auto-backup workspace players on changes made via debug tools
+      try {
+        const unsub = attachAutoBackup({
+          // minimal shim for store-like interface
+          version: '1.0.0',
+          getState: () => ({ players: loadPlayersFromWorkspace() }),
+          subscribe: (event, fn) => { return () => {}; }
+        }, store, { maxBackups: 3 });
+      } catch {}
 
       document.getElementById('loadGolden').addEventListener('click', async () => {
         const text = await fetch('../../testdata/golden/debug_validation_set.csv').then(r => r.text());
