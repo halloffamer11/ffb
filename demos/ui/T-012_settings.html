@@ -26,11 +26,23 @@
           <label>RB <input name="r_RB" type="number" value="2" class="border p-1 w-16" /></label>
           <label>WR <input name="r_WR" type="number" value="2" class="border p-1 w-16" /></label>
           <label>TE <input name="r_TE" type="number" value="1" class="border p-1 w-16" /></label>
-          <label>FLEX <input name="r_FLEX" type="number" value="0" class="border p-1 w-16" /></label>
           <label>K <input name="r_K" type="number" value="0" class="border p-1 w-16" /></label>
           <label>DST <input name="r_DST" type="number" value="0" class="border p-1 w-16" /></label>
           <label>BENCH <input name="r_BENCH" type="number" value="6" class="border p-1 w-16" /></label>
         </div>
+      </fieldset>
+
+      <fieldset class="border p-3 rounded">
+        <legend class="font-medium">Flex Slots</legend>
+        <div class="flex flex-wrap gap-2 mb-2">
+          <button type="button" data-flex-preset="NONE" class="px-2 py-1 border rounded">None</button>
+          <button type="button" data-flex-preset="WR_TE" class="px-2 py-1 border rounded">WR/TE</button>
+          <button type="button" data-flex-preset="RB_WR" class="px-2 py-1 border rounded">RB/WR</button>
+          <button type="button" data-flex-preset="RB_WR_TE" class="px-2 py-1 border rounded">RB/WR/TE</button>
+          <button type="button" data-flex-preset="SUPERFLEX" class="px-2 py-1 border rounded">Superflex (QB+)</button>
+        </div>
+        <div id="flexSlots" class="space-y-1"></div>
+        <button id="addFlexSlot" type="button" class="mt-2 px-3 py-2 rounded border">Add Flex Slot</button>
       </fieldset>
 
       <div class="grid grid-cols-2 gap-4">

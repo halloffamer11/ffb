@@ -7,6 +7,7 @@ const DEFAULT_SETTINGS = {
   teams: 12,
   budget: 200,
   roster: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 0, K: 0, DST: 0, BENCH: 6 },
+  rosterFlex: [],
   scoringPreset: 'PPR',
   keeperMode: false,
   owners: [],
@@ -45,6 +46,7 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
   hydrateForm(form, current);
   renderSummary(summary, current);
   syncOwnersGrid(form, current);
+  syncFlexUI(form, current);
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -84,6 +86,16 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
     const input = form[name];
     if (input) input.addEventListener('input', () => { if (form.scoringPreset) form.scoringPreset.value = 'CUSTOM'; });
   });
+
+  // Flex presets
+  form.querySelectorAll('[data-flex-preset]')?.forEach(btn => btn.addEventListener('click', () => {
+    const p = btn.getAttribute('data-flex-preset');
+    applyFlexPreset(form, p);
+  }));
+
+  // Add flex slot
+  const addFlexBtn = form.querySelector('#addFlexSlot');
+  if (addFlexBtn) addFlexBtn.addEventListener('click', () => addFlexSlot(form));
 }
 
 export function generateOwnerNames(teams) {
@@ -278,6 +290,95 @@ function applyPresetToOverrideInputs(form, preset) {
   for (const [name, value] of Object.entries(map)) {
     if (form[name]) form[name].value = value;
   }
+}
+
+// ===== Flex Builder =====
+function syncFlexUI(form, settings) {
+  const container = document.getElementById('flexSlots');
+  if (!container) return;
+  container.innerHTML = '';
+  const slots = Array.isArray(settings.rosterFlex) ? settings.rosterFlex : [];
+  slots.forEach((slot, idx) => {
+    const row = document.createElement('div');
+    row.className = 'flex items-center gap-4 py-1';
+    row.innerHTML = `
+      <div class="w-28 text-slate-700">${slot.label || `FLEX ${idx+1}`}</div>
+      <label class="inline-flex items-center gap-1"><input type="checkbox" data-flex="${idx}" data-pos="QB" ${slot.allowed?.includes('QB') ? 'checked' : ''}/> QB</label>
+      <label class="inline-flex items-center gap-1"><input type="checkbox" data-flex="${idx}" data-pos="RB" ${slot.allowed?.includes('RB') ? 'checked' : ''}/> RB</label>
+      <label class="inline-flex items-center gap-1"><input type="checkbox" data-flex="${idx}" data-pos="WR" ${slot.allowed?.includes('WR') ? 'checked' : ''}/> WR</label>
+      <label class="inline-flex items-center gap-1"><input type="checkbox" data-flex="${idx}" data-pos="TE" ${slot.allowed?.includes('TE') ? 'checked' : ''}/> TE</label>
+      <button type="button" class="ml-auto px-2 py-1 border rounded text-slate-600" data-remove="${idx}">Remove</button>
+    `;
+    container.appendChild(row);
+  });
+
+  // Checkbox changes
+  container.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.addEventListener('input', () => {
+    const idx = Number(cb.getAttribute('data-flex'));
+    const pos = cb.getAttribute('data-pos');
+    const s = loadSettings();
+    const slots2 = Array.isArray(s.rosterFlex) ? s.rosterFlex : [];
+    const slot = slots2[idx] || { label: `FLEX ${idx+1}`, allowed: [] };
+    const set = new Set(slot.allowed || []);
+    if (cb.checked) set.add(pos); else set.delete(pos);
+    slot.allowed = Array.from(set);
+    slots2[idx] = slot;
+    s.rosterFlex = slots2;
+    saveSettings(s);
+    renderSummary(document.getElementById('summary'), s);
+  }));
+
+  // Remove slot
+  container.querySelectorAll('button[data-remove]').forEach(btn => btn.addEventListener('click', () => {
+    const idx = Number(btn.getAttribute('data-remove'));
+    const s = loadSettings();
+    const slots2 = (s.rosterFlex || []).slice();
+    slots2.splice(idx, 1);
+    s.rosterFlex = slots2.map((slot, i) => ({ ...slot, label: slot.label || `FLEX ${i+1}` }));
+    saveSettings(s);
+    syncFlexUI(form, s);
+    renderSummary(document.getElementById('summary'), s);
+  }));
+}
+
+function applyFlexPreset(form, preset) {
+  const s = loadSettings();
+  let slots = [];
+  switch (String(preset || '').toUpperCase()) {
+    case 'NONE':
+      slots = [];
+      break;
+    case 'WR_TE':
+      slots = [{ label: 'FLEX 1', allowed: ['WR','TE'] }];
+      break;
+    case 'RB_WR':
+      slots = [{ label: 'FLEX 1', allowed: ['RB','WR'] }];
+      break;
+    case 'RB_WR_TE':
+      slots = [{ label: 'FLEX 1', allowed: ['RB','WR','TE'] }];
+      break;
+    case 'SUPERFLEX':
+      slots = [{ label: 'SUPERFLEX', allowed: ['QB','RB','WR','TE'] }];
+      break;
+    default:
+      slots = s.rosterFlex || [];
+  }
+  s.rosterFlex = slots;
+  saveSettings(s);
+  syncFlexUI(form, s);
+  renderSummary(document.getElementById('summary'), s);
+}
+
+function addFlexSlot(form) {
+  const s = loadSettings();
+  const slots = (s.rosterFlex || []).slice();
+  const nextIdx = slots.length;
+  const defaultAllowed = slots.length ? (slots[slots.length - 1].allowed || ['RB','WR','TE']) : ['RB','WR','TE'];
+  slots.push({ label: `FLEX ${nextIdx + 1}`, allowed: defaultAllowed.slice() });
+  s.rosterFlex = slots;
+  saveSettings(s);
+  syncFlexUI(form, s);
+  renderSummary(document.getElementById('summary'), s);
 }
 
 
