@@ -280,6 +280,8 @@ Result: Tier computation via vbd deltas with stdDev×0.5 threshold; unit tests c
   5. Check injury status displays
 - **Success Criteria**: <50ms response time
 
+Result: Implemented BasicSearch and HTML validation page. Human validation PASS — case-insensitive and partial matches correct; drafted filter works; workspace drafted flag toggles and persists.
+
 ### T-009b: Fuzzy Matching Algorithm ⚠️
 **Complexity**: High | **Risk**: Medium
 - Implement Levenshtein distance for typos

@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-009a Basic Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-4">T-009a Basic String Search</h1>
+
+    <div class="flex items-center gap-3 flex-wrap mb-4">
+      <input id="q" type="text" placeholder="Search players…" class="border p-2 w-64" />
+      <label class="inline-flex items-center gap-2">Filter
+        <select id="drafted" class="border p-2">
+          <option value="all">All</option>
+          <option value="undrafted">Undrafted</option>
+          <option value="drafted">Drafted</option>
+        </select>
+      </label>
+      <span class="text-sm text-slate-600">Results: <span id="count">0</span></span>
+      <span class="text-sm text-slate-600">Time: <span id="time">0</span> ms</span>
+      <button id="reload" class="ml-auto px-3 py-2 rounded bg-slate-600 text-white">Reload Workspace</button>
+    </div>
+
+    <div id="notice" class="text-amber-700 text-sm mb-3"></div>
+
+    <table class="min-w-full bg-white rounded border text-sm">
+      <thead class="bg-slate-100">
+        <tr>
+          <th class="text-left p-2">name</th>
+          <th class="text-left p-2">team</th>
+          <th class="text-left p-2">position</th>
+          <th class="text-left p-2">injury</th>
+          <th class="text-left p-2">drafted</th>
+          <th class="text-left p-2">action</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <script type="module">
+      import { BasicSearch } from '../../src/core/search.js';
+      import { loadPlayersFromWorkspace, savePlayersToWorkspace } from '../../src/ui/dataManagement.js';
+
+      const qEl = document.getElementById('q');
+      const draftedEl = document.getElementById('drafted');
+      const countEl = document.getElementById('count');
+      const timeEl = document.getElementById('time');
+      const notice = document.getElementById('notice');
+      const rowsEl = document.getElementById('rows');
+
+      let players = [];
+      let search = null;
+
+      function normalizePlayers(arr) {
+        return (arr || []).map(p => ({ ...p, drafted: !!p.drafted }));
+      }
+
+      function reload() {
+        players = normalizePlayers(loadPlayersFromWorkspace());
+        search = new BasicSearch(players);
+        if (!players.length) {
+          notice.textContent = 'No players in workspace. Load data in T-013 Data Management, then return here.';
+        } else {
+          notice.textContent = '';
+        }
+        runSearch();
+      }
+
+      function runSearch() {
+        const q = qEl.value || '';
+        const drafted = draftedEl.value;
+        const t0 = performance.now();
+        const results = search.search(q, { drafted });
+        const t1 = performance.now();
+        render(results);
+        countEl.textContent = String(results.length);
+        timeEl.textContent = (t1 - t0).toFixed(1);
+      }
+
+      function render(results) {
+        rowsEl.innerHTML = '';
+        const max = 50;
+        const slice = results.slice(0, max);
+        for (const r of slice) {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="p-2 border-t">${r.name}</td>
+            <td class="p-2 border-t">${r.team}</td>
+            <td class="p-2 border-t">${r.position}</td>
+            <td class="p-2 border-t">${r.injuryStatus ?? ''}</td>
+            <td class="p-2 border-t ${r.drafted ? 'text-emerald-700' : 'text-slate-500'}">${r.drafted ? 'Yes' : 'No'}</td>
+            <td class="p-2 border-t">
+              <button class="px-2 py-1 border rounded" data-id="${r.id || r.name}">${r.drafted ? 'Mark Undrafted' : 'Mark Drafted'}</button>
+            </td>`;
+          rowsEl.appendChild(tr);
+        }
+
+        // Wire actions
+        rowsEl.querySelectorAll('button[data-id]').forEach(btn => btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          // Match by id if present, else by name
+          const idx = players.findIndex(p => String(p.id || p.name) === id);
+          if (idx >= 0) {
+            players[idx].drafted = !players[idx].drafted;
+            // Persist back to workspace
+            const res = savePlayersToWorkspace(players.map(({ __source, ...rest }) => rest));
+            if (!res.ok) {
+              alert('Failed to save drafted flag');
+            } else {
+              search = new BasicSearch(players);
+              runSearch();
+            }
+          }
+        }));
+      }
+
+      qEl.addEventListener('input', runSearch);
+      draftedEl.addEventListener('change', runSearch);
+      document.getElementById('reload').addEventListener('click', reload);
+
+      reload();
+    </script>
+  </body>
+  </html>
+
+
