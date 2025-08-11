@@ -3,7 +3,7 @@
 
 import { createStorageAdapter } from '../adapters/storage.js';
 
-const GRID_ROWS = 4;
+let GRID_ROWS = 8; // minimum 8 per spec
 const GRID_COLS = 8;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -79,7 +79,9 @@ export function initDashboard(root) {
               <button class=\"btn-del text-xs px-2 py-1 border rounded\">Delete</button>
             ` : '<button class=\"btn-expand text-xs px-2 py-1 border rounded\">Expand</button>'}
           </div>
-          <div class="grow p-3 text-xs text-slate-600">${def.name} placeholder.</div>
+          <div class="grow p-0 text-xs text-slate-600 overflow-hidden">
+            ${renderWidgetContents(w.type)}
+          </div>
           ${state.edit ? `
             <div class=\"edge-right absolute right-[-6px] top-1/2 -translate-y-1/2 w-2 h-10 bg-slate-500/70 rounded cursor-ew-resize\" title=\"Resize horizontal\"></div>
             <div class=\"edge-bottom absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-10 h-2 bg-slate-500/70 rounded cursor-ns-resize\" title=\"Resize vertical\"></div>
@@ -102,6 +104,22 @@ export function initDashboard(root) {
       }
       grid.appendChild(el);
     }
+  }
+
+  function renderWidgetContents(type) {
+    if (type === 'search') {
+      return `<iframe src="/demos/ui/T-009c_search.html?hud=0" class="w-full h-full border-0"></iframe>`;
+    }
+    if (type === 'tiers') {
+      return `<div class="w-full h-full p-2 overflow-auto text-slate-700" data-widget="tiers">Tiers widget</div>`;
+    }
+    if (type === 'roster') {
+      return `<div class="w-full h-full p-2 text-slate-700">My Roster widget</div>`;
+    }
+    if (type === 'budget') {
+      return `<div class="w-full h-full p-2 text-slate-700">Budget Tracker widget</div>`;
+    }
+    return `<div class="w-full h-full p-2">${type}</div>`;
   }
 
   function expandWidget(id) {
@@ -259,6 +277,25 @@ export function initDashboard(root) {
   toolbar.querySelector('[data-btn="add"]')?.addEventListener('click', () => {
     const sel = root.querySelector('[data-select="widget"]');
     addWidget(sel?.value || 'tiers');
+  });
+  // row controls
+  toolbar.querySelector('[data-btn="rows-inc"]')?.addEventListener('click', () => {
+    if (GRID_ROWS >= 24) return; // 8 base + 16 additional
+    GRID_ROWS += 1;
+    grid.style.gridTemplateRows = `repeat(${GRID_ROWS}, 1fr)`;
+    saveDashboard(state.dash);
+    render();
+  });
+  toolbar.querySelector('[data-btn="rows-dec"]')?.addEventListener('click', () => {
+    if (GRID_ROWS <= 8) return;
+    // Prevent removing if any widget would intersect the last row
+    const targetRow = GRID_ROWS;
+    const blocks = state.dash.widgets.some(w => (w.row + w.h - 1) >= targetRow);
+    if (blocks) return; // disallow
+    GRID_ROWS -= 1;
+    grid.style.gridTemplateRows = `repeat(${GRID_ROWS}, 1fr)`;
+    saveDashboard(state.dash);
+    render();
   });
 
   render();
