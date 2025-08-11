@@ -33,46 +33,71 @@
 
       <!-- Tabs -->
       <section id="view-dashboard" class="view">
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <!-- Panel: Search & Select -->
-          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[24rem] md:col-span-2 xl:col-span-3">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium">Search & Select</div>
-            <div class="p-3 grow">
+        <div id="dashGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <!-- Panel: Search & Select (fixed full width) -->
+          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[24rem] md:col-span-2 xl:col-span-3" data-panel="search" draggable="true" data-size="l" data-collapsed="false">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+              <span class="mr-auto">Search & Select</span>
+              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
+              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
+            </div>
+            <div class="panel-body p-3 grow">
               <iframe src="./T-009c_search.html?hud=0" class="w-full h-[28rem] md:h-[30rem] border rounded"></iframe>
             </div>
           </div>
 
           <!-- Panel: Player Analysis (placeholder) -->
-          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium">Player Analysis</div>
-            <div class="p-3 grow">
+          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+              <span class="mr-auto">Player Analysis</span>
+              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
+              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
+            </div>
+            <div class="panel-body p-3 grow">
               <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Analysis details will appear here after selection.</p>
             </div>
           </div>
 
           <!-- Panel: Position Tiers (placeholder) -->
-          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium">Position Tiers</div>
-            <div class="p-3 grow">
+          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+              <span class="mr-auto">Position Tiers</span>
+              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
+              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
+            </div>
+            <div class="panel-body p-3 grow">
               <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Tier visualization placeholder.</p>
             </div>
           </div>
 
           <!-- Panel: My Roster (placeholder) -->
-          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium">My Roster</div>
-            <div class="p-3 grow">
+          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+              <span class="mr-auto">My Roster</span>
+              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
+              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
+            </div>
+            <div class="panel-body p-3 grow">
               <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Roster composition summary.</p>
             </div>
           </div>
 
           <!-- Panel: Budget Tracker (placeholder) -->
-          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
-            <div class="px-3 py-2 border-b bg-slate-50 font-medium">Budget Tracker</div>
-            <div class="p-3 grow">
+          <div class="panel rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium flex items-center gap-2 cursor-move">
+              <span class="mr-auto">Budget Tracker</span>
+              <button class="btn-size-down text-xs px-2 py-1 border rounded">–</button>
+              <button class="btn-size-up text-xs px-2 py-1 border rounded">+</button>
+              <button class="btn-collapse text-xs px-2 py-1 border rounded">Collapse</button>
+            </div>
+            <div class="panel-body p-3 grow">
               <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Remaining budget and max bid.</p>
             </div>
@@ -125,6 +150,98 @@
 
       // Default
       setActive('dashboard');
+
+      // ===== MVP panel controls: collapse, resize, drag/snap (simple) =====
+      const grid = document.getElementById('dashGrid');
+      const LS_KEY = 'dashboardLayoutV1';
+
+      function applySize(panel, size) {
+        panel.dataset.size = size;
+        panel.classList.remove('md:col-span-1','md:col-span-2','xl:col-span-1','xl:col-span-2','xl:col-span-3','min-h-[16rem]','min-h-[20rem]','min-h-[24rem]');
+        // sizes: s=1col, m=2col, l=full
+        if (size === 's') {
+          panel.classList.add('md:col-span-1','xl:col-span-1','min-h-[16rem]');
+        } else if (size === 'm') {
+          panel.classList.add('md:col-span-2','xl:col-span-2','min-h-[20rem]');
+        } else {
+          panel.classList.add('md:col-span-2','xl:col-span-3','min-h-[24rem]');
+        }
+      }
+
+      function applyCollapsed(panel, collapsed) {
+        panel.dataset.collapsed = String(collapsed);
+        const body = panel.querySelector('.panel-body');
+        if (body) body.classList.toggle('hidden', collapsed);
+      }
+
+      function saveLayout() {
+        const order = Array.from(grid.querySelectorAll('.panel')).map(p => p.dataset.panel);
+        const sizes = {}; const collapsed = {};
+        order.forEach(id => {
+          const p = grid.querySelector(`.panel[data-panel="${id}"]`);
+          sizes[id] = p?.dataset.size || 's';
+          collapsed[id] = p?.dataset.collapsed === 'true';
+        });
+        localStorage.setItem(LS_KEY, JSON.stringify({ order, sizes, collapsed }));
+      }
+
+      function loadLayout() {
+        try {
+          const raw = localStorage.getItem(LS_KEY);
+          if (!raw) return;
+          const { order, sizes, collapsed } = JSON.parse(raw);
+          if (Array.isArray(order)) {
+            order.forEach(id => {
+              const p = grid.querySelector(`.panel[data-panel="${id}"]`);
+              if (p) grid.appendChild(p);
+            });
+          }
+          const panels = Array.from(grid.querySelectorAll('.panel'));
+          panels.forEach(p => {
+            const id = p.dataset.panel;
+            if (sizes && sizes[id]) applySize(p, sizes[id]);
+            if (collapsed) applyCollapsed(p, !!collapsed[id]);
+          });
+        } catch {}
+      }
+
+      function wirePanelControls(panel) {
+        panel.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/panel', panel.dataset.panel);
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        panel.addEventListener('dragover', e => { e.preventDefault(); });
+        panel.addEventListener('drop', e => {
+          e.preventDefault();
+          const id = e.dataTransfer.getData('text/panel');
+          const src = grid.querySelector(`.panel[data-panel="${id}"]`);
+          if (src && src !== panel) {
+            grid.insertBefore(src, panel);
+            saveLayout();
+          }
+        });
+        const btnDown = panel.querySelector('.btn-size-down');
+        const btnUp = panel.querySelector('.btn-size-up');
+        const btnCol = panel.querySelector('.btn-collapse');
+        if (btnDown) btnDown.addEventListener('click', () => {
+          const order = ['s','m','l'];
+          const idx = Math.max(0, order.indexOf(panel.dataset.size || 's') - 1);
+          applySize(panel, order[idx]); saveLayout();
+        });
+        if (btnUp) btnUp.addEventListener('click', () => {
+          const order = ['s','m','l'];
+          const idx = Math.min(order.length - 1, order.indexOf(panel.dataset.size || 's') + 1);
+          applySize(panel, order[idx]); saveLayout();
+        });
+        if (btnCol) btnCol.addEventListener('click', () => {
+          const collapsed = panel.dataset.collapsed === 'true' ? false : true;
+          applyCollapsed(panel, collapsed); saveLayout();
+        });
+      }
+
+      // Initialize panel behaviors
+      Array.from(grid.querySelectorAll('.panel')).forEach(p => wirePanelControls(p));
+      loadLayout();
     </script>
   </body>
   </html>
