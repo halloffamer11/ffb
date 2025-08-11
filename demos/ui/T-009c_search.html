@@ -57,6 +57,7 @@
       </label>
       <span class="text-sm text-slate-600">Results: <span id="count">0</span></span>
       <span class="text-sm text-slate-600">Time: <span id="time">0</span> ms</span>
+      <span id="perfHud" class="text-xs text-slate-500 hidden"> | Avg: <span id="hudAvg">-</span> ms, p95: <span id="hudP95">-</span> ms <button id="hudReset" class="ml-1 underline">reset</button></span>
       <button id="reload" class="ml-auto px-3 py-2 rounded bg-slate-600 text-white">Reload Workspace</button>
       <a href="./T-013_data_management.html" class="px-3 py-2 rounded bg-amber-600 text-white" target="_blank">Open T-013</a>
     </div>
@@ -87,6 +88,9 @@
       const showDraftedEl = document.getElementById('showDrafted');
       const countEl = document.getElementById('count');
       const timeEl = document.getElementById('time');
+      const perfHud = document.getElementById('perfHud');
+      const hudAvgEl = document.getElementById('hudAvg');
+      const hudP95El = document.getElementById('hudP95');
       const notice = document.getElementById('notice');
       const rowsEl = document.getElementById('rows');
       const posAllEl = document.getElementById('pos_all');
@@ -96,6 +100,8 @@
       let search = null;
       let lastResults = [];
       let selectedIdx = -1;
+      const PERF_HUD_ENABLED = (new URLSearchParams(location.search).get('hud') ?? '1') !== '0';
+      let perfSamples = [];
       function normalizePos(p) {
         const s = String(p || '').toUpperCase();
         if (s === 'DEF') return 'DST';
@@ -204,6 +210,7 @@
         render(results, q);
         countEl.textContent = String(results.length);
         timeEl.textContent = (t1 - t0).toFixed(1);
+        recordPerf(t1 - t0);
       }
 
       function render(results, query) {
@@ -294,6 +301,27 @@
 
       // Initial
       reload();
+
+      // Perf HUD helpers
+      function recordPerf(ms) {
+        if (!PERF_HUD_ENABLED) return;
+        if (!Number.isFinite(ms)) return;
+        perfHud.classList.remove('hidden');
+        perfSamples.push(ms);
+        if (perfSamples.length > 200) perfSamples.shift();
+        const avg = perfSamples.reduce((a, b) => a + b, 0) / perfSamples.length;
+        const sorted = [...perfSamples].sort((a, b) => a - b);
+        const idx = Math.max(0, Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95) - 1));
+        const p95 = sorted[idx] ?? ms;
+        hudAvgEl.textContent = avg.toFixed(1);
+        hudP95El.textContent = p95.toFixed(1);
+      }
+
+      document.getElementById('hudReset').addEventListener('click', () => {
+        perfSamples = [];
+        hudAvgEl.textContent = '-';
+        hudP95El.textContent = '-';
+      });
     </script>
   </body>
   </html>
