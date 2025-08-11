@@ -1,4 +1,5 @@
 import { createStorageAdapter } from '../adapters/storage.js';
+import { getPreset } from '../core/scoring.js';
 
 const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
 
@@ -65,6 +66,23 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
   form.teams.addEventListener('input', () => {
     const t = Number(form.teams.value || 12);
     regenerateOwnersGrid(form, t);
+  });
+
+  // Preset selection applies defaults to overrides
+  if (form.scoringPreset) {
+    form.scoringPreset.addEventListener('change', () => {
+      const preset = String(form.scoringPreset.value || 'PPR').toUpperCase();
+      if (preset === 'CUSTOM') return;
+      const p = getPreset(preset);
+      applyPresetToOverrideInputs(form, p);
+    });
+  }
+
+  // Any manual change to overrides marks preset as CUSTOM (deferred save on submit)
+  const overrideNames = ['s_passYdsPerPt','s_passTds','s_passInt','s_rushYdsPerPt','s_rushTds','s_rec','s_recYdsPerPt','s_recTds','s_fumbles'];
+  overrideNames.forEach(name => {
+    const input = form[name];
+    if (input) input.addEventListener('input', () => { if (form.scoringPreset) form.scoringPreset.value = 'CUSTOM'; });
   });
 }
 
@@ -217,7 +235,8 @@ export function regenerateOwnersGrid(form, teams, reset = false) {
   owners = owners.slice(0, teams);
   owners.forEach((o, idx) => { o.id = idx + 1; o.order = idx + 1; if (!o.team) o.team = `Team ${idx + 1}`; if (!o.name) o.name = `Owner ${idx + 1}`; });
 
-  const s = { ...readForm(form), owners, teams };
+  // Preserve all other settings from storage; update only owners and teams
+  const s = { ...currentSettings, owners, teams };
   saveSettings(s);
   syncOwnersGrid(form, s);
   const summary = document.getElementById('summary');
@@ -241,6 +260,24 @@ function setIfPresent(form, name, value) {
 function getNumOrEmpty(v) {
   const n = Number(v);
   return Number.isFinite(n) ? n : '';
+}
+
+function applyPresetToOverrideInputs(form, preset) {
+  if (!preset) return;
+  const map = {
+    s_passYdsPerPt: preset.passYdsPerPt,
+    s_passTds: preset.passTds,
+    s_passInt: preset.passInt,
+    s_rushYdsPerPt: preset.rushYdsPerPt,
+    s_rushTds: preset.rushTds,
+    s_rec: preset.rec,
+    s_recYdsPerPt: preset.recYdsPerPt,
+    s_recTds: preset.recTds,
+    s_fumbles: preset.fumbles
+  };
+  for (const [name, value] of Object.entries(map)) {
+    if (form[name]) form[name].value = value;
+  }
 }
 
 
