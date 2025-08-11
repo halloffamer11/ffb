@@ -47,6 +47,7 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
   renderSummary(summary, current);
   syncOwnersGrid(form, current);
   syncFlexUI(form, current);
+  updateDerived(form, current);
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
@@ -68,6 +69,7 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
   form.teams.addEventListener('input', () => {
     const t = Number(form.teams.value || 12);
     regenerateOwnersGrid(form, t);
+    updateDerived(form, readForm(form));
   });
 
   // Preset selection applies defaults to overrides
@@ -90,6 +92,12 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
   // Add flex slot
   const addFlexBtn = form.querySelector('#addFlexSlot');
   if (addFlexBtn) addFlexBtn.addEventListener('click', () => addFlexSlot(form));
+
+  // Roster numeric inputs should refresh derived values
+  ['r_QB','r_RB','r_WR','r_TE','r_K','r_DST','r_BENCH','r_FLEX'].forEach(n => {
+    const inp = form[n];
+    if (inp) inp.addEventListener('input', () => updateDerived(form, readForm(form)));
+  });
 }
 
 export function generateOwnerNames(teams) {
@@ -109,7 +117,7 @@ function hydrateForm(form, s) {
   if (form.minBid) form.minBid.value = s.minBid ?? 1;
   if (form.rounds) form.rounds.value = s.rounds ?? 16;
   if (form.draftType) form.draftType.value = s.draftType || 'SNAKE';
-  if (form.idpEnabled) form.idpEnabled.checked = !!s.idpEnabled;
+  // IDP field removed per spec
   const o = s.scoringOverrides || {};
   setIfPresent(form, 's_passYdsPerPt', o.passYdsPerPt);
   setIfPresent(form, 's_passTds', o.passTds);
@@ -144,7 +152,7 @@ function readForm(form) {
     minBid: Math.max(1, Number(form.minBid?.value || 1)),
     rounds: Math.max(1, Number(form.rounds?.value || 16)),
     draftType: (form.draftType?.value || 'SNAKE').toUpperCase(),
-    idpEnabled: !!form.idpEnabled?.checked,
+    // idpEnabled removed
     scoringOverrides: {
       passYdsPerPt: getNumOrEmpty(form.s_passYdsPerPt?.value),
       passTds: getNumOrEmpty(form.s_passTds?.value),
@@ -198,6 +206,7 @@ function syncOwnersGrid(form, settings) {
     const sorted = rows.sort((a, b) => a.order - b.order);
     // Update grid display and persist to form through saveSettings on submit
     persistOwnersToStorage(form, sorted);
+    updateDerived(form, readForm(form));
   }));
 }
 
@@ -255,6 +264,7 @@ function persistOwnersToStorage(form, owners) {
   saveSettings(s);
   const summary = document.getElementById('summary');
   renderSummary(summary, s);
+  updateDerived(form, s);
 }
 
 // nothing else to export here (regenerateOwnersGrid already exported above)
@@ -291,7 +301,16 @@ function syncFlexUI(form, settings) {
   const container = document.getElementById('flexSlots');
   if (!container) return;
   container.innerHTML = '';
-  const slots = Array.isArray(settings.rosterFlex) ? settings.rosterFlex : [];
+  // Drive number of flex slots from starters field FLEX
+  const desiredCount = Number(form['r_FLEX']?.value || settings.roster?.FLEX || 0);
+  const currentSlots = Array.isArray(settings.rosterFlex) ? settings.rosterFlex : [];
+  const slots = currentSlots.slice(0, desiredCount);
+  while (slots.length < desiredCount) slots.push({ label: `FLEX ${slots.length + 1}`, allowed: ['RB','WR','TE'] });
+  if (desiredCount !== currentSlots.length) {
+    const s = loadSettings();
+    s.rosterFlex = slots;
+    saveSettings(s);
+  }
   slots.forEach((slot, idx) => {
     const row = document.createElement('div');
     row.className = 'flex items-center gap-4 py-1';
@@ -320,6 +339,7 @@ function syncFlexUI(form, settings) {
     s.rosterFlex = slots2;
     saveSettings(s);
     renderSummary(document.getElementById('summary'), s);
+    updateDerived(form, { ...s, roster: readForm(form).roster });
   }));
 
   // Remove slot
@@ -332,6 +352,7 @@ function syncFlexUI(form, settings) {
     saveSettings(s);
     syncFlexUI(form, s);
     renderSummary(document.getElementById('summary'), s);
+    updateDerived(form, { ...s, roster: readForm(form).roster });
   }));
 }
 
@@ -347,6 +368,25 @@ function addFlexSlot(form) {
   saveSettings(s);
   syncFlexUI(form, s);
   renderSummary(document.getElementById('summary'), s);
+  updateDerived(form, { ...s, roster: readForm(form).roster });
+}
+
+// ===== Roster totals & rounds =====
+function computeRosterTotals(s) {
+  const startersSum = (s.roster?.QB || 0) + (s.roster?.RB || 0) + (s.roster?.WR || 0) + (s.roster?.TE || 0) + (s.roster?.K || 0) + (s.roster?.DST || 0);
+  const flexCount = Array.isArray(s.rosterFlex) ? s.rosterFlex.length : 0;
+  const bench = s.roster?.BENCH || 0;
+  const startersTotal = startersSum + flexCount;
+  const rosterTotalPerTeam = startersTotal + bench;
+  const rounds = rosterTotalPerTeam; // one pick per round per team
+  return { startersTotal, benchTotal: bench, rosterTotalPerTeam, rounds };
+}
+
+function updateDerived(form, s) {
+  const d = computeRosterTotals(s);
+  if (form.rounds) { form.rounds.value = d.rounds; form.rounds.disabled = true; }
+  const rt = document.getElementById('rosterTotal');
+  if (rt) rt.textContent = String(d.rosterTotalPerTeam);
 }
 
 
