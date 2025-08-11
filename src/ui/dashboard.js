@@ -3,7 +3,7 @@
 
 import { createStorageAdapter } from '../adapters/storage.js';
 
-let GRID_ROWS = 8; // minimum 8 per spec
+const GRID_ROWS = 4;
 const GRID_COLS = 8;
 const SAVE_DEBOUNCE_MS = 500;
 
@@ -106,28 +106,18 @@ export function initDashboard(root) {
     }
   }
 
-  function renderWidgetContents(type) {
-    if (type === 'search') {
-      return `<iframe src="/demos/ui/T-009c_search.html?hud=0" class="w-full h-full border-0"></iframe>`;
-    }
-    if (type === 'tiers') {
-      return `<div class="w-full h-full p-2 overflow-auto text-slate-700" data-widget="tiers">Tiers widget</div>`;
-    }
-    if (type === 'roster') {
-      return `<div class="w-full h-full p-2 text-slate-700">My Roster widget</div>`;
-    }
-    if (type === 'budget') {
-      return `<div class="w-full h-full p-2 text-slate-700">Budget Tracker widget</div>`;
-    }
-    return `<div class="w-full h-full p-2">${type}</div>`;
-  }
-
   function expandWidget(id) {
     const overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 bg-black/30 z-[2000] flex items-center justify-center';
     const card = document.createElement('div');
-    card.className = 'bg-white w-[95vw] h-[95vh] rounded shadow-xl p-4 relative';
-    card.innerHTML = '<button class="absolute top-2 right-2 px-3 py-1 border rounded">Close</button><div class="text-slate-600">Expanded view</div>';
+    card.className = 'bg-white w-[95vw] h-[95vh] rounded shadow-xl p-2 relative overflow-hidden';
+    const w = state.dash.widgets.find(x => x.id === id);
+    const def = WidgetRegistry[w?.type] || { name: 'Widget' };
+    card.innerHTML = `<button class=\"absolute top-2 right-2 px-3 py-1 border rounded\">Close</button>
+      <div class=\"w-full h-full pt-8\">
+        <div class=\"absolute top-2 left-3 text-sm font-medium text-slate-700\">${def.name}</div>
+        <div class=\"w-full h-full overflow-hidden\">${renderWidgetContents(w?.type, true)}</div>
+      </div>`;
     card.querySelector('button').addEventListener('click', () => overlay.remove());
     overlay.appendChild(card);
     document.body.appendChild(overlay);
@@ -278,29 +268,29 @@ export function initDashboard(root) {
     const sel = root.querySelector('[data-select="widget"]');
     addWidget(sel?.value || 'tiers');
   });
-  // row controls
-  toolbar.querySelector('[data-btn="rows-inc"]')?.addEventListener('click', () => {
-    if (GRID_ROWS >= 24) return; // 8 base + 16 additional
-    GRID_ROWS += 1;
-    grid.style.gridTemplateRows = `repeat(${GRID_ROWS}, 1fr)`;
-    saveDashboard(state.dash);
-    render();
-  });
-  toolbar.querySelector('[data-btn="rows-dec"]')?.addEventListener('click', () => {
-    if (GRID_ROWS <= 8) return;
-    // Prevent removing if any widget would intersect the last row
-    const targetRow = GRID_ROWS;
-    const blocks = state.dash.widgets.some(w => (w.row + w.h - 1) >= targetRow);
-    if (blocks) return; // disallow
-    GRID_ROWS -= 1;
-    grid.style.gridTemplateRows = `repeat(${GRID_ROWS}, 1fr)`;
-    saveDashboard(state.dash);
-    render();
-  });
 
   render();
 }
 
 function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
+
+// Map widget type to embedded content
+function renderWidgetContents(type, expanded = false) {
+  if (type === 'search') {
+    const url = '/demos/ui/T-009c_search.html?hud=0';
+    return `<iframe src="${url}" class="w-full h-full border-0" loading="lazy"></iframe>`;
+  }
+  if (type === 'tiers') {
+    // Placeholder until dedicated tiers UI exists
+    return `<div class="w-full h-full p-3 overflow-auto text-slate-700">Tiers widget (coming soon)</div>`;
+  }
+  if (type === 'roster') {
+    return `<div class="w-full h-full p-3 text-slate-700">My Roster widget (coming soon)</div>`;
+  }
+  if (type === 'budget') {
+    return `<div class="w-full h-full p-3 text-slate-700">Budget Tracker widget (coming soon)</div>`;
+  }
+  return `<div class="w-full h-full p-3">${type || ''}</div>`;
+}
 
 
