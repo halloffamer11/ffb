@@ -123,40 +123,8 @@ echo "Stub: bidirectional sync between PCL and code notes.
 EOF
 chmod +x scripts/usdadsync.sh
 
-# Cursor rules (tight starter set)
-cat > .cursorrules <<'EOF'
-# GLOBAL RULES
-## Axioms
-- KISS. Prefer boring solutions and standard libraries.
-- YAGNI. No speculative abstractions.
-- DRY. Extract duplication only after it is proven.
-- Do the simplest thing that could possibly work.
-- Make illegal states unrepresentable.
-
-## Source of Truth
-- PCL is authoritative. If conflicts arise, stop and reconcile before editing.
-
-## Workflow
-- Before any edit: output a short plan (scope, files, acceptance criteria).
-- Keep changes small. If >200 lines or >3 files, pause and request confirmation.
-- After each step, run tests and provide a human-readable check path.
-
-## Code Quality
-- Single responsibility per module/function.
-- Pure core in src/core. Impure edges in src/adapters. Compose in src/app.
-- Prefer composition over inheritance.
-
-## Contracts & Data
-- Validate external boundaries against contracts/*.
-- Maintain small, versioned golden datasets in testdata/golden.
-
-## Security & Ops
-- No secrets in code. Use env vars.
-- Timeouts and retries for I/O.
-
-## Docs
-- Keep README run/test/build instructions current.
-- Log decisions in pcl/context.md and brief notes in DECISIONS.md if created.
-EOF
+# Cursor rules: point to GSL rules
+rm -f .cursorrules
+ln -s .gsl/rules.md .cursorrules
 
 echo "Scaffold complete."

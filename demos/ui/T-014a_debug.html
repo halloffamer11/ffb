@@ -7,28 +7,35 @@
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
   <body class="bg-slate-50 text-slate-900 p-6">
-    <h1 class="text-2xl font-semibold mb-4">T-014a Debug Validation</h1>
+    <h1 class="text-2xl font-semibold mb-2">T-014a Debug Validation</h1>
+    <p class="text-sm text-slate-600 mb-4">Development-only validation tab. Configure league settings, load/import players, then run golden comparison.</p>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <section class="md:col-span-1">
-        <h2 class="font-medium mb-2">League Settings</h2>
-        <iframe src="./T-012_settings.html" class="w-full h-96 border rounded"></iframe>
-      </section>
+    <div class="space-y-6">
+      <details open class="border rounded">
+        <summary class="px-3 py-2 font-medium cursor-pointer select-none">League Settings</summary>
+        <div class="p-3 pt-0">
+          <iframe src="./T-012_settings.html" class="w-full h-96 border rounded"></iframe>
+        </div>
+      </details>
 
-      <section class="md:col-span-1">
-        <h2 class="font-medium mb-2">Data Management</h2>
-        <iframe src="./T-013_data_management.html" class="w-full h-96 border rounded"></iframe>
-      </section>
+      <details open class="border rounded">
+        <summary class="px-3 py-2 font-medium cursor-pointer select-none">Data Management</summary>
+        <div class="p-3 pt-0">
+          <iframe src="./T-013_data_management.html" class="w-full h-96 border rounded"></iframe>
+        </div>
+      </details>
 
-      <section class="md:col-span-1">
-        <h2 class="font-medium mb-2">Golden & Validation</h2>
-        <div class="space-y-3">
+      <details open class="border rounded">
+        <summary class="px-3 py-2 font-medium cursor-pointer select-none">Golden & Validation</summary>
+        <div class="p-3 pt-0 space-y-3">
           <div class="space-x-2">
             <button id="loadGolden" class="px-3 py-2 rounded bg-slate-600 text-white">Load Golden Data</button>
             <label>Tolerance (%) <input id="tolerance" type="number" step="0.1" value="1.0" class="border p-1 w-24"></label>
             <button id="run" class="px-3 py-2 rounded bg-blue-600 text-white">Run Validation</button>
             <button id="exportMd" class="px-3 py-2 rounded bg-emerald-600 text-white">Export Markdown</button>
+            <button id="useGoldenAsCurrent" class="px-3 py-2 rounded bg-amber-600 text-white">Use Golden as Current</button>
           </div>
+          <div class="text-xs text-slate-600">Status: Current <span id="curCount">0</span> rows, Golden <span id="goldCount">0</span> rows</div>
           <div id="summary" class="text-sm"></div>
           <div class="max-h-96 overflow-auto">
             <table id="results" class="min-w-full bg-white rounded border text-sm">
@@ -41,13 +48,13 @@
             <pre id="missing" class="bg-white border rounded p-2 text-xs"></pre>
           </div>
         </div>
-      </section>
+      </details>
     </div>
 
     <script type="module">
       import { createStorageAdapter } from '/src/adapters/storage.js';
       import { loadSettings } from '/src/ui/settings.js';
-      import { loadPlayersFromWorkspace } from '/src/ui/dataManagement.js';
+      import { loadPlayersFromWorkspace, savePlayersToWorkspace } from '/src/ui/dataManagement.js';
       import { autoConfigure, calculatePoints } from '/src/core/scoring.js';
       import { calculatePlayerVBD } from '/src/core/vbd.js';
 
@@ -58,11 +65,23 @@
 
       let golden = [];
       let lastResults = null;
+      const curCountEl = document.getElementById('curCount');
+      const goldCountEl = document.getElementById('goldCount');
+      const runBtn = document.getElementById('run');
+
+      function refreshCounts() {
+        const cur = loadPlayersFromWorkspace() || [];
+        curCountEl.textContent = String(cur.length);
+        goldCountEl.textContent = String(golden.length || 0);
+        runBtn.disabled = (cur.length === 0 || (golden.length || 0) === 0);
+        runBtn.classList.toggle('opacity-50', runBtn.disabled);
+      }
 
       document.getElementById('loadGolden').addEventListener('click', async () => {
         const text = await fetch('../../testdata/golden/debug_validation_set.csv').then(r => r.text());
         golden = parseCsvToObjects(text);
         alert(`Loaded golden: ${golden.length} rows`);
+        refreshCounts();
       });
 
       document.getElementById('run').addEventListener('click', () => {
@@ -70,7 +89,7 @@
         const tolerance = tolPct / 100.0;
         const settings = loadSettings();
         const players = loadPlayersFromWorkspace();
-        const scoring = autoConfigure(settings.scoringPreset);
+        const scoring = autoConfigure(settings.scoringPreset, settings.scoringOverrides);
 
         // Compute points for current players if they have stat columns; otherwise assume points present
         const current = players.map(p => ({ ...p, points: Number(p.points) || Number(p.pts) || 0 }));
@@ -105,7 +124,7 @@
         const withinPct = rows.length ? (rows.filter(r => r.within).length / rows.length) * 100 : 0;
 
         renderTable(rows);
-        summaryEl.textContent = JSON.stringify({ count: rows.length, maePts: round(maePts,2), maeVbd: round(maeVbd,2), withinPct: round(withinPct,1) }, null, 2);
+        summaryEl.textContent = JSON.stringify({ count: rows.length, tolerancePct: tolPct, maePts: round(maePts,2), maeVbd: round(maeVbd,2), withinPct: round(withinPct,1) }, null, 2);
         missingEl.textContent = missing.join('\n');
         lastResults = { rows, maePts, maeVbd, withinPct, missing, tolerance: tolPct };
       });
@@ -119,6 +138,26 @@
         a.href = url; a.download = `debug_validation_${Date.now()}.md`; a.click();
         URL.revokeObjectURL(url);
       });
+
+      // Convenience: overwrite workspace players with golden points for quick validation
+      document.getElementById('useGoldenAsCurrent').addEventListener('click', () => {
+        if (!golden.length) { alert('Load golden first'); return; }
+        const settings = loadSettings();
+        const scoring = autoConfigure(settings.scoringPreset, settings.scoringOverrides);
+        const rows = golden.map(g => ({
+          name: g.name,
+          team: g.team,
+          position: g.position,
+          points: (Number(g.expected_points_ppr) || calculatePoints(g, scoring))
+        }));
+        const res = savePlayersToWorkspace(rows);
+        if (!res.ok) { alert('Failed to save to workspace'); return; }
+        alert(`Workspace updated with ${rows.length} golden rows`);
+        refreshCounts();
+      });
+
+      // Initial counts
+      refreshCounts();
 
       function renderTable(rows) {
         tbody.innerHTML = '';

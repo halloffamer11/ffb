@@ -89,14 +89,13 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
     if (input) input.addEventListener('input', () => { if (form.scoringPreset) form.scoringPreset.value = 'CUSTOM'; });
   });
 
-  // Add flex slot
-  const addFlexBtn = form.querySelector('#addFlexSlot');
-  if (addFlexBtn) addFlexBtn.addEventListener('click', () => addFlexSlot(form));
-
-  // Roster numeric inputs should refresh derived values
+  // Roster numeric inputs should refresh derived values; FLEX also drives slots
   ['r_QB','r_RB','r_WR','r_TE','r_K','r_DST','r_BENCH','r_FLEX'].forEach(n => {
     const inp = form[n];
-    if (inp) inp.addEventListener('input', () => updateDerived(form, readForm(form)));
+    if (inp) inp.addEventListener('input', () => {
+      if (n === 'r_FLEX') syncFlexUI(form, loadSettings());
+      updateDerived(form, readForm(form));
+    });
   });
 }
 
@@ -104,6 +103,21 @@ export function generateOwnerNames(teams) {
   const list = [];
   for (let i = 1; i <= teams; i += 1) list.push({ id: i, name: `Team ${i}` });
   return list;
+}
+
+// Reset to defaults and refresh UI
+export function resetLeagueSettings(formId, summaryId) {
+  const form = typeof formId === 'string' ? document.getElementById(formId) : formId;
+  const summary = typeof summaryId === 'string' ? document.getElementById(summaryId) : summaryId;
+  const fresh = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+  saveSettings(fresh);
+  if (form) {
+    hydrateForm(form, fresh);
+    syncOwnersGrid(form, fresh);
+    syncFlexUI(form, fresh);
+    updateDerived(form, fresh);
+  }
+  if (summary) renderSummary(summary, fresh);
 }
 
 function hydrateForm(form, s) {
@@ -134,7 +148,9 @@ function hydrateForm(form, s) {
 function readForm(form) {
   const roster = {};
   for (const key of ['QB','RB','WR','TE','FLEX','K','DST','BENCH']) {
-    roster[key] = Number(form[`r_${key}`].value || 0);
+    const inp = form[`r_${key}`];
+    const raw = inp ? Number(inp.value || 0) : 0;
+    roster[key] = Math.max(0, raw);
   }
   // Read owners from grid if present
   let owners = [];
@@ -142,13 +158,14 @@ function readForm(form) {
   if (grid) {
     owners = readOwnersGrid(grid).sort((a, b) => a.order - b.order);
   }
+  const existing = loadSettings() || {};
   return {
     teams: Number(form.teams.value || 12),
     budget: Number(form.budget.value || 200),
     roster,
     scoringPreset: form.scoringPreset.value || 'PPR',
-    keeperMode: !!form.keeperMode?.checked,
     owners,
+    userTeamId: existing.userTeamId || 1,
     minBid: Math.max(1, Number(form.minBid?.value || 1)),
     rounds: Math.max(1, Number(form.rounds?.value || 16)),
     draftType: (form.draftType?.value || 'SNAKE').toUpperCase(),
@@ -194,10 +211,15 @@ function syncOwnersGrid(form, settings) {
   const owners = coerceOwners(settings, Number(form.teams.value || 12));
   owners.forEach((o, idx) => {
     const tr = document.createElement('tr');
+    tr.draggable = true;
+    tr.dataset.idx = String(idx);
+    const isUser = (settings.userTeamId ? o.id === settings.userTeamId : idx === 0);
+    tr.className = isUser ? 'bg-emerald-50' : '';
     tr.innerHTML = `
       <td class="p-2 border-t text-slate-600">${idx + 1}</td>
       <td class="p-2 border-t"><input type="text" value="${o.team || `Team ${idx+1}`}" class="border p-1 w-full" data-field="team" data-idx="${idx}" /></td>
-      <td class="p-2 border-t"><input type="text" value="${o.name || `Owner ${idx+1}`}" class="border p-1 w-full" data-field="name" data-idx="${idx}" /></td>`;
+      <td class="p-2 border-t"><input type="text" value="${o.name || `Owner ${idx+1}`}" class="border p-1 w-full" data-field="name" data-idx="${idx}" /></td>
+      <td class="p-2 border-t text-center"><input type="radio" name="userTeam" ${isUser ? 'checked' : ''} data-user="${idx}"/></td>`;
     grid.appendChild(tr);
   });
 
@@ -208,6 +230,50 @@ function syncOwnersGrid(form, settings) {
     persistOwnersToStorage(form, sorted);
     updateDerived(form, readForm(form));
   }));
+
+  // Radio select for user team
+  grid.querySelectorAll('input[type="radio"][name="userTeam"]').forEach(r => r.addEventListener('change', () => {
+    const idxSel = Number(r.getAttribute('data-user'));
+    const s = loadSettings();
+    s.userTeamId = idxSel + 1;
+    saveSettings(s);
+    syncOwnersGrid(form, s);
+  }));
+
+  // Drag-and-drop to reorder
+  let dragIdx = null;
+  grid.querySelectorAll('tr').forEach(tr => {
+    tr.addEventListener('dragstart', e => { dragIdx = Number(tr.dataset.idx); e.dataTransfer?.setData('text/plain', dragIdx); });
+    tr.addEventListener('dragover', e => { e.preventDefault(); tr.classList.add('bg-slate-100'); });
+    tr.addEventListener('dragleave', () => tr.classList.remove('bg-slate-100'));
+    tr.addEventListener('drop', () => {
+      const targetIdx = Number(tr.dataset.idx);
+      if (dragIdx == null || targetIdx === dragIdx) return;
+      const rows = readOwnersGrid(grid);
+      // Determine currently selected user index
+      const selected = grid.querySelector('input[type="radio"][name="userTeam"]:checked');
+      const selectedIdx = selected ? Number(selected.getAttribute('data-user')) : 0;
+
+      const [moved] = rows.splice(dragIdx, 1);
+      rows.splice(targetIdx, 0, moved);
+
+      // Compute new selected index after reorder
+      let newSelectedIdx = selectedIdx;
+      if (selectedIdx === dragIdx) {
+        newSelectedIdx = targetIdx;
+      } else if (selectedIdx > dragIdx && selectedIdx <= targetIdx) {
+        newSelectedIdx = selectedIdx - 1;
+      } else if (selectedIdx < dragIdx && selectedIdx >= targetIdx) {
+        newSelectedIdx = selectedIdx + 1;
+      }
+
+      persistOwnersToStorage(form, rows.map((r, i) => ({ ...r, order: i + 1 })));
+      const s2 = loadSettings();
+      s2.userTeamId = (newSelectedIdx | 0) + 1;
+      saveSettings(s2);
+      syncOwnersGrid(form, s2);
+    });
+  });
 }
 
 function readOwnersGrid(grid) {
@@ -259,8 +325,11 @@ export function regenerateOwnersGrid(form, teams, reset = false) {
 }
 
 function persistOwnersToStorage(form, owners) {
-  const s = readForm(form);
-  s.owners = owners.map((o, idx) => ({ id: idx + 1, team: o.team, name: o.name, order: o.order }));
+  const existing = loadSettings() || {};
+  const s = { ...existing, ...readForm(form) };
+  const userTeamId = existing.userTeamId || s.userTeamId || 1;
+  s.userTeamId = userTeamId;
+  s.owners = owners.map((o, idx) => ({ id: idx + 1, team: o.team, name: o.name, order: o.order, isUser: (idx + 1) === userTeamId }));
   saveSettings(s);
   const summary = document.getElementById('summary');
   renderSummary(summary, s);
@@ -320,7 +389,6 @@ function syncFlexUI(form, settings) {
       <label class="inline-flex items-center gap-1"><input type="checkbox" data-flex="${idx}" data-pos="RB" ${slot.allowed?.includes('RB') ? 'checked' : ''}/> RB</label>
       <label class="inline-flex items-center gap-1"><input type="checkbox" data-flex="${idx}" data-pos="WR" ${slot.allowed?.includes('WR') ? 'checked' : ''}/> WR</label>
       <label class="inline-flex items-center gap-1"><input type="checkbox" data-flex="${idx}" data-pos="TE" ${slot.allowed?.includes('TE') ? 'checked' : ''}/> TE</label>
-      <button type="button" class="ml-auto px-2 py-1 border rounded text-slate-600" data-remove="${idx}">Remove</button>
     `;
     container.appendChild(row);
   });
@@ -342,18 +410,7 @@ function syncFlexUI(form, settings) {
     updateDerived(form, { ...s, roster: readForm(form).roster });
   }));
 
-  // Remove slot
-  container.querySelectorAll('button[data-remove]').forEach(btn => btn.addEventListener('click', () => {
-    const idx = Number(btn.getAttribute('data-remove'));
-    const s = loadSettings();
-    const slots2 = (s.rosterFlex || []).slice();
-    slots2.splice(idx, 1);
-    s.rosterFlex = slots2.map((slot, i) => ({ ...slot, label: slot.label || `FLEX ${i+1}` }));
-    saveSettings(s);
-    syncFlexUI(form, s);
-    renderSummary(document.getElementById('summary'), s);
-    updateDerived(form, { ...s, roster: readForm(form).roster });
-  }));
+  // Remove button eliminated; count driven by FLEX starters
 }
 
 // Removed preset application to keep UI simple per feedback
@@ -373,7 +430,7 @@ function addFlexSlot(form) {
 
 // ===== Roster totals & rounds =====
 function computeRosterTotals(s) {
-  const startersSum = (s.roster?.QB || 0) + (s.roster?.RB || 0) + (s.roster?.WR || 0) + (s.roster?.TE || 0) + (s.roster?.K || 0) + (s.roster?.DST || 0);
+  const startersSum = (s.roster?.QB || 0) + (s.roster?.RB || 0) + (s.roster?.WR || 0) + (s.roster?.TE || 0) + (s.roster?.FLEX || 0) + (s.roster?.K || 0) + (s.roster?.DST || 0);
   const flexCount = Array.isArray(s.rosterFlex) ? s.rosterFlex.length : 0;
   const bench = s.roster?.BENCH || 0;
   const startersTotal = startersSum + flexCount;

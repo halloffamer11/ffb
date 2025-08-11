@@ -9,34 +9,83 @@
   <body class="bg-slate-50 text-slate-900 p-6">
     <h1 class="text-2xl font-semibold mb-4">T-013 Data Management</h1>
 
-    <div class="space-x-2 mb-4">
-      <input id="fileInput" type="file" accept=".csv,text/csv" class="border p-2" />
-      <button id="loadBtn" class="px-3 py-2 rounded bg-slate-600 text-white">Load</button>
-      <button id="saveBtn" class="px-3 py-2 rounded bg-blue-600 text-white">Save to Workspace</button>
-      <button id="exportBtn" class="px-3 py-2 rounded bg-emerald-600 text-white">Export CSV</button>
+    <div class="space-y-3 mb-4">
+      <div class="flex items-center gap-2 flex-wrap">
+        <input id="fileInput" type="file" accept=".csv,text/csv" class="border p-2" />
+        <button id="loadBtn" class="px-3 py-2 rounded bg-slate-600 text-white">Load</button>
+        <button id="saveBtn" class="px-3 py-2 rounded bg-blue-600 text-white">Save to Workspace</button>
+        <button id="exportBtn" class="px-3 py-2 rounded bg-emerald-600 text-white">Export CSV</button>
+        <span class="text-sm text-slate-600">Source: <span id="sourceLabel">workspace</span></span>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="inline-flex items-center gap-1"><input id="selectAll" type="checkbox" /> Select All</label>
+        <button id="deleteSelected" class="px-2 py-1 border rounded text-rose-700">Delete Selected</button>
+      </div>
     </div>
 
     <div id="errors" class="text-rose-600 whitespace-pre-wrap"></div>
 
     <table id="grid" class="min-w-full bg-white rounded border text-sm">
-      <thead class="bg-slate-100"><tr><th class="text-left p-2">name</th><th class="text-left p-2">team</th><th class="text-left p-2">position</th><th class="text-left p-2">points</th><th class="text-left p-2">injury</th></tr></thead>
+      <thead class="bg-slate-100"><tr>
+        <th class="text-left p-2 w-8"></th>
+        <th class="text-left p-2">name</th>
+        <th class="text-left p-2">team</th>
+        <th class="text-left p-2">position</th>
+        <th class="text-left p-2">points</th>
+        <th class="text-left p-2">injury</th>
+        <th class="text-left p-2">source</th>
+      </tr></thead>
       <tbody></tbody>
     </table>
 
-    <script type="module">
-      import { loadPlayersFromFile, savePlayersToWorkspace, loadPlayersFromWorkspace } from '../../src/ui/dataManagement.js';
+      <script type="module">
+      import { loadPlayersFromFile, savePlayersToWorkspace, loadPlayersFromWorkspace, withSourceTag } from '../../src/ui/dataManagement.js';
+      import { normalizeInjuryStatus } from '../../src/core/schema.js';
 
       const fileInput = document.getElementById('fileInput');
       const gridBody = document.querySelector('#grid tbody');
       const errors = document.getElementById('errors');
       let current = [];
+      const STATUS_LABELS = ['HEALTHY','Q','D','O','IR','PUP','NA'];
+
+      function codeToLabel(code) {
+        const n = Number(code);
+        if (Number.isFinite(n)) return STATUS_LABELS[n] ?? 'NA';
+        const s = String(code || '').toUpperCase();
+        return STATUS_LABELS.includes(s) ? s : 'NA';
+      }
 
       function render(rows) {
         gridBody.innerHTML = '';
         for (const r of rows) {
+          const globalIdx = current.indexOf(r);
           const tr = document.createElement('tr');
-          tr.innerHTML = `<td class="p-2 border-t">${r.name}</td><td class="p-2 border-t">${r.team}</td><td class="p-2 border-t">${r.position}</td><td class="p-2 border-t">${r.points}</td><td class="p-2 border-t">${r.injuryStatus ?? ''}</td>`;
+          tr.innerHTML = `
+            <td class="p-2 border-t"><input type="checkbox" class="rowSel" /></td>
+            <td class="p-2 border-t">${r.name}</td>
+            <td class="p-2 border-t">${r.team}</td>
+            <td class="p-2 border-t">${r.position}</td>
+            <td class="p-2 border-t">${r.points}</td>
+            <td class="p-2 border-t">
+              <select class="injSel border p-1 text-xs" data-idx="${globalIdx}"></select>
+            </td>
+            <td class="p-2 border-t text-slate-500">${r.__source || ''}</td>`;
           gridBody.appendChild(tr);
+
+          // Populate injury dropdown
+          const sel = tr.querySelector('select.injSel');
+          const currentLabel = codeToLabel(r.injuryStatus);
+          for (const label of STATUS_LABELS) {
+            const opt = document.createElement('option');
+            opt.value = label; opt.textContent = label;
+            if (label === currentLabel) opt.selected = true;
+            sel.appendChild(opt);
+          }
+          sel.addEventListener('change', () => {
+            const idx = Number(sel.getAttribute('data-idx'));
+            if (!Number.isFinite(idx) || idx < 0 || idx >= current.length) return;
+            current[idx].injuryStatus = normalizeInjuryStatus(sel.value);
+          });
         }
       }
 
@@ -46,13 +95,14 @@
         const res = await loadPlayersFromFile(file);
         if (!res.ok) { errors.textContent = JSON.stringify(res.errors, null, 2); return; }
         errors.textContent = '';
-        current = res.records;
-        render(current.slice(0, 20));
+        current = withSourceTag(res.records, 'file');
+        document.getElementById('sourceLabel').textContent = 'file';
+        render(current.slice(0, 50));
       });
 
       document.getElementById('saveBtn').addEventListener('click', () => {
         if (!current.length) { errors.textContent = 'No data loaded'; return; }
-        const r = savePlayersToWorkspace(current);
+        const r = savePlayersToWorkspace(current.map(({ __source, ...rest }) => rest));
         errors.textContent = r.ok ? '' : `Save failed: ${r.error}`;
         if (r.ok) alert('Saved to workspace');
       });
@@ -70,8 +120,21 @@
       });
 
       // Load from workspace on page load
-      current = loadPlayersFromWorkspace();
-      if (current.length) render(current.slice(0, 20));
+      current = withSourceTag(loadPlayersFromWorkspace(), 'workspace');
+      if (current.length) render(current.slice(0, 50));
+      document.getElementById('sourceLabel').textContent = current.length ? 'workspace' : '—';
+
+      // Bulk ops
+      document.getElementById('selectAll').addEventListener('change', (e) => {
+        gridBody.querySelectorAll('input.rowSel').forEach(cb => cb.checked = e.target.checked);
+      });
+      document.getElementById('deleteSelected').addEventListener('click', () => {
+        const keep = [];
+        const cbs = Array.from(gridBody.querySelectorAll('input.rowSel'));
+        cbs.forEach((cb, idx) => { if (!cb.checked) keep.push(current[idx]); });
+        current = keep;
+        render(current.slice(0, 50));
+      });
     </script>
   </body>
   </html>

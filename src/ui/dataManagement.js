@@ -17,4 +17,8 @@ export function loadPlayersFromWorkspace() {
   return store.get('players') || [];
 }
 
+export function withSourceTag(records, source) {
+  return (records || []).map(r => ({ ...r, __source: source }));
+}
+
 

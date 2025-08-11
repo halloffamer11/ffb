@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-009c Search Results UI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      tr[aria-selected="true"] { outline: 2px solid #2563eb; background-color: #eff6ff; }
+      mark { background: #fde68a; padding: 0 1px; border-radius: 2px; }
+      /* Toggle switch styling */
+      input.toggle {
+        appearance: none;
+        width: 2.5rem; /* 40px */
+        height: 1.25rem; /* 20px */
+        background: #cbd5e1; /* slate-300 */
+        border-radius: 9999px;
+        position: relative;
+        outline: none;
+        transition: background-color 0.2s ease;
+      }
+      input.toggle::after {
+        content: '';
+        position: absolute;
+        top: 0.125rem; /* 2px */
+        left: 0.125rem; /* 2px */
+        width: 1rem; /* 16px */
+        height: 1rem; /* 16px */
+        background: #ffffff;
+        border-radius: 9999px;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+        transition: transform 0.2s ease;
+      }
+      input.toggle:checked { background: #10b981; /* emerald-500 */ }
+      input.toggle:checked::after { transform: translateX(1.25rem); /* 20px */ }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-2">T-009c Search Results UI</h1>
+    <p class="text-sm text-slate-600 mb-4">Fuzzy search results with highlight, drafted styling, and keyboard navigation (↑/↓ to move, Enter to toggle drafted).</p>
+
+    <div class="flex items-center gap-3 flex-wrap mb-2">
+      <input id="q" type="text" placeholder="Type a name... (e.g., mah, travis, cj)" class="border p-2 w-[28rem]" />
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-600">Positions:</span>
+        <label class="inline-flex items-center gap-1 text-xs"><input id="pos_all" type="checkbox" checked /> All</label>
+        <label class="inline-flex items-center gap-1 text-xs"><input class="pos" data-pos="QB" type="checkbox" /> QB</label>
+        <label class="inline-flex items-center gap-1 text-xs"><input class="pos" data-pos="RB" type="checkbox" /> RB</label>
+        <label class="inline-flex items-center gap-1 text-xs"><input class="pos" data-pos="WR" type="checkbox" /> WR</label>
+        <label class="inline-flex items-center gap-1 text-xs"><input class="pos" data-pos="TE" type="checkbox" /> TE</label>
+        <label class="inline-flex items-center gap-1 text-xs"><input class="pos" data-pos="DST" type="checkbox" /> DST</label>
+        <label class="inline-flex items-center gap-1 text-xs"><input class="pos" data-pos="K" type="checkbox" /> K</label>
+      </div>
+      <label class="inline-flex items-center gap-2 ml-2 text-xs">
+        Show Drafted
+        <input id="showDrafted" type="checkbox" class="toggle" />
+      </label>
+      <span class="text-sm text-slate-600">Results: <span id="count">0</span></span>
+      <span class="text-sm text-slate-600">Time: <span id="time">0</span> ms</span>
+      <button id="reload" class="ml-auto px-3 py-2 rounded bg-slate-600 text-white">Reload Workspace</button>
+      <a href="./T-013_data_management.html" class="px-3 py-2 rounded bg-amber-600 text-white" target="_blank">Open T-013</a>
+    </div>
+
+    <div id="notice" class="text-amber-700 text-sm mb-3"></div>
+
+    <table class="min-w-full bg-white rounded border text-sm">
+      <thead class="bg-slate-100">
+        <tr>
+          <th class="text-left p-2">name</th>
+          <th class="text-left p-2">team</th>
+          <th class="text-left p-2">pos</th>
+          <th class="text-left p-2">ADP</th>
+          <th class="text-left p-2">injury</th>
+          <th class="text-left p-2">drafted</th>
+          <th class="text-left p-2">action</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+    </table>
+
+    <script type="module">
+      import { FuzzySearch } from '../../src/core/search.js';
+      import { normalizeInjuryStatus } from '../../src/core/schema.js';
+      import { loadPlayersFromWorkspace, savePlayersToWorkspace } from '../../src/ui/dataManagement.js';
+
+      const qEl = document.getElementById('q');
+      const showDraftedEl = document.getElementById('showDrafted');
+      const countEl = document.getElementById('count');
+      const timeEl = document.getElementById('time');
+      const notice = document.getElementById('notice');
+      const rowsEl = document.getElementById('rows');
+      const posAllEl = document.getElementById('pos_all');
+      const posEls = Array.from(document.querySelectorAll('input.pos'));
+
+      let players = [];
+      let search = null;
+      let lastResults = [];
+      let selectedIdx = -1;
+      function normalizePos(p) {
+        const s = String(p || '').toUpperCase();
+        if (s === 'DEF') return 'DST';
+        return s;
+      }
+
+      function selectedPositions() {
+        if (posAllEl.checked) return new Set(['QB','RB','WR','TE','DST','K']);
+        const set = new Set();
+        for (const el of posEls) { if (el.checked) set.add(el.getAttribute('data-pos')); }
+        // Fallback to all if none selected to avoid zero-results trap
+        if (set.size === 0) return new Set(['QB','RB','WR','TE','DST','K']);
+        return set;
+      }
+
+      function applyFilters(arr) {
+        const showDrafted = !!showDraftedEl.checked;
+        const allowed = selectedPositions();
+        return arr.filter(p => {
+          if (!showDrafted && p.drafted) return false;
+          const pos = normalizePos(p.position);
+          return allowed.has(pos);
+        });
+      }
+
+      function bestComparator(a, b) {
+        const adpA = getAdp(a); const adpB = getAdp(b);
+        if (adpA !== '' && adpB !== '' && Number.isFinite(Number(adpA)) && Number.isFinite(Number(adpB))) {
+          return Number(adpA) - Number(adpB); // lower ADP first
+        }
+        const ptsA = Number(a.points); const ptsB = Number(b.points);
+        if (Number.isFinite(ptsA) && Number.isFinite(ptsB)) return ptsB - ptsA; // higher points first
+        return String(a.name).localeCompare(String(b.name));
+      }
+
+
+      function normalizePlayers(arr) { return (arr || []).map(p => ({ ...p, drafted: !!p.drafted })); }
+      function getAdp(p) { return (p?.marketData?.adp ?? p?.adp) ?? ''; }
+
+      const STATUS_LABELS = ['HEALTHY','Q','D','O','IR','PUP','NA'];
+
+      function injuryClass(code) {
+        const c = normalizeInjuryStatus(code);
+        if (c === 0) return 'text-emerald-700';   // HEALTHY
+        if (c === 1) return 'text-yellow-700';    // Q
+        if (c === 2) return 'text-orange-700';    // D
+        if (c === 3) return 'text-rose-700';      // O
+        if (c === 4) return 'text-rose-700';      // IR
+        if (c === 5) return 'text-rose-700';      // PUP
+        return 'text-slate-500';                  // NA
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, s => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[s]));
+      }
+
+      function highlightName(name, query) {
+        const n = String(name || '');
+        const q = String(query || '').trim();
+        if (!q) return escapeHtml(n);
+        const esc = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const re = new RegExp(esc, 'i');
+        const m = n.match(re);
+        if (!m) return escapeHtml(n);
+        const i = m.index; const j = i + m[0].length;
+        return escapeHtml(n.slice(0, i)) + '<mark>' + escapeHtml(n.slice(i, j)) + '</mark>' + escapeHtml(n.slice(j));
+      }
+
+      function reload() {
+        players = normalizePlayers(loadPlayersFromWorkspace());
+        search = new FuzzySearch(players);
+        if (!players.length) { notice.textContent = 'No players in workspace. Use T-013 to import data, then return here.'; }
+        else { notice.textContent = ''; }
+        selectedIdx = -1;
+        runSearch();
+      }
+
+      function runSearch() {
+        const q = qEl.value || '';
+        const t0 = performance.now();
+        let results;
+        if (q.trim().length === 0) {
+          // Default view: best remaining
+          results = applyFilters(players).slice().sort(bestComparator);
+        } else {
+          const drafted = showDraftedEl.checked ? 'all' : 'undrafted';
+          results = applyFilters(search.search(q, { drafted }));
+        }
+        const t1 = performance.now();
+        lastResults = results;
+        render(results, q);
+        countEl.textContent = String(results.length);
+        timeEl.textContent = (t1 - t0).toFixed(1);
+      }
+
+      function render(results, query) {
+        rowsEl.innerHTML = '';
+        if (!results.length) {
+          const tr = document.createElement('tr');
+          const td = document.createElement('td');
+          td.colSpan = 7; td.className = 'p-3 text-slate-500 italic';
+          td.textContent = 'No results';
+          tr.appendChild(td); rowsEl.appendChild(tr); return;
+        }
+        const max = 50;
+        const slice = results.slice(0, max);
+        slice.forEach((r, idx) => {
+          const tr = document.createElement('tr');
+          tr.setAttribute('role', 'row');
+          tr.setAttribute('aria-selected', String(idx === selectedIdx));
+          if (r.drafted) tr.classList.add('opacity-60');
+          tr.innerHTML = `
+            <td class="p-2 border-t name"></td>
+            <td class="p-2 border-t">${escapeHtml(r.team ?? '')}</td>
+            <td class="p-2 border-t">${escapeHtml(r.position ?? '')}</td>
+            <td class="p-2 border-t">${escapeHtml(getAdp(r))}</td>
+            <td class="p-2 border-t ${injuryClass(r.injuryStatus)}">${STATUS_LABELS[normalizeInjuryStatus(r.injuryStatus)]}</td>
+            <td class="p-2 border-t ${r.drafted ? 'text-emerald-700' : 'text-slate-500'}">${r.drafted ? 'Yes' : 'No'}</td>
+            <td class="p-2 border-t">
+              <button class="px-2 py-1 border rounded" data-id="${r.id || r.name}">${r.drafted ? 'Mark Undrafted' : 'Mark Drafted'}</button>
+            </td>`;
+          const nameTd = tr.querySelector('.name');
+          nameTd.innerHTML = highlightName(r.name, query);
+          rowsEl.appendChild(tr);
+        });
+
+        // Wire actions
+        rowsEl.querySelectorAll('button[data-id]').forEach(btn => btn.addEventListener('click', () => {
+          const id = btn.getAttribute('data-id');
+          toggleDraftedById(id);
+        }));
+      }
+
+      function toggleDraftedById(id) {
+        const idx = players.findIndex(p => String(p.id || p.name) === String(id));
+        if (idx < 0) return;
+        players[idx].drafted = !players[idx].drafted;
+        const res = savePlayersToWorkspace(players.map(({ __source, ...rest }) => rest));
+        if (!res.ok) { alert('Failed to save drafted flag'); return; }
+        search = new FuzzySearch(players);
+        runSearch();
+      }
+
+      // Keyboard navigation: ↑/↓ to move, Enter to toggle drafted
+      function onKeyDown(e) {
+        const total = lastResults.length;
+        if (!['ArrowDown','ArrowUp','Enter'].includes(e.key)) return;
+        if (!total) return;
+        if (e.key === 'ArrowDown') { selectedIdx = Math.min(total - 1, selectedIdx + 1); e.preventDefault(); render(lastResults, qEl.value || ''); return; }
+        if (e.key === 'ArrowUp') { selectedIdx = Math.max(0, selectedIdx - 1); e.preventDefault(); render(lastResults, qEl.value || ''); return; }
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          const sel = lastResults[selectedIdx >= 0 ? selectedIdx : 0];
+          const id = sel?.id || sel?.name;
+          if (id != null) toggleDraftedById(id);
+        }
+      }
+
+      qEl.addEventListener('input', () => { selectedIdx = -1; runSearch(); });
+      showDraftedEl.addEventListener('change', () => { selectedIdx = -1; runSearch(); });
+      posAllEl.addEventListener('change', () => {
+        if (posAllEl.checked) {
+          // When All is checked, uncheck all individual positions
+          posEls.forEach(el => { el.checked = false; });
+        }
+        selectedIdx = -1; runSearch();
+      });
+      posEls.forEach(el => el.addEventListener('change', (e) => {
+        const target = e.currentTarget;
+        if (target.checked) {
+          if (posAllEl.checked) {
+            // First selection after All: unselect All and keep only this
+            posAllEl.checked = false;
+            posEls.forEach(other => { if (other !== target) other.checked = false; });
+          }
+        }
+        selectedIdx = -1; runSearch();
+      }));
+      document.addEventListener('keydown', onKeyDown);
+      document.getElementById('reload').addEventListener('click', reload);
+
+      // Initial
+      reload();
+    </script>
+  </body>
+  </html>
+
+

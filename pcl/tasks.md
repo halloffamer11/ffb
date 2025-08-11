@@ -282,7 +282,7 @@ Result: Tier computation via vbd deltas with stdDev×0.5 threshold; unit tests c
 
 Result: Implemented BasicSearch and HTML validation page. Human validation PASS — case-insensitive and partial matches correct; drafted filter works; workspace drafted flag toggles and persists.
 
-### T-009b: Fuzzy Matching Algorithm ⚠️
+### T-009b: Fuzzy Matching Algorithm ⚠️ ✅
 **Complexity**: High | **Risk**: Medium
 - Implement Levenshtein distance for typos
 - Set quality threshold for matches
@@ -302,7 +302,9 @@ Result: Implemented BasicSearch and HTML validation page. Human validation PASS 
   5. Measure response time for each
 - **Success Criteria**: All test cases match correctly in <50ms
 
-### T-009c: Search Results UI
+Result: Implemented `FuzzySearch` with normalization, initials handling (e.g., CJ → C.J.), and bounded Levenshtein for <50ms queries. Added unit tests `tests/unit/search_fuzzy.test.js`; performance verified by test. Human validation: Use `demos/ui/T-009a_search.html` to load players, then in DevTools run `new (await import('/src/core/search.js')).FuzzySearch(loadPlayersFromWorkspace()).search('CJ')` to verify cases; or run Node `node tests/unit/search_fuzzy.test.js`.
+
+### T-009c: Search Results UI ✅
 **Complexity**: Medium | **Risk**: Low
 - Display player context in results
 - Highlight matched portions
@@ -322,6 +324,8 @@ Result: Implemented BasicSearch and HTML validation page. Human validation PASS 
   6. Press Enter to select
   7. Check injury colors (green/yellow/red)
 - **Success Criteria**: Intuitive keyboard navigation
+
+Result: Implemented `demos/ui/T-009c_search.html` with fuzzy results, highlight, drafted greying, keyboard navigation (↑/↓, Enter), empty-state handling, and injury color coding.
 
 ### T-009d: Search Performance Optimization
 **Complexity**: Medium | **Risk**: Medium
