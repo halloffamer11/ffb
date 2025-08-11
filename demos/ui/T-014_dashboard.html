@@ -34,7 +34,7 @@
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-4">
+    <main class="max-w-7xl mx-auto px-4 py-4" data-dashboard-root>
       <!-- Loading state overlay -->
       <div id="loading" class="hidden fixed inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center">
         <div class="w-72 h-24 rounded border bg-white p-4 animate-pulse">
@@ -48,7 +48,16 @@
 
       <!-- Tabs -->
       <section id="view-dashboard" class="view">
-        <div id="dashGrid" class="grid gap-4">
+        <div class="flex items-center gap-2 mb-3" data-action="toolbar">
+          <button data-btn="edit" class="px-3 py-1 border rounded">Toggle Edit</button>
+          <select data-select="widget" class="border p-1 text-sm">
+            <option value="tiers">Position Tiers</option>
+            <option value="roster">My Roster</option>
+            <option value="budget">Budget Tracker</option>
+          </select>
+          <button data-btn="add" class="px-3 py-1 border rounded">Add Widget</button>
+        </div>
+        <div id="dashGrid" data-grid class="grid gap-4 h-[70vh]">
           <!-- Panel: Search & Select (fixed full width) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="search" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
@@ -195,7 +204,8 @@
       </section>
     </main>
 
-    <script>
+    <script type="module">
+      import { initDashboard } from '/src/ui/dashboard.js';
       const tabs = Array.from(document.querySelectorAll('button.tab'));
       const views = {
         dashboard: document.getElementById('view-dashboard'),
@@ -456,10 +466,9 @@
         Array.from(grid.querySelectorAll('.panel')).forEach(p => { trimHeightForCollapsed(p); applyGridPosition(p); });
       }
 
-      // Initialize panel behaviors
-      Array.from(grid.querySelectorAll('.panel')).forEach(p => { applyGridPosition(p); wirePanelControls(p); });
-      loadLayout();
-      applyRowStyles();
+      // Replace legacy layout with new widget engine
+      const root = document.querySelector('[data-dashboard-root]');
+      initDashboard(root);
     </script>
   </body>
   </html>
