@@ -104,7 +104,14 @@
         if (!current.length) { errors.textContent = 'No data loaded'; return; }
         const r = savePlayersToWorkspace(current.map(({ __source, ...rest }) => rest));
         errors.textContent = r.ok ? '' : `Save failed: ${r.error}`;
-        if (r.ok) alert('Saved to workspace');
+        if (r.ok) {
+          alert('Saved to workspace');
+          try {
+            // Write a backup snapshot here too (same namespace as workspace)
+            const players = (loadPlayersFromWorkspace() || []).slice();
+            window.localStorage.setItem('workspace::__backup::manual_' + Date.now(), JSON.stringify({ version: '1.0.0', timestamp: Date.now(), state: { players }, size: JSON.stringify({ players }).length }));
+          } catch {}
+        }
       });
 
       document.getElementById('exportBtn').addEventListener('click', () => {

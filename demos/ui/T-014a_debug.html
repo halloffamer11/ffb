@@ -52,8 +52,7 @@
     </div>
 
     <script type="module">
-      import { createStorageAdapter } from '/src/adapters/storage.js';
-      import { attachAutoBackup } from '/src/adapters/backup.js';
+      import { createStorageAdapter, createBackupManager } from '/src/adapters/storage.js';
       import { loadSettings } from '/src/ui/settings.js';
       import { loadPlayersFromWorkspace, savePlayersToWorkspace } from '/src/ui/dataManagement.js';
       import { autoConfigure, calculatePoints } from '/src/core/scoring.js';
@@ -78,21 +77,23 @@
         runBtn.classList.toggle('opacity-50', runBtn.disabled);
       }
 
-      // Auto-backup workspace players on changes made via debug tools
-      try {
-        const unsub = attachAutoBackup({
-          // minimal shim for store-like interface
-          version: '1.0.0',
-          getState: () => ({ players: loadPlayersFromWorkspace() }),
-          subscribe: (event, fn) => { return () => {}; }
-        }, store, { maxBackups: 3 });
-      } catch {}
+      // Auto-backup helper for this page (workspace players only)
+      const backups = createBackupManager(store, { maxBackups: 3 });
+      function backupWorkspacePlayers(note = '') {
+        try {
+          const players = loadPlayersFromWorkspace() || [];
+          const snap = { version: store.getVersion ? store.getVersion() : '1.0.0', timestamp: Date.now(), note, state: { players } };
+          snap.size = JSON.stringify(snap.state).length;
+          backups.save(snap);
+        } catch {}
+      }
 
       document.getElementById('loadGolden').addEventListener('click', async () => {
         const text = await fetch('../../testdata/golden/debug_validation_set.csv').then(r => r.text());
         golden = parseCsvToObjects(text);
         alert(`Loaded golden: ${golden.length} rows`);
         refreshCounts();
+        backupWorkspacePlayers('afterLoadGolden');
       });
 
       document.getElementById('run').addEventListener('click', () => {
@@ -165,6 +166,7 @@
         if (!res.ok) { alert('Failed to save to workspace'); return; }
         alert(`Workspace updated with ${rows.length} golden rows`);
         refreshCounts();
+        backupWorkspacePlayers('afterUseGoldenAsCurrent');
       });
 
       // Initial counts
