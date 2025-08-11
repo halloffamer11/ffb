@@ -48,9 +48,9 @@
 
       <!-- Tabs -->
       <section id="view-dashboard" class="view">
-        <div id="dashGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 grid-flow-row-dense gap-4">
+        <div id="dashGrid" class="grid gap-4">
           <!-- Panel: Search & Select (fixed full width) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem]" data-panel="search" draggable="true" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem]" data-panel="search" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Search & Select</span>
               <div class="flex items-center gap-1 text-xs">
@@ -70,7 +70,7 @@
           </div>
 
           <!-- Panel: Player Analysis (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="2" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="2" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Player Analysis</span>
               <div class="flex items-center gap-1 text-xs">
@@ -91,7 +91,7 @@
           </div>
 
           <!-- Panel: Position Tiers (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false" data-col="3" data-row="7" data-w="1" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" data-size="m" data-collapsed="false" data-col="3" data-row="7" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Position Tiers</span>
               <div class="flex items-center gap-1 text-xs">
@@ -112,7 +112,7 @@
           </div>
 
           <!-- Panel: My Roster (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="1" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">My Roster</span>
               <div class="flex items-center gap-1 text-xs">
@@ -133,7 +133,7 @@
           </div>
 
           <!-- Panel: Budget Tracker (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false" data-col="2" data-row="10" data-w="1" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" data-size="s" data-collapsed="false" data-col="2" data-row="10" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Budget Tracker</span>
               <div class="flex items-center gap-1 text-xs">
@@ -273,21 +273,8 @@
       }
 
       function wirePanelControls(panel) {
-        // Drag and drop with before/after placement
-        panel.addEventListener('dragstart', e => {
-          e.dataTransfer.setData('text/panel', panel.dataset.panel);
-          e.dataTransfer.effectAllowed = 'move';
-        });
-        panel.addEventListener('dragover', e => { e.preventDefault(); });
-        panel.addEventListener('drop', e => {
-          e.preventDefault();
-          const id = e.dataTransfer.getData('text/panel');
-          const src = grid.querySelector(`.panel[data-panel="${id}"]`);
-          if (!src) return;
-          const targetCell = pointToCell(e.clientX, e.clientY);
-          movePanelToCellOrSwap(src, targetCell.col, targetCell.row);
-          saveLayout();
-        });
+        // Drag-and-drop disabled in simplified mode
+        panel.setAttribute('draggable', 'false');
         const header = panel.querySelector('.panel-header');
         if (header) header.addEventListener('click', () => {
           const collapsed = panel.dataset.collapsed === 'true' ? false : true;
@@ -326,10 +313,7 @@
           }
         });
 
-        // Resizer
-        const resizer = panel.querySelector('.resizer');
-        if (resizer) resizer.addEventListener('mousedown', (e) => startResize(e, panel));
-        if (header) header.addEventListener('mousedown', (e) => startDrag(e, panel));
+        // Dragging disabled; no resizer hooks
       }
 
       function startDrag(e, panel) {
@@ -389,6 +373,7 @@
         return { left: p.col, right: p.col + p.w - 1, top: p.row, bottom: p.row + p.h - 1 };
       }
       function overlaps(a, b) {
+        // Strict cell overlap detection; no partials (integral grid only)
         return !(a.left > b.right || a.right < b.left || a.top > b.bottom || a.bottom < b.top);
       }
       function checkOverlap(panel) {
