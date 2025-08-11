@@ -87,12 +87,6 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
     if (input) input.addEventListener('input', () => { if (form.scoringPreset) form.scoringPreset.value = 'CUSTOM'; });
   });
 
-  // Flex presets
-  form.querySelectorAll('[data-flex-preset]')?.forEach(btn => btn.addEventListener('click', () => {
-    const p = btn.getAttribute('data-flex-preset');
-    applyFlexPreset(form, p);
-  }));
-
   // Add flex slot
   const addFlexBtn = form.querySelector('#addFlexSlot');
   if (addFlexBtn) addFlexBtn.addEventListener('click', () => addFlexSlot(form));
@@ -341,33 +335,7 @@ function syncFlexUI(form, settings) {
   }));
 }
 
-function applyFlexPreset(form, preset) {
-  const s = loadSettings();
-  let slots = [];
-  switch (String(preset || '').toUpperCase()) {
-    case 'NONE':
-      slots = [];
-      break;
-    case 'WR_TE':
-      slots = [{ label: 'FLEX 1', allowed: ['WR','TE'] }];
-      break;
-    case 'RB_WR':
-      slots = [{ label: 'FLEX 1', allowed: ['RB','WR'] }];
-      break;
-    case 'RB_WR_TE':
-      slots = [{ label: 'FLEX 1', allowed: ['RB','WR','TE'] }];
-      break;
-    case 'SUPERFLEX':
-      slots = [{ label: 'SUPERFLEX', allowed: ['QB','RB','WR','TE'] }];
-      break;
-    default:
-      slots = s.rosterFlex || [];
-  }
-  s.rosterFlex = slots;
-  saveSettings(s);
-  syncFlexUI(form, s);
-  renderSummary(document.getElementById('summary'), s);
-}
+// Removed preset application to keep UI simple per feedback
 
 function addFlexSlot(form) {
   const s = loadSettings();
