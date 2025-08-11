@@ -13,7 +13,7 @@
       .panel.active .panel-header { background-color: #ecfdf5; /* emerald-50 */ border-color: #a7f3d0; }
       .panel.collapsed .panel-header { background-color: #f1f5f9; /* slate-100 */ color: #64748b; }
       /* Grid sizing */
-      #dashGrid { grid-template-columns: repeat(12, minmax(0, 1fr)); grid-auto-rows: 6rem; }
+      #dashGrid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
       /* Resizer */
       .resizer { position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; cursor: nwse-resize; background: rgba(100,116,139,0.25); border-radius: 2px; }
       .panel { position: relative; }
@@ -54,6 +54,8 @@
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem]" data-panel="search" draggable="true" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="12" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Search & Select</span>
+              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
+              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
@@ -66,6 +68,8 @@
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="6" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Player Analysis</span>
+              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
+              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
@@ -79,6 +83,8 @@
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false" data-col="7" data-row="7" data-w="6" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Position Tiers</span>
+              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
+              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
@@ -92,6 +98,8 @@
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="6" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">My Roster</span>
+              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
+              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
@@ -105,6 +113,8 @@
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false" data-col="7" data-row="10" data-w="6" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Budget Tracker</span>
+              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
+              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
@@ -167,6 +177,7 @@
       const LS_KEY = 'dashboardLayoutV2';
       const COLS = 12;
       const ROW_H = 96; // px (6rem)
+      const rowCollapse = {}; // rowIndex -> collapsed boolean
 
       function applyGridPosition(panel) {
         const col = clamp(1, COLS, Number(panel.dataset.col || 1));
@@ -174,7 +185,18 @@
         const w = clamp(1, COLS - col + 1, Number(panel.dataset.w || 1));
         const h = Math.max(1, Number(panel.dataset.h || 1));
         panel.style.gridColumn = `${col} / span ${w}`;
-        panel.style.gridRow = `${row} / span ${h}`;
+        // If a row is collapsed, force height to 1 row for that row and trim any overflow into it
+        const rowsSpanned = effectiveRows(panel, row, h);
+        panel.style.gridRow = `${row} / span ${rowsSpanned}`;
+      }
+
+      function effectiveRows(panel, startRow, h) {
+        // Trim height if any overlapped row is collapsed
+        let span = h;
+        for (let r = startRow; r < startRow + h; r += 1) {
+          if (rowCollapse[r]) { span = Math.min(span, Math.max(1, r - startRow)); break; }
+        }
+        return Math.max(1, span);
       }
 
       function applyCollapsed(panel, collapsed) {
@@ -186,22 +208,26 @@
       function saveLayout() {
         const panels = Array.from(grid.querySelectorAll('.panel'));
         const state = panels.map(p => ({ id: p.dataset.panel, col: Number(p.dataset.col), row: Number(p.dataset.row), w: Number(p.dataset.w), h: Number(p.dataset.h), collapsed: p.dataset.collapsed === 'true' }));
-        localStorage.setItem(LS_KEY, JSON.stringify(state));
+        const rows = { ...rowCollapse };
+        localStorage.setItem(LS_KEY, JSON.stringify({ panels: state, rows }));
       }
 
       function loadLayout() {
         try {
           const raw = localStorage.getItem(LS_KEY);
           if (!raw) return;
-          const state = JSON.parse(raw);
-          if (!Array.isArray(state)) return;
-          state.forEach(s => {
+          const payload = JSON.parse(raw);
+          const states = Array.isArray(payload) ? payload : payload.panels;
+          if (!Array.isArray(states)) return;
+          Object.assign(rowCollapse, payload.rows || {});
+          states.forEach(s => {
             const p = grid.querySelector(`.panel[data-panel="${s.id}"]`);
             if (!p) return;
             p.dataset.col = s.col; p.dataset.row = s.row; p.dataset.w = s.w; p.dataset.h = s.h;
             applyGridPosition(p);
             applyCollapsed(p, !!s.collapsed);
           });
+          applyRowStyles();
         } catch {}
       }
 
@@ -224,7 +250,12 @@
         const header = panel.querySelector('.panel-header');
         if (header) header.addEventListener('click', () => {
           const collapsed = panel.dataset.collapsed === 'true' ? false : true;
-          applyCollapsed(panel, collapsed); saveLayout();
+          applyCollapsed(panel, collapsed);
+          // Toggle row collapse for the top row of this panel
+          const r = Number(panel.dataset.row || 1);
+          rowCollapse[r] = collapsed;
+          applyRowStyles();
+          saveLayout();
         });
         const expandBtn = panel.querySelector('.btn-expand');
         if (expandBtn) expandBtn.addEventListener('click', (ev) => {
@@ -351,9 +382,22 @@
       }
       function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
 
+      function applyRowStyles() {
+        // Apply CSS row sizes by injecting per-row track sizes
+        const maxRow = Math.max(...Array.from(grid.querySelectorAll('.panel')).map(p => Number(p.dataset.row || 1) + Number(p.dataset.h || 1)));
+        // Build template rows: collapsed rows get 2.5rem, others 6rem
+        const sizes = [];
+        for (let r = 1; r <= maxRow; r += 1) sizes.push(rowCollapse[r] ? '2.5rem' : '6rem');
+        grid.style.gridAutoRows = '6rem';
+        grid.style.gridTemplateRows = sizes.join(' ');
+        // Re-apply positions to trim spans
+        Array.from(grid.querySelectorAll('.panel')).forEach(p => applyGridPosition(p));
+      }
+
       // Initialize panel behaviors
       Array.from(grid.querySelectorAll('.panel')).forEach(p => { applyGridPosition(p); wirePanelControls(p); });
       loadLayout();
+      applyRowStyles();
     </script>
   </body>
   </html>
