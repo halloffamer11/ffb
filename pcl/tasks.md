@@ -76,7 +76,7 @@ Result: Initialized Vite app with Tailwind via CDN and CSP headers; added worksp
 
 Result: Implemented compact player schema helpers and enum; Node tests confirm <100 bytes/player and valid enums. Human validation PASS — injuryMappingOK=true, maxSampleBytes=72 (allSamplesUnder100=true), workspaceOK=true. Guide: `demos/ui/T-002_schema_check.md`.
 
-### T-003: Storage Layer Implementation ⚠️
+### T-003: Storage Layer Implementation ⚠️ ✅
 **Complexity**: High | **Risk**: High
 - Create localStorage wrapper with error handling
 - Implement size-conscious persistence (<5MB total)
@@ -106,7 +106,7 @@ Result: Implemented Phase 1 storage wrapper with namespace, version, availabilit
 *Duration: 2-3 days | Risk: MEDIUM*
 * Note: Workspace functionality added in this phase*
 
-### T-004: CSV Import with Validation ⚠️
+### T-004: CSV Import with Validation ⚠️ ✅
 **Complexity**: High | **Risk**: Medium
 - Implement CSV parser (Papa Parse)
 - Add comprehensive format validation
@@ -134,7 +134,7 @@ Result: Implemented Phase 1 storage wrapper with namespace, version, availabilit
 
 Result: CSV import core implemented and validated. Human validation PASS — valid OK; BOM/CRLF/quotes preserved; UTF-8 diacritics parsed; missing columns and invalid numbers reported; corrupt CSV flagged. Preview: `demos/ui/T-004_import_preview.html`; Guide: `demos/ui/T-004_import.md`.
 
-### T-005: Golden Dataset Integration
+### T-005: Golden Dataset Integration ✅
 **Complexity**: Low | **Risk**: Low
 - Load provided test CSV files
 - Transform to internal data format
@@ -156,7 +156,7 @@ Result: CSV import core implemented and validated. Human validation PASS — val
 
 Result: Golden transform implemented; sample sources updated to 2024 with K/DST; padding to 300; export/import round-trip verified. Human validation PASS — baseCount>0, fullCount=300, roundTrip count=300. Guide: `demos/ui/T-005_golden.md`.
 
-### T-006: Scoring System Implementation
+### T-006: Scoring System Implementation ✅
 **Complexity**: Medium | **Risk**: Low
 - Implement PPR scoring calculations
 - Implement half-PPR calculations
@@ -180,7 +180,7 @@ Result: Golden transform implemented; sample sources updated to 2024 with K/DST;
 
 Result: Implemented presets and custom overrides with pure calculation function; unit tests verify ordering and overrides. HITL guide added `demos/ui/T-006_scoring_validation.md`.
 
-### ** T-006a: Workspace Implementation**
+### ** T-006a: Workspace Implementation** ✅
 **Complexity**: High | **Risk**: Medium
 *Added to Phase 2 per architectural decision*
 - Implement .ffdraft file format
@@ -210,7 +210,7 @@ Result: Implemented presets and custom overrides with pure calculation function;
 ## Phase 3: Core Algorithms
 *Duration: 3-4 days | Risk: MEDIUM*
 
-### T-007: VBD Calculation Engine
+### T-007: VBD Calculation Engine ✅
 **Complexity**: Medium | **Risk**: Low
 - Implement baseline calculation (teams × starters)
 - Calculate Points Above Replacement (PAR)
@@ -238,7 +238,7 @@ Result: Implemented presets and custom overrides with pure calculation function;
 
 Result: Baseline helper and VBD per-player implemented; unit tests cover baseline and VBD math; HITL guide `demos/ui/T-007_vbd_validation.md`.
 
-### T-008: Position Tier Analysis
+### T-008: Position Tier Analysis ✅
 **Complexity**: Medium | **Risk**: Medium
 - Implement delta-based tier breaks
 - Calculate tier thresholds (stdDev × 0.5)
@@ -261,7 +261,7 @@ Result: Baseline helper and VBD per-player implemented; unit tests cover baselin
 
 Result: Tier computation via vbd deltas with stdDev×0.5 threshold; unit tests confirm inclusion; HITL guide `demos/ui/T-008_tiers_validation.md`.
 
-### T-009a: Basic String Search
+### T-009a: Basic String Search ✅
 **Complexity**: Low | **Risk**: Low
 - Implement case-insensitive contains search
 - Add simple caching mechanism
@@ -327,7 +327,7 @@ Result: Implemented `FuzzySearch` with normalization, initials handling (e.g., C
 
 Result: Implemented `demos/ui/T-009c_search.html` with fuzzy results, highlight, drafted greying, keyboard navigation (↑/↓, Enter), empty-state handling, and injury color coding.
 
-### T-009d: Search Performance Optimization
+### T-009d: Search Performance Optimization ✅
 **Complexity**: Medium | **Risk**: Medium
 - Build search index on load
 - Implement result caching
@@ -345,10 +345,12 @@ Result: Implemented `demos/ui/T-009c_search.html` with fuzzy results, highlight,
   5. Monitor performance in DevTools
 - **Success Criteria**: <50ms for all searches
 
+Result: Added prefix and initials candidate index in `FuzzySearch`, input debouncing (150ms) in `T-009c_search.html`, and an optional performance HUD (avg/p95) toggle via `?hud=0`. Unit perf updated to assert fuzzy <50ms; HITL shows debounced input and cached repeats are instant.
+
 ## Phase 4: State Management
 *Duration: 2 days | Risk: HIGH*
 
-### T-010: State Management System ⚠️
+### T-010: State Management System ⚠️ ✅
 **Complexity**: High | **Risk**: High
 - Implement single source of truth store
 - Create event bus for updates
@@ -371,6 +373,8 @@ Result: Implemented `demos/ui/T-009c_search.html` with fuzzy results, highlight,
   6. Check action log in console
   7. Save workspace, verify state included
 - **Success Criteria**: State remains consistent through all operations
+
+Result: Added `src/state/store.js` providing a pure, minimal store with pub/sub, 10-level undo, action logging, and non-blocking workspace sync; unit tests `tests/unit/state.test.js` cover updates, undo, and pick editing. HITL pending integration with dashboard.
 
 ### T-011: Auto-Backup System
 **Complexity**: Medium | **Risk**: Medium
