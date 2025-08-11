@@ -13,7 +13,7 @@
       .panel.active .panel-header { background-color: #ecfdf5; /* emerald-50 */ border-color: #a7f3d0; }
       .panel.collapsed .panel-header { background-color: #f1f5f9; /* slate-100 */ color: #64748b; }
       /* Grid sizing */
-      #dashGrid { grid-template-columns: repeat(12, minmax(0, 1fr)); }
+      #dashGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       /* Resizer */
       .resizer { position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; cursor: nwse-resize; background: rgba(100,116,139,0.25); border-radius: 2px; }
       .panel { position: relative; }
@@ -51,7 +51,7 @@
       <section id="view-dashboard" class="view">
         <div id="dashGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 grid-flow-row-dense gap-4">
           <!-- Panel: Search & Select (fixed full width) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem]" data-panel="search" draggable="true" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="12" data-h="6">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem]" data-panel="search" draggable="true" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Search & Select</span>
               <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
@@ -65,7 +65,7 @@
           </div>
 
           <!-- Panel: Player Analysis (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="6" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="2" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Player Analysis</span>
               <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
@@ -80,7 +80,7 @@
           </div>
 
           <!-- Panel: Position Tiers (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false" data-col="7" data-row="7" data-w="6" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false" data-col="3" data-row="7" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Position Tiers</span>
               <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
@@ -95,7 +95,7 @@
           </div>
 
           <!-- Panel: My Roster (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="6" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">My Roster</span>
               <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
@@ -110,7 +110,7 @@
           </div>
 
           <!-- Panel: Budget Tracker (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false" data-col="7" data-row="10" data-w="6" data-h="3">
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false" data-col="2" data-row="10" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Budget Tracker</span>
               <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
@@ -175,7 +175,7 @@
       // ===== MVP panel controls: collapse, resize, drag/snap (simple) =====
       const grid = document.getElementById('dashGrid');
       const LS_KEY = 'dashboardLayoutV2';
-      const COLS = 12;
+      const COLS = 3;   // Fixed 3 columns per spec
       const ROW_H = 96; // px (6rem)
       const rowCollapse = {}; // rowIndex -> collapsed boolean
 
@@ -197,6 +197,18 @@
           if (rowCollapse[r]) { span = Math.min(span, Math.max(1, r - startRow)); break; }
         }
         return Math.max(1, span);
+      }
+
+      function trimHeightForCollapsed(panel) {
+        // Permanently shrink panel.h if it overlaps collapsed rows
+        const startRow = Number(panel.dataset.row || 1);
+        let newH = Number(panel.dataset.h || 1);
+        for (let r = startRow; r < startRow + newH; r += 1) {
+          if (rowCollapse[r]) { newH = Math.max(1, r - startRow); break; }
+        }
+        if (newH !== Number(panel.dataset.h)) {
+          panel.dataset.h = newH;
+        }
       }
 
       function applyCollapsed(panel, collapsed) {
@@ -255,8 +267,14 @@
           const r = Number(panel.dataset.row || 1);
           rowCollapse[r] = collapsed;
           applyRowStyles();
+          // After collapsing a row, trim panels that overlap this row
+          Array.from(grid.querySelectorAll('.panel')).forEach(p => { trimHeightForCollapsed(p); applyGridPosition(p); });
           saveLayout();
         });
+        const btnMinus = panel.querySelector('.btn-minus');
+        const btnPlus = panel.querySelector('.btn-plus');
+        if (btnMinus) btnMinus.addEventListener('click', (ev) => { ev.stopPropagation(); header.click(); });
+        if (btnPlus) btnPlus.addEventListener('click', (ev) => { ev.stopPropagation(); header.click(); });
         const expandBtn = panel.querySelector('.btn-expand');
         if (expandBtn) expandBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
@@ -330,6 +348,8 @@
             // revert if resize overlaps
             panel.dataset.w = start.w; panel.dataset.h = start.h; applyGridPosition(panel);
           }
+          // Trim height if overlaps collapsed rows
+          trimHeightForCollapsed(panel); applyGridPosition(panel);
           saveLayout();
         }
         document.addEventListener('mousemove', onMove);
@@ -391,7 +411,7 @@
         grid.style.gridAutoRows = '6rem';
         grid.style.gridTemplateRows = sizes.join(' ');
         // Re-apply positions to trim spans
-        Array.from(grid.querySelectorAll('.panel')).forEach(p => applyGridPosition(p));
+        Array.from(grid.querySelectorAll('.panel')).forEach(p => { trimHeightForCollapsed(p); applyGridPosition(p); });
       }
 
       // Initialize panel behaviors
