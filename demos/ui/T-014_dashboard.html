@@ -15,7 +15,6 @@
       /* Grid sizing */
       #dashGrid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       /* Resizer */
-      .resizer { position: absolute; right: 4px; bottom: 4px; width: 14px; height: 14px; cursor: nwse-resize; background: rgba(100,116,139,0.25); border-radius: 2px; }
       .panel { position: relative; }
       /* Fullscreen */
       .panel.fullscreen { position: fixed !important; inset: 0 !important; z-index: 50 !important; width: 100vw !important; height: 100vh !important; border-radius: 0 !important; }
@@ -54,74 +53,104 @@
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[24rem]" data-panel="search" draggable="true" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Search & Select</span>
-              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
-              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-slate-500">W</span>
+                <button class="btn-h-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-h-plus px-2 py-1 border rounded">+</button>
+                <span class="text-slate-500 ml-2">H</span>
+                <button class="btn-v-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-v-plus px-2 py-1 border rounded">+</button>
+              </div>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <iframe src="./T-009c_search.html?hud=0" class="w-full h-[28rem] md:h-[30rem] border rounded"></iframe>
             </div>
-            <div class="resizer" title="Drag to resize"></div>
+            
           </div>
 
           <!-- Panel: Player Analysis (placeholder) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="analysis" draggable="true" data-size="m" data-collapsed="false" data-col="1" data-row="7" data-w="2" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Player Analysis</span>
-              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
-              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-slate-500">W</span>
+                <button class="btn-h-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-h-plus px-2 py-1 border rounded">+</button>
+                <span class="text-slate-500 ml-2">H</span>
+                <button class="btn-v-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-v-plus px-2 py-1 border rounded">+</button>
+              </div>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Analysis details will appear here after selection.</p>
             </div>
-            <div class="resizer" title="Drag to resize"></div>
+            
           </div>
 
           <!-- Panel: Position Tiers (placeholder) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="tiers" draggable="true" data-size="m" data-collapsed="false" data-col="3" data-row="7" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Position Tiers</span>
-              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
-              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-slate-500">W</span>
+                <button class="btn-h-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-h-plus px-2 py-1 border rounded">+</button>
+                <span class="text-slate-500 ml-2">H</span>
+                <button class="btn-v-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-v-plus px-2 py-1 border rounded">+</button>
+              </div>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Tier visualization placeholder.</p>
             </div>
-            <div class="resizer" title="Drag to resize"></div>
+            
           </div>
 
           <!-- Panel: My Roster (placeholder) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="roster" draggable="true" data-size="s" data-collapsed="false" data-col="1" data-row="10" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">My Roster</span>
-              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
-              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-slate-500">W</span>
+                <button class="btn-h-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-h-plus px-2 py-1 border rounded">+</button>
+                <span class="text-slate-500 ml-2">H</span>
+                <button class="btn-v-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-v-plus px-2 py-1 border rounded">+</button>
+              </div>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Roster composition summary.</p>
             </div>
-            <div class="resizer" title="Drag to resize"></div>
+            
           </div>
 
           <!-- Panel: Budget Tracker (placeholder) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]" data-panel="budget" draggable="true" data-size="s" data-collapsed="false" data-col="2" data-row="10" data-w="1" data-h="3">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Budget Tracker</span>
-              <button class="btn-minus text-xs px-2 py-1 border rounded">−</button>
-              <button class="btn-plus text-xs px-2 py-1 border rounded">+</button>
+              <div class="flex items-center gap-1 text-xs">
+                <span class="text-slate-500">W</span>
+                <button class="btn-h-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-h-plus px-2 py-1 border rounded">+</button>
+                <span class="text-slate-500 ml-2">H</span>
+                <button class="btn-v-minus px-2 py-1 border rounded">−</button>
+                <button class="btn-v-plus px-2 py-1 border rounded">+</button>
+              </div>
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
               <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
               <p class="text-xs text-slate-600 mt-2">Remaining budget and max bid.</p>
             </div>
-            <div class="resizer" title="Drag to resize"></div>
+            
           </div>
         </div>
       </section>
@@ -271,10 +300,15 @@
           Array.from(grid.querySelectorAll('.panel')).forEach(p => { trimHeightForCollapsed(p); applyGridPosition(p); });
           saveLayout();
         });
-        const btnMinus = panel.querySelector('.btn-minus');
-        const btnPlus = panel.querySelector('.btn-plus');
-        if (btnMinus) btnMinus.addEventListener('click', (ev) => { ev.stopPropagation(); header.click(); });
-        if (btnPlus) btnPlus.addEventListener('click', (ev) => { ev.stopPropagation(); header.click(); });
+        // Width/Height buttons
+        const hMinus = panel.querySelector('.btn-h-minus');
+        const hPlus = panel.querySelector('.btn-h-plus');
+        const vMinus = panel.querySelector('.btn-v-minus');
+        const vPlus = panel.querySelector('.btn-v-plus');
+        if (hMinus) hMinus.addEventListener('click', (ev) => { ev.stopPropagation(); adjustSize(panel, -1, 0); });
+        if (hPlus) hPlus.addEventListener('click', (ev) => { ev.stopPropagation(); adjustSize(panel, +1, 0); });
+        if (vMinus) vMinus.addEventListener('click', (ev) => { ev.stopPropagation(); adjustSize(panel, 0, -1); });
+        if (vPlus) vPlus.addEventListener('click', (ev) => { ev.stopPropagation(); adjustSize(panel, 0, +1); });
         const expandBtn = panel.querySelector('.btn-expand');
         if (expandBtn) expandBtn.addEventListener('click', (ev) => {
           ev.stopPropagation();
@@ -327,33 +361,24 @@
         document.addEventListener('mouseup', onUp);
       }
 
-      function startResize(e, panel) {
-        if (panel.classList.contains('fullscreen')) return;
-        e.stopPropagation();
-        const start = getPanelState(panel);
-        const origin = grid.getBoundingClientRect();
-        function onMove(ev) {
-          const x = ev.clientX - origin.left; const y = ev.clientY - origin.top;
-          const rightCol = clamp(start.col, COLS, Math.ceil(x / (origin.width / COLS)));
-          const bottomRow = Math.max(start.row, Math.ceil(y / ROW_H));
-          const w = clamp(1, COLS - start.col + 1, rightCol - start.col + 1);
-          const h = Math.max(1, bottomRow - start.row + 1);
-          panel.dataset.w = w; panel.dataset.h = h;
-          applyGridPosition(panel);
+      // Drag resizer removed; resizing via buttons with strict grid enforcement
+
+      function adjustSize(panel, dW, dH) {
+        const s = getPanelState(panel);
+        let newW = clamp(1, COLS - s.col + 1, s.w + dW);
+        let newH = Math.max(1, s.h + dH);
+        // Enforce collapsed rows trimming
+        for (let r = s.row; r < s.row + newH; r += 1) {
+          if (rowCollapse[r]) { newH = Math.max(1, r - s.row); break; }
         }
-        function onUp() {
-          document.removeEventListener('mousemove', onMove);
-          document.removeEventListener('mouseup', onUp);
-          if (checkOverlap(panel)) {
-            // revert if resize overlaps
-            panel.dataset.w = start.w; panel.dataset.h = start.h; applyGridPosition(panel);
-          }
-          // Trim height if overlaps collapsed rows
-          trimHeightForCollapsed(panel); applyGridPosition(panel);
-          saveLayout();
+        // Tentatively apply
+        panel.dataset.w = newW; panel.dataset.h = newH; applyGridPosition(panel);
+        if (checkOverlap(panel)) {
+          // revert if overlap
+          panel.dataset.w = s.w; panel.dataset.h = s.h; applyGridPosition(panel);
+          return;
         }
-        document.addEventListener('mousemove', onMove);
-        document.addEventListener('mouseup', onUp);
+        saveLayout();
       }
 
       function getPanelState(panel) {
