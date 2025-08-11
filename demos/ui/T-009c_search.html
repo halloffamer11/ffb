@@ -171,6 +171,10 @@
       }
 
       function reload() {
+        // During parent dashboard drags, suppress reloads to avoid flicker/errors
+        if (window.parent && window.parent.document.body.classList.contains('dash-drag-active')) {
+          return;
+        }
         players = normalizePlayers(loadPlayersFromWorkspace());
         search = new FuzzySearch(players);
         if (!players.length) { notice.textContent = 'No players in workspace. Use T-013 to import data, then return here.'; }
@@ -257,6 +261,7 @@
         players[idx].drafted = !players[idx].drafted;
         const res = savePlayersToWorkspace(players.map(({ __source, ...rest }) => rest));
         if (!res.ok) { alert('Failed to save drafted flag'); return; }
+        // Avoid triggering parent re-render mid-drag; only re-run search locally
         search = new FuzzySearch(players);
         runSearch();
       }
@@ -298,6 +303,7 @@
       }));
       document.addEventListener('keydown', onKeyDown);
       document.getElementById('reload').addEventListener('click', reload);
+      // If the parent toggles dash-drag-active, avoid auto reloads; we check inside reload()
 
       // Initial
       reload();

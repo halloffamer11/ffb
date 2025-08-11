@@ -47,6 +47,7 @@ export function initDashboard(root) {
 
   const toolbar = root.querySelector('[data-action="toolbar"]');
   const grid = root.querySelector('[data-grid]');
+  let dragShield = null;
 
   grid.style.display = 'grid';
   grid.style.gridTemplateColumns = `repeat(${GRID_COLS}, 1fr)`;
@@ -54,6 +55,13 @@ export function initDashboard(root) {
 
   function render() {
     grid.classList.toggle('edit', state.edit);
+    // Preserve any existing iframes to avoid reloads during layout changes
+    const preservedIframes = new Map();
+    for (const child of Array.from(grid.children)) {
+      const id = child.getAttribute('data-id');
+      const iframe = child.querySelector('iframe');
+      if (id && iframe) preservedIframes.set(id, iframe);
+    }
     grid.innerHTML = '';
     // draw subtle grid lines (stronger in edit mode)
     const lineOpacity = state.edit ? 0.35 : 0.12;
@@ -92,12 +100,22 @@ export function initDashboard(root) {
           ` : ''}
         </div>`;
 
+      // Reattach preserved iframe (if exists) to prevent content reload flicker
+      const bodyEl = el.querySelector('.grow');
+      const preserved = preservedIframes.get(w.id);
+      if (bodyEl && preserved) {
+        bodyEl.innerHTML = '';
+        bodyEl.appendChild(preserved);
+      }
+
       // Events
       if (state.edit) {
         const header = el.querySelector('.widget-header');
         header.addEventListener('pointerdown', (e) => {
           // Ignore drags starting from controls or resize edges
           if (e.target.closest('button') || e.target.closest('.edge-right') || e.target.closest('.edge-bottom')) return;
+          // Capture the pointer so we always receive pointerup
+          if (header.setPointerCapture) { try { header.setPointerCapture(e.pointerId); } catch {} }
           startDrag(e, w.id);
         });
         el.querySelector('.btn-del')?.addEventListener('click', (e) => { e.stopPropagation(); delWidget(w.id); });
@@ -158,8 +176,15 @@ export function initDashboard(root) {
     if (!w) return;
     const offset = { dCol: start.col - w.col, dRow: start.row - w.row };
     state.dragging = { id, offset };
-    window.addEventListener('pointermove', onDrag);
-    window.addEventListener('pointerup', endDrag, { once: true });
+    // Create a transparent overlay to reliably capture pointer events above iframes
+    dragShield = document.createElement('div');
+    dragShield.className = 'fixed inset-0 z-[3000] cursor-grabbing';
+    dragShield.style.background = 'transparent';
+    dragShield.style.pointerEvents = 'auto';
+    document.body.appendChild(dragShield);
+    dragShield.addEventListener('pointermove', onDrag);
+    dragShield.addEventListener('pointerup', endDrag, { once: true });
+    dragShield.addEventListener('pointercancel', endDrag, { once: true });
   }
   function onDrag(e) {
     const d = state.dragging; if (!d) return;
@@ -167,22 +192,27 @@ export function initDashboard(root) {
     const cell = pointerCell(e, grid);
     const newCol = clamp(1, GRID_COLS - w.w + 1, cell.col - d.offset.dCol);
     const newRow = clamp(1, GRID_ROWS - w.h + 1, cell.row - d.offset.dRow);
-    const prev = { ...w };
-    w.col = newCol; w.row = newRow;
-    if (collidesAny(state.dash.widgets, w.id)) {
-      // gravity pack others
-      gravityPack(state.dash.widgets, w.id);
+    // Update state
+    w.col = newCol;
+    w.row = newRow;
+    // Move only the dragged element's DOM node to avoid re-rendering iframes
+    const el = grid.querySelector(`[data-id="${d.id}"]`);
+    if (el) {
+      el.style.gridColumn = `${w.col} / span ${w.w}`;
+      el.style.gridRow = `${w.row} / span ${w.h}`;
     }
-    render();
-    // restore visual position if still colliding
-    const cur = state.dash.widgets.find(x => x.id === d.id);
-    if (collidesAny(state.dash.widgets, cur.id)) Object.assign(cur, prev);
   }
   function endDrag() {
     state.dragging = null;
-    window.removeEventListener('pointermove', onDrag);
+    if (dragShield) {
+      dragShield.removeEventListener('pointermove', onDrag);
+      try { dragShield.remove(); } catch {}
+      dragShield = null;
+    }
     // resume saves now
     document.body.classList.remove('dash-drag-active');
+    // Resolve collisions only once at drop time
+    gravityPack(state.dash.widgets, null);
     saveDashboard(state.dash);
     render();
   }
