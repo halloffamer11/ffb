@@ -79,9 +79,7 @@ export function initDashboard(root) {
               <button class=\"btn-del text-xs px-2 py-1 border rounded\">Delete</button>
             ` : '<button class=\"btn-expand text-xs px-2 py-1 border rounded\">Expand</button>'}
           </div>
-          <div class="grow p-0 text-xs text-slate-600 overflow-hidden">
-            ${renderWidgetContents(w.type)}
-          </div>
+          <div class="grow p-3 text-xs text-slate-600">${def.name} placeholder.</div>
           ${state.edit ? `
             <div class=\"edge-right absolute right-[-6px] top-1/2 -translate-y-1/2 w-2 h-10 bg-slate-500/70 rounded cursor-ew-resize\" title=\"Resize horizontal\"></div>
             <div class=\"edge-bottom absolute bottom-[-6px] left-1/2 -translate-x-1/2 w-10 h-2 bg-slate-500/70 rounded cursor-ns-resize\" title=\"Resize vertical\"></div>
@@ -110,14 +108,8 @@ export function initDashboard(root) {
     const overlay = document.createElement('div');
     overlay.className = 'fixed inset-0 bg-black/30 z-[2000] flex items-center justify-center';
     const card = document.createElement('div');
-    card.className = 'bg-white w-[95vw] h-[95vh] rounded shadow-xl p-2 relative overflow-hidden';
-    const w = state.dash.widgets.find(x => x.id === id);
-    const def = WidgetRegistry[w?.type] || { name: 'Widget' };
-    card.innerHTML = `<button class=\"absolute top-2 right-2 px-3 py-1 border rounded\">Close</button>
-      <div class=\"w-full h-full pt-8\">
-        <div class=\"absolute top-2 left-3 text-sm font-medium text-slate-700\">${def.name}</div>
-        <div class=\"w-full h-full overflow-hidden\">${renderWidgetContents(w?.type, true)}</div>
-      </div>`;
+    card.className = 'bg-white w-[95vw] h-[95vh] rounded shadow-xl p-4 relative';
+    card.innerHTML = '<button class="absolute top-2 right-2 px-3 py-1 border rounded">Close</button><div class="text-slate-600">Expanded view</div>';
     card.querySelector('button').addEventListener('click', () => overlay.remove());
     overlay.appendChild(card);
     document.body.appendChild(overlay);
@@ -187,20 +179,16 @@ export function initDashboard(root) {
     const w = state.dash.widgets.find(x => x.id === r.id); if (!w) return;
     const def = WidgetRegistry[w.type];
     const cell = pointerCell(e, grid);
-    if (r.edge === 'right' || r.edge === 'corner') {
+    const prev = { w: w.w, h: w.h };
+    if (r.edge === 'right') {
       const newW = clamp(def.minW, Math.min(def.maxW, GRID_COLS - w.col + 1), cell.col - w.col + 1);
       w.w = newW;
     }
-    if (r.edge === 'bottom' || r.edge === 'corner') {
+    if (r.edge === 'bottom') {
       const newH = clamp(def.minH, Math.min(def.maxH, GRID_ROWS - w.row + 1), cell.row - w.row + 1);
       w.h = newH;
     }
-    if (collidesAny(state.dash.widgets, w.id)) {
-      // prevent overlap by reverting size step (coarse)
-      const defW = Math.min(w.w, def.maxW); const defH = Math.min(w.h, def.maxH);
-      w.w = defW; w.h = defH;
-      gravityPack(state.dash.widgets, w.id);
-    }
+    if (collidesAny(state.dash.widgets, w.id)) { w.w = prev.w; w.h = prev.h; }
     render();
   }
   function endResize() {
@@ -273,24 +261,5 @@ export function initDashboard(root) {
 }
 
 function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
-
-// Map widget type to embedded content
-function renderWidgetContents(type, expanded = false) {
-  if (type === 'search') {
-    const url = '/demos/ui/T-009c_search.html?hud=0';
-    return `<iframe src="${url}" class="w-full h-full border-0" loading="lazy"></iframe>`;
-  }
-  if (type === 'tiers') {
-    // Placeholder until dedicated tiers UI exists
-    return `<div class="w-full h-full p-3 overflow-auto text-slate-700">Tiers widget (coming soon)</div>`;
-  }
-  if (type === 'roster') {
-    return `<div class="w-full h-full p-3 text-slate-700">My Roster widget (coming soon)</div>`;
-  }
-  if (type === 'budget') {
-    return `<div class="w-full h-full p-3 text-slate-700">Budget Tracker widget (coming soon)</div>`;
-  }
-  return `<div class="w-full h-full p-3">${type || ''}</div>`;
-}
 
 
