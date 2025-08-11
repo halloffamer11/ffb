@@ -403,7 +403,7 @@ Result: Added `src/adapters/backup.js` with attachAutoBackup(), envelope validat
 ## Phase 5: User Interface - Settings
 *Duration: 2 days | Risk: LOW*
 
-### T-012: League Settings UI
+### T-012: League Settings UI ✅
 **Complexity**: Medium | **Risk**: Low
 - Create settings form interface
 - Implement roster configuration UI
@@ -427,8 +427,10 @@ Result: Added `src/adapters/backup.js` with attachAutoBackup(), envelope validat
   7. Try invalid configuration (0 QBs)
   8. Verify error message appears
 - **Success Criteria**: All league formats configurable
+ 
+Result: Implemented full settings page with owners/draft order, roster starters (FLEX-driven), scoring presets with overrides, budget/min bid, derived rounds, and reset controls. Dev-only page: `demos/ui/T-012_settings.html`. HITL: PASS — persisted settings reload correctly and validation errors display.
 
-### T-013: Data Management UI
+### T-013: Data Management UI ✅
 **Complexity**: Medium | **Risk**: Low
 - Create import interface with preview
 - Display imported player grid
@@ -449,6 +451,8 @@ Result: Added `src/adapters/backup.js` with attachAutoBackup(), envelope validat
   6. Export modified data
   7. Verify changes in export
 - **Success Criteria**: Smooth data management workflow
+ 
+Result: Implemented CSV import/preview UI with workspace save/load, delete-selected, select-all, CSV export, and injury status dropdown editing. Dev-only page: `demos/ui/T-013_data_management.html`. HITL: PASS — edits persist to workspace; export reflects changes.
 
 ## Phase 6: User Interface - Draft Dashboard
 *Duration: 4-5 days | Risk: MEDIUM*
