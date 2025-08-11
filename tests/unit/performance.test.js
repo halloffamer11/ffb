@@ -3,7 +3,7 @@
  */
 
 import { vbdChecksum } from '../../src/core/vbd.js';
-import { BasicSearch, searchChecksum } from '../../src/core/search.js';
+import { BasicSearch, FuzzySearch, searchChecksum } from '../../src/core/search.js';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -90,6 +90,16 @@ function assertOkay(name, condition, details) {
   const checksum = searchChecksum(res);
   const t1 = nowMs();
   assertOkay('Search <50ms', (t1 - t0) < 50, { durationMs: (t1 - t0), checksum, count: res.length });
+}
+
+// FuzzySearch timing (<50ms target)
+{
+  const fz = new FuzzySearch(players);
+  const t0 = nowMs();
+  const res = fz.search('plar 2'); // small typo
+  const checksum = searchChecksum(res);
+  const t1 = nowMs();
+  assertOkay('Fuzzy <50ms', (t1 - t0) < 50, { durationMs: (t1 - t0), checksum, count: res.length });
 }
 
 // localStorage and workspace timings are browser-only; covered by in-browser runner.

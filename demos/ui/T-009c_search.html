@@ -173,7 +173,22 @@
         runSearch();
       }
 
+      // Simple debounce wrapper
+      let debounceTimer = null;
+      function debounce(fn, delay) {
+        return function(...args) {
+          clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => fn.apply(this, args), delay);
+        };
+      }
+
+      const runSearchDebounced = debounce(runSearchCore, 150);
+
       function runSearch() {
+        runSearchDebounced();
+      }
+
+      function runSearchCore() {
         const q = qEl.value || '';
         const t0 = performance.now();
         let results;

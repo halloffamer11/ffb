@@ -58,6 +58,29 @@ export class FuzzySearch {
         initials: tokens.map(t => t[0]).join('')
       };
     });
+
+    // Build lightweight prefix index for quick candidate narrowing
+    this.prefixMap = new Map(); // key: token prefix (1..3 chars), value: Set of row indices
+    this.initialsMap = new Map(); // key: initials string, value: Set of row indices
+    for (let i = 0; i < this.index.length; i += 1) {
+      const r = this.index[i];
+      // Prefixes for each token up to length 3
+      for (const t of r.tokens) {
+        const max = Math.min(3, t.length);
+        for (let L = 1; L <= max; L += 1) {
+          const pref = t.slice(0, L);
+          let set = this.prefixMap.get(pref);
+          if (!set) { set = new Set(); this.prefixMap.set(pref, set); }
+          set.add(i);
+        }
+      }
+      // Initials map
+      if (r.initials) {
+        let setI = this.initialsMap.get(r.initials);
+        if (!setI) { setI = new Set(); this.initialsMap.set(r.initials, setI); }
+        setI.add(i);
+      }
+    }
   }
 
   /**
@@ -75,11 +98,33 @@ export class FuzzySearch {
     const qTokens = tokenize(q);
     const qInitials = qTokens.map(t => t[0]).join('');
 
-    // 1) Fast contains path
+    // 1) Candidates via prefix/initials to reduce scanning
+    let candidateIdxSet = null;
+    if (qStripped.length > 0 && qStripped.length <= 3) {
+      candidateIdxSet = this.prefixMap.get(qStripped) || null;
+      // If no prefix match, try initials map directly
+      if (!candidateIdxSet && this.initialsMap.has(qStripped)) {
+        candidateIdxSet = this.initialsMap.get(qStripped);
+      }
+    } else if (qStripped.length >= 4) {
+      // Use first 3 chars to seed
+      const seed = qStripped.slice(0, 3);
+      candidateIdxSet = this.prefixMap.get(seed) || null;
+    }
+
+    // 2) Fast contains path (either all or narrowed candidates)
     const quick = [];
-    for (const r of this.index) {
-      if (!passesDrafted(r.player, draftedMode)) continue;
-      if (r.nameLower.includes(q)) quick.push(r);
+    if (candidateIdxSet) {
+      for (const i of candidateIdxSet) {
+        const r = this.index[i];
+        if (!passesDrafted(r.player, draftedMode)) continue;
+        if (r.nameLower.includes(q)) quick.push(r);
+      }
+    } else {
+      for (const r of this.index) {
+        if (!passesDrafted(r.player, draftedMode)) continue;
+        if (r.nameLower.includes(q)) quick.push(r);
+      }
     }
     if (quick.length > 0 && q.length <= 3) {
       const outQuick = quick.map(r => r.player);
@@ -87,10 +132,39 @@ export class FuzzySearch {
       return outQuick;
     }
 
-    // 2) Fuzzy match with bounded Levenshtein
+    // 3) Fuzzy match with bounded Levenshtein
     const scored = [];
     const threshold = dynamicThreshold(qStripped.length);
-    for (const r of this.index) {
+    const iterate = candidateIdxSet ? candidateIdxSet.values() : null;
+    const iterator = iterate ? iterate : null;
+    if (iterator) {
+      for (const i of iterator) {
+        const r = this.index[i];
+        if (!passesDrafted(r.player, draftedMode)) continue;
+        // Exact/contains variants first
+        if (r.nameStripped.includes(qStripped)) {
+          scored.push({ r, dist: 0 });
+          continue;
+        }
+        if (r.initials === qStripped || r.initials === qInitials) {
+          scored.push({ r, dist: 0 });
+          continue;
+        }
+        const dFull = boundedLevenshtein(qStripped, r.nameStripped, threshold);
+        let dToken = Infinity;
+        for (const t of r.tokens) {
+          const d = boundedLevenshtein(qStripped, t, threshold);
+          if (d < dToken) dToken = d;
+          if (dToken === 0) break;
+        }
+        const dInit = boundedLevenshtein(qStripped, r.initials, Math.min(threshold, 2));
+        const d = Math.min(dFull, dToken, dInit);
+        if (Number.isFinite(d) && d <= threshold) {
+          scored.push({ r, dist: d });
+        }
+      }
+    } else {
+      for (const r of this.index) {
       if (!passesDrafted(r.player, draftedMode)) continue;
       // Exact/contains variants first
       if (r.nameStripped.includes(qStripped)) {
@@ -114,6 +188,7 @@ export class FuzzySearch {
       const d = Math.min(dFull, dToken, dInit);
       if (Number.isFinite(d) && d <= threshold) {
         scored.push({ r, dist: d });
+      }
       }
     }
 
