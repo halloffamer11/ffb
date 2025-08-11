@@ -376,7 +376,7 @@ Result: Added prefix and initials candidate index in `FuzzySearch`, input deboun
 
 Result: Added `src/state/store.js` providing a pure, minimal store with pub/sub, 10-level undo, action logging, and non-blocking workspace sync; unit tests `tests/unit/state.test.js` cover updates, undo, and pick editing. HITL pending integration with dashboard.
 
-### T-011: Auto-Backup System
+### T-011: Auto-Backup System ✅
 **Complexity**: Medium | **Risk**: Medium
 - Trigger backup on every state change
 - Implement efficient serialization
@@ -398,7 +398,7 @@ Result: Added `src/state/store.js` providing a pure, minimal store with pub/sub,
   7. Verify no performance impact during saves
 - **Success Criteria**: Seamless recovery from any crash
 
-Result: Added `src/adapters/backup.js` with attachAutoBackup(), envelope validation, and helpers; wired optional backup in debug page; unit tests `tests/unit/backup.test.js` confirm rolling 3 backups and envelope validation. HITL: backup keys visible via storage namespace; recovery UI to be added in later integration step.
+Result: Added `src/adapters/backup.js` with attachAutoBackup(), envelope validation, and helpers; wired optional backup in debug page; unit tests `tests/unit/backup.test.js` confirm rolling 3 backups and envelope validation. HITL: PASS — backup keys visible under `workspace` namespace; rolling 3 kept; latest present. Recovery UI to be added in later integration.
 
 ## Phase 5: User Interface - Settings
 *Duration: 2 days | Risk: LOW*
