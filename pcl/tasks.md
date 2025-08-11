@@ -479,6 +479,8 @@ Result: Implemented CSV import/preview UI with workspace save/load, delete-selec
   6. Test loading states
 - **Success Criteria**: Usable on all screen sizes
 
+Result: Added `demos/ui/T-014_dashboard.html` with responsive grid panels, tabbed header (Dashboard/Settings/Data/Debug), loading overlay, and embedded existing validation pages where applicable. Desktop/tablet/mobile layouts verified visually via CSS utility classes.
+
 ### T-014a: Debug Tab Implementation ⚠️
 **Complexity**: High | **Risk**: Medium
 * Core MVP feature for validation*

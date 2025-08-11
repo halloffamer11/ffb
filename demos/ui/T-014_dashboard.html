@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-014 Dashboard Layout</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 min-h-screen">
+    <header class="bg-white border-b">
+      <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
+        <h1 class="text-xl font-semibold mr-auto">Draft Dashboard</h1>
+        <nav class="flex items-center gap-1">
+          <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="dashboard">Dashboard</button>
+          <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="settings">Settings</button>
+          <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="data">Data</button>
+          <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="debug">Debug</button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 py-4">
+      <!-- Loading state overlay -->
+      <div id="loading" class="hidden fixed inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center">
+        <div class="w-72 h-24 rounded border bg-white p-4 animate-pulse">
+          <div class="h-4 bg-slate-200 rounded w-32 mb-3"></div>
+          <div class="space-y-2">
+            <div class="h-2 bg-slate-200 rounded"></div>
+            <div class="h-2 bg-slate-200 rounded w-3/4"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <section id="view-dashboard" class="view">
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <!-- Panel: Search & Select -->
+          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium">Search & Select</div>
+            <div class="p-3 grow">
+              <iframe src="./T-009c_search.html?hud=0" class="w-full h-72 border rounded"></iframe>
+            </div>
+          </div>
+
+          <!-- Panel: Player Analysis (placeholder) -->
+          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium">Player Analysis</div>
+            <div class="p-3 grow">
+              <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
+              <p class="text-xs text-slate-600 mt-2">Analysis details will appear here after selection.</p>
+            </div>
+          </div>
+
+          <!-- Panel: Position Tiers (placeholder) -->
+          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium">Position Tiers</div>
+            <div class="p-3 grow">
+              <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
+              <p class="text-xs text-slate-600 mt-2">Tier visualization placeholder.</p>
+            </div>
+          </div>
+
+          <!-- Panel: My Roster (placeholder) -->
+          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium">My Roster</div>
+            <div class="p-3 grow">
+              <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
+              <p class="text-xs text-slate-600 mt-2">Roster composition summary.</p>
+            </div>
+          </div>
+
+          <!-- Panel: Budget Tracker (placeholder) -->
+          <div class="rounded border bg-white overflow-hidden flex flex-col min-h-[16rem]">
+            <div class="px-3 py-2 border-b bg-slate-50 font-medium">Budget Tracker</div>
+            <div class="p-3 grow">
+              <div class="h-24 rounded bg-slate-100 animate-pulse"></div>
+              <p class="text-xs text-slate-600 mt-2">Remaining budget and max bid.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="view-settings" class="view hidden">
+        <div class="rounded border bg-white p-3">
+          <iframe src="./T-012_settings.html" class="w-full h-[36rem] border rounded"></iframe>
+        </div>
+      </section>
+
+      <section id="view-data" class="view hidden">
+        <div class="rounded border bg-white p-3">
+          <iframe src="./T-013_data_management.html" class="w-full h-[32rem] border rounded"></iframe>
+        </div>
+      </section>
+
+      <section id="view-debug" class="view hidden">
+        <div class="rounded border bg-white p-3">
+          <iframe src="./T-014a_debug.html" class="w-full h-[36rem] border rounded"></iframe>
+          <p class="text-xs text-slate-600 mt-2">Debug tab is development-only and excluded from production builds.</p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const tabs = Array.from(document.querySelectorAll('button.tab'));
+      const views = {
+        dashboard: document.getElementById('view-dashboard'),
+        settings: document.getElementById('view-settings'),
+        data: document.getElementById('view-data'),
+        debug: document.getElementById('view-debug')
+      };
+      const loading = document.getElementById('loading');
+
+      function setActive(tab) {
+        tabs.forEach(b => b.classList.toggle('bg-slate-200', b.dataset.tab === tab));
+        Object.entries(views).forEach(([k, el]) => el.classList.toggle('hidden', k !== tab));
+      }
+
+      tabs.forEach(btn => btn.addEventListener('click', () => {
+        loading.classList.remove('hidden');
+        setTimeout(() => {
+          setActive(btn.dataset.tab);
+          loading.classList.add('hidden');
+        }, 250); // small simulated loading
+      }));
+
+      // Default
+      setActive('dashboard');
+    </script>
+  </body>
+  </html>
+
+
