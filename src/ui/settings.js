@@ -8,7 +8,22 @@ const DEFAULT_SETTINGS = {
   roster: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 0, K: 0, DST: 0, BENCH: 6 },
   scoringPreset: 'PPR',
   keeperMode: false,
-  owners: []
+  owners: [],
+  minBid: 1,
+  rounds: 16,
+  draftType: 'SNAKE', // or 'LINEAR'
+  idpEnabled: false,
+  scoringOverrides: {
+    passYdsPerPt: '',
+    passTds: '',
+    passInt: '',
+    rushYdsPerPt: '',
+    rushTds: '',
+    rec: '',
+    recYdsPerPt: '',
+    recTds: '',
+    fumbles: ''
+  }
 };
 
 export function loadSettings() {
@@ -67,6 +82,20 @@ function hydrateForm(form, s) {
   }
   form.scoringPreset.value = s.scoringPreset;
   if (form.keeperMode) form.keeperMode.checked = !!s.keeperMode;
+  if (form.minBid) form.minBid.value = s.minBid ?? 1;
+  if (form.rounds) form.rounds.value = s.rounds ?? 16;
+  if (form.draftType) form.draftType.value = s.draftType || 'SNAKE';
+  if (form.idpEnabled) form.idpEnabled.checked = !!s.idpEnabled;
+  const o = s.scoringOverrides || {};
+  setIfPresent(form, 's_passYdsPerPt', o.passYdsPerPt);
+  setIfPresent(form, 's_passTds', o.passTds);
+  setIfPresent(form, 's_passInt', o.passInt);
+  setIfPresent(form, 's_rushYdsPerPt', o.rushYdsPerPt);
+  setIfPresent(form, 's_rushTds', o.rushTds);
+  setIfPresent(form, 's_rec', o.rec);
+  setIfPresent(form, 's_recYdsPerPt', o.recYdsPerPt);
+  setIfPresent(form, 's_recTds', o.recTds);
+  setIfPresent(form, 's_fumbles', o.fumbles);
   // Owners grid will be synced below
 }
 
@@ -87,7 +116,22 @@ function readForm(form) {
     roster,
     scoringPreset: form.scoringPreset.value || 'PPR',
     keeperMode: !!form.keeperMode?.checked,
-    owners
+    owners,
+    minBid: Math.max(1, Number(form.minBid?.value || 1)),
+    rounds: Math.max(1, Number(form.rounds?.value || 16)),
+    draftType: (form.draftType?.value || 'SNAKE').toUpperCase(),
+    idpEnabled: !!form.idpEnabled?.checked,
+    scoringOverrides: {
+      passYdsPerPt: getNumOrEmpty(form.s_passYdsPerPt?.value),
+      passTds: getNumOrEmpty(form.s_passTds?.value),
+      passInt: getNumOrEmpty(form.s_passInt?.value),
+      rushYdsPerPt: getNumOrEmpty(form.s_rushYdsPerPt?.value),
+      rushTds: getNumOrEmpty(form.s_rushTds?.value),
+      rec: getNumOrEmpty(form.s_rec?.value),
+      recYdsPerPt: getNumOrEmpty(form.s_recYdsPerPt?.value),
+      recTds: getNumOrEmpty(form.s_recTds?.value),
+      fumbles: getNumOrEmpty(form.s_fumbles?.value)
+    }
   };
 }
 
@@ -99,6 +143,9 @@ function validateSettings(s) {
   if (s.roster.QB < 1) errors.push('At least 1 QB required');
   if (!Array.isArray(s.owners) || s.owners.length !== s.teams) errors.push('Owners count must equal number of teams');
   if (starters <= 0) errors.push('Total starters must be > 0');
+  if (!Number.isFinite(s.minBid) || s.minBid < 1) errors.push('Minimum bid must be >= 1');
+  if (!Number.isFinite(s.rounds) || s.rounds < 1) errors.push('Number of rounds must be >= 1');
+  if (!['SNAKE','LINEAR'].includes(String(s.draftType || 'SNAKE').toUpperCase())) errors.push('Draft type must be Snake or Linear');
   if (errors.length) return { ok: false, errors };
   return { ok: true };
 }
@@ -186,5 +233,14 @@ function persistOwnersToStorage(form, owners) {
 }
 
 // nothing else to export here (regenerateOwnersGrid already exported above)
+
+function setIfPresent(form, name, value) {
+  if (form[name] != null && value !== undefined && value !== '') form[name].value = value;
+}
+
+function getNumOrEmpty(v) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : '';
+}
 
 

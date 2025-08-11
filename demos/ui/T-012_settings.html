@@ -46,6 +46,40 @@
         </label>
       </div>
 
+      <fieldset class="border p-3 rounded">
+        <legend class="font-medium">Scoring Overrides (optional)</legend>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <label>Pass yds / pt <input name="s_passYdsPerPt" type="number" step="0.1" class="border p-1 w-full" placeholder="25" /></label>
+          <label>Pass TDs <input name="s_passTds" type="number" step="0.1" class="border p-1 w-full" placeholder="4" /></label>
+          <label>INT <input name="s_passInt" type="number" step="0.1" class="border p-1 w-full" placeholder="-2" /></label>
+          <label>Rush yds / pt <input name="s_rushYdsPerPt" type="number" step="0.1" class="border p-1 w-full" placeholder="10" /></label>
+          <label>Rush TDs <input name="s_rushTds" type="number" step="0.1" class="border p-1 w-full" placeholder="6" /></label>
+          <label>REC <input name="s_rec" type="number" step="0.1" class="border p-1 w-full" placeholder="1 (PPR)" /></label>
+          <label>Rec yds / pt <input name="s_recYdsPerPt" type="number" step="0.1" class="border p-1 w-full" placeholder="10" /></label>
+          <label>Rec TDs <input name="s_recTds" type="number" step="0.1" class="border p-1 w-full" placeholder="6" /></label>
+          <label>Fumbles <input name="s_fumbles" type="number" step="0.1" class="border p-1 w-full" placeholder="-2" /></label>
+        </div>
+        <div class="mt-2 text-xs text-slate-600">Leave blank to use the scoring preset defaults.</div>
+      </fieldset>
+
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+        <label class="block">Minimum Bid
+          <input name="minBid" type="number" min="1" value="1" class="border p-2 w-full" />
+        </label>
+        <label class="block">Rounds
+          <input name="rounds" type="number" min="1" value="16" class="border p-2 w-full" />
+        </label>
+        <label class="block">Draft Type
+          <select name="draftType" class="border p-2 w-full">
+            <option value="SNAKE">Snake</option>
+            <option value="LINEAR">Linear</option>
+          </select>
+        </label>
+        <label class="block">Enable IDP
+          <input name="idpEnabled" type="checkbox" class="ml-2" />
+        </label>
+      </div>
+
       <div>
         <div class="flex items-center justify-between">
           <h3 class="font-medium">Owners & Draft Order</h3>
