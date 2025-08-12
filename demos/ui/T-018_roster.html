@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-018 My Roster</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-4">T-018 My Roster</h1>
+
+    <div class="mb-3 text-slate-600 text-sm">
+      Validation steps:
+      <ol class="list-decimal pl-6">
+        <li>Load players in Data Management page and set owners in Settings.</li>
+        <li>Simulate picks into workspace state; verify roster grouping and projection update.</li>
+        <li>Draft players sharing a bye week; verify conflict warning.</li>
+        <li>Change injury statuses; ensure indicators remain display-only.</li>
+      </ol>
+    </div>
+
+    <div id="rosterPanel" class="rounded border bg-white p-3"></div>
+
+    <script type="module">
+      import { attachRosterAutoRefresh } from '../../src/ui/roster.js';
+      const panel = document.getElementById('rosterPanel');
+      attachRosterAutoRefresh(panel, 1000);
+    </script>
+  </body>
+  </html>
+
+

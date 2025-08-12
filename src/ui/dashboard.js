@@ -9,9 +9,11 @@ const SAVE_DEBOUNCE_MS = 500;
 
 export const WidgetRegistry = {
   search: { name: 'Search & Select', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 8, defaultH: 2 },
+  draft: { name: 'Draft Entry', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
   tiers: { name: 'Position Tiers', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
   roster: { name: 'My Roster', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
-  budget: { name: 'Budget Tracker', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 }
+  budget: { name: 'Budget Tracker', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
+  ledger: { name: 'Draft Ledger', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 }
 };
 
 const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
@@ -75,9 +77,23 @@ export function initDashboard(root) {
       el.style.gridColumn = `${w.col} / span ${w.w}`;
       el.style.gridRow = `${w.row} / span ${w.h}`;
       el.dataset.id = w.id;
+      const typeSelectMarkup = state.edit ? `<select class="widget-type px-2 py-1 border rounded text-xs">
+            ${Object.entries(WidgetRegistry).map(([k,def2]) => `<option value="${k}" ${w.type===k?'selected':''}>${def2.name}</option>`).join('')}
+          </select>` : '';
       el.innerHTML = `
         <div class="w-full h-full flex flex-col relative">
-          <div class="widget-header flex items-center gap-2 px-2 py-1 border-b bg-slate-50 ${state.edit ? 'cursor-grab' : ''}">
+          <div class="widget-header flex items-center gap-2 px-2 py-1 border-b bg-slate-50">
+            ${state.edit ? `
+              <button class=\"drag-handle p-1 rounded cursor-grab hover:bg-slate-200\" title=\"Move widget\" aria-label=\"Move widget\">
+                <svg width=\"16\" height=\"16\" viewBox=\"0 0 16 16\" fill=\"#64748b\" xmlns=\"http://www.w3.org/2000/svg\">
+                  <circle cx=\"4\" cy=\"4\" r=\"1.6\"/>
+                  <circle cx=\"12\" cy=\"4\" r=\"1.6\"/>
+                  <circle cx=\"8\" cy=\"8\" r=\"1.6\"/>
+                  <circle cx=\"4\" cy=\"12\" r=\"1.6\"/>
+                  <circle cx=\"12\" cy=\"12\" r=\"1.6\"/>
+                </svg>
+              </button>
+            ` : ''}
             <span class="text-sm font-medium mr-auto select-none">${def.name}</span>
             ${state.edit ? `
               <div class=\"flex items-center gap-1 text-xs select-none\">
@@ -88,11 +104,12 @@ export function initDashboard(root) {
                 <button class=\"btn-h-dec px-2 py-1 border rounded\">−</button>
                 <button class=\"btn-h-inc px-2 py-1 border rounded\">+</button>
               </div>
+              ${typeSelectMarkup}
               <button class=\"btn-del text-xs px-2 py-1 border rounded\">Delete</button>
             ` : '<button class=\"btn-expand text-xs px-2 py-1 border rounded\">Expand</button>'}
           </div>
           <div class="grow p-0 text-xs text-slate-600 overflow-hidden">
-            ${renderWidgetContents(w.type)}
+            ${renderWidgetContents(w.type, w.id)}
           </div>
           ${state.edit ? `
             <div class=\"edge-right absolute right-[-6px] top-1/2 -translate-y-1/2 w-2 h-10 bg-slate-500/70 rounded cursor-ew-resize\" title=\"Resize horizontal\"></div>
@@ -110,12 +127,9 @@ export function initDashboard(root) {
 
       // Events
       if (state.edit) {
-        const header = el.querySelector('.widget-header');
-        header.addEventListener('pointerdown', (e) => {
-          // Ignore drags starting from controls or resize edges
-          if (e.target.closest('button') || e.target.closest('.edge-right') || e.target.closest('.edge-bottom')) return;
-          // Capture the pointer so we always receive pointerup
-          if (header.setPointerCapture) { try { header.setPointerCapture(e.pointerId); } catch {} }
+        const handle = el.querySelector('.drag-handle');
+        handle?.addEventListener('pointerdown', (e) => {
+          if (handle.setPointerCapture) { try { handle.setPointerCapture(e.pointerId); } catch {} }
           startDrag(e, w.id);
         });
         el.querySelector('.btn-del')?.addEventListener('click', (e) => { e.stopPropagation(); delWidget(w.id); });
@@ -125,6 +139,18 @@ export function initDashboard(root) {
         el.querySelector('.btn-h-inc')?.addEventListener('click', (e) => { e.stopPropagation(); adjustSizeButtons(w.id, 0, +1); });
         el.querySelector('.edge-right')?.addEventListener('pointerdown', (e) => startResize(e, w.id, 'right'));
         el.querySelector('.edge-bottom')?.addEventListener('pointerdown', (e) => startResize(e, w.id, 'bottom'));
+        // Switch widget type via dropdown
+        el.querySelector('.widget-type')?.addEventListener('change', (e) => {
+          const val = e.target.value;
+          if (!WidgetRegistry[val]) return;
+          const ww = state.dash.widgets.find(x => x.id === w.id);
+          if (!ww) return;
+          ww.type = val;
+          // Reset config if any future widgets have configs
+          ww.config = {};
+          saveDashboard(state.dash);
+          render();
+        });
       } else {
         el.querySelector('.btn-expand')?.addEventListener('click', () => expandWidget(w.id));
       }
@@ -327,19 +353,47 @@ export function initDashboard(root) {
 function clamp(min, max, v) { return Math.max(min, Math.min(max, v)); }
 
 // Map widget type to embedded content
-function renderWidgetContents(type, expanded = false) {
+function renderWidgetContents(type, widgetId, expanded = false) {
   if (type === 'search') {
     const url = '/demos/ui/T-009c_search.html?hud=0';
     return `<iframe src="${url}" class="w-full h-full border-0" loading="lazy"></iframe>`;
+  }
+  if (type === 'draft') {
+    // Inline draft form; load module to initialize after mount
+    setTimeout(async () => {
+      try {
+        const mod = await import('./draft.js');
+        const container = document.getElementById(`draft-${widgetId}`);
+        if (container) mod.initDraftWidget(container);
+      } catch {}
+    }, 0);
+    return `<div class="w-full h-full"><div id="draft-${widgetId}" class="w-full h-full"></div></div>`;
   }
   if (type === 'tiers') {
     return `<div class="w-full h-full p-3 overflow-auto text-slate-700">Tiers widget (coming soon)</div>`;
   }
   if (type === 'roster') {
-    return `<div class="w-full h-full p-3 text-slate-700">My Roster widget (coming soon)</div>`;
+    setTimeout(async () => {
+      try {
+        const mod = await import('./roster.js');
+        const container = document.getElementById(`roster-${widgetId}`);
+        if (container && mod.attachRosterAutoRefresh) mod.attachRosterAutoRefresh(container, 1000);
+      } catch {}
+    }, 0);
+    return `<div class="w-full h-full"><div id="roster-${widgetId}" class="w-full h-full p-2 overflow-auto"></div></div>`;
   }
   if (type === 'budget') {
     return `<div class="w-full h-full p-3 text-slate-700">Budget Tracker widget (coming soon)</div>`;
+  }
+  if (type === 'ledger') {
+    setTimeout(async () => {
+      try {
+        const mod = await import('./ledger.js');
+        const container = document.getElementById(`ledger-${widgetId}`);
+        if (container) mod.initLedgerWidget(container);
+      } catch {}
+    }, 0);
+    return `<div class="w-full h-full"><div id="ledger-${widgetId}" class="w-full h-full"></div></div>`;
   }
   return `<div class="w-full h-full p-3">${type || ''}</div>`;
 }

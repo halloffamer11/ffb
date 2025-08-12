@@ -240,8 +240,9 @@
             <td class="p-2 border-t">${escapeHtml(getAdp(r))}</td>
             <td class="p-2 border-t ${injuryClass(r.injuryStatus)}">${STATUS_LABELS[normalizeInjuryStatus(r.injuryStatus)]}</td>
             <td class="p-2 border-t ${r.drafted ? 'text-emerald-700' : 'text-slate-500'}">${r.drafted ? 'Yes' : 'No'}</td>
-            <td class="p-2 border-t">
-              <button class="px-2 py-1 border rounded" data-id="${r.id || r.name}">${r.drafted ? 'Mark Undrafted' : 'Mark Drafted'}</button>
+            <td class="p-2 border-t space-x-1">
+              <button class="btn-select px-2 py-1 border rounded" data-id="${r.id || r.name}">Select</button>
+              <button class="btn-toggle px-2 py-1 border rounded" data-id="${r.id || r.name}">${r.drafted ? 'Mark Undrafted' : 'Mark Drafted'}</button>
             </td>`;
           const nameTd = tr.querySelector('.name');
           nameTd.innerHTML = highlightName(r.name, query);
@@ -249,9 +250,16 @@
         });
 
         // Wire actions
-        rowsEl.querySelectorAll('button[data-id]').forEach(btn => btn.addEventListener('click', () => {
+        rowsEl.querySelectorAll('button.btn-toggle[data-id]').forEach(btn => btn.addEventListener('click', () => {
           const id = btn.getAttribute('data-id');
           toggleDraftedById(id);
+        }));
+        rowsEl.querySelectorAll('button.btn-select[data-id]').forEach(btn => btn.addEventListener('click', (ev) => {
+          ev.preventDefault(); ev.stopPropagation();
+          const id = btn.getAttribute('data-id');
+          const p = players.find(pp => String(pp.id || pp.name) === String(id));
+          const msg = { type: 'player.selected', payload: { id: p?.id ?? '', name: p?.name ?? '' } };
+          try { window.parent?.postMessage(msg, '*'); } catch {}
         }));
       }
 
@@ -277,7 +285,12 @@
           e.preventDefault();
           const sel = lastResults[selectedIdx >= 0 ? selectedIdx : 0];
           const id = sel?.id || sel?.name;
-          if (id != null) toggleDraftedById(id);
+          if (id != null) {
+            // Keep Enter as toggle drafted for now, but also broadcast selection for Draft widget
+            const p = players.find(pp => String(pp.id || pp.name) === String(id));
+            try { window.parent?.postMessage({ type: 'player.selected', payload: { id: p?.id ?? '', name: p?.name ?? '' } }, '*'); } catch {}
+            toggleDraftedById(id);
+          }
         }
       }
 
@@ -304,6 +317,16 @@
       document.addEventListener('keydown', onKeyDown);
       document.getElementById('reload').addEventListener('click', reload);
       // If the parent toggles dash-drag-active, avoid auto reloads; we check inside reload()
+
+      // Reflect external changes to workspace players (e.g., draft widget updates)
+      window.addEventListener('storage', (e) => {
+        try {
+          if (!e) return;
+          // Vite dev server may prepend origin; use includes
+          if (String(e.key || '').includes('workspace::players')) reload();
+          if (String(e.key || '').includes('workspace::state')) reload();
+        } catch {}
+      });
 
       // Initial
       reload();
