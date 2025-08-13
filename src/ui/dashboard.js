@@ -47,6 +47,7 @@ let saveTimer = null;
 export function initDashboard(root) {
   if (!root) { console.warn('[dashboard] initDashboard: root not found'); return; }
   const dash = loadDashboard();
+  let isDragging = false; // drag/resize guard to avoid mid-drag saves/renders
   const state = { dash, edit: false, dragging: null, resizing: null };
 
   const toolbar = root.querySelector('[data-action="toolbar"]');
@@ -253,6 +254,9 @@ export function initDashboard(root) {
     e.stopPropagation(); e.preventDefault();
     const w = state.dash.widgets.find(x => x.id === id); if (!w) return;
     state.resizing = { id, edge };
+    document.body.classList.add('dash-drag-active');
+    // guard to avoid mid-drag saves/renders
+    try { /* isDragging */ isDragging = true; } catch {}
     window.addEventListener('pointermove', onResize);
     window.addEventListener('pointerup', endResize, { once: true });
   }
@@ -279,12 +283,20 @@ export function initDashboard(root) {
       w.h = newH;
     }
     if (collidesAny(state.dash.widgets, w.id)) { w.w = prev.w; w.h = prev.h; }
-    render();
+    // Inline update only to avoid full re-render mid-resize
+    const el = grid.querySelector(`[data-id="${r.id}"]`);
+    if (el) {
+      el.style.gridColumn = `${w.col} / span ${w.w}`;
+      el.style.gridRow = `${w.row} / span ${w.h}`;
+    }
   }
   function endResize() {
     state.resizing = null;
     window.removeEventListener('pointermove', onResize);
+    document.body.classList.remove('dash-drag-active');
+    try { isDragging = false; } catch {}
     saveDashboard(state.dash);
+    render();
   }
 
   function adjustSizeButtons(id, dW, dH) {
