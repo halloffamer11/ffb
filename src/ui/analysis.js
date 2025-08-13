@@ -51,7 +51,8 @@ function viewModel(player, players, leagueSettings) {
   const byPos = players.filter(p => String(p.position||'').toUpperCase() === String(player.position||'').toUpperCase());
   const league = { teams: Number(leagueSettings.teams||12), starters: leagueSettings.roster || {} };
   const withVbd = calculatePlayerVBD(players, league);
-  const p2 = withVbd.find(p => String(p.id) === String(player.id) || String(p.name).toLowerCase() === String(player.name).toLowerCase()) || player;
+  const hasId = player.id != null && player.id !== '';
+  const p2 = withVbd.find(p => (hasId ? String(p.id) === String(player.id) : String(p.name).toLowerCase() === String(player.name).toLowerCase())) || player;
   const baseline = baselineForPosition(players, String(player.position||''), league);
   const vbd = Number(p2.vbd || ((Number(p2.points||0)) - baseline));
   const vbdVals = byPos.map(p => p.vbd != null ? Number(p.vbd) : (Number(p.points||0) - baseline));
@@ -108,17 +109,30 @@ function render(container, vm) {
 export function initAnalysisWidget(container) {
   if (!container) return;
   container.innerHTML = '';
-  const players = loadPlayers();
   let selected = null;
   const settings = loadSettings();
-  function update() { render(container, viewModel(selected, players, settings)); }
+  function update() {
+    const players = loadPlayers();
+    const vm = viewModel(selected, players, settings);
+    if (vm) {
+      try { console.debug('[analysis] vm', { id: vm.id, name: vm.name, pos: vm.position, vbd: vm.vbd }); } catch {}
+    }
+    render(container, vm);
+  }
   update();
   window.addEventListener('message', (e) => {
     const data = e?.data; if (!data || data.type !== 'player.selected') return;
     const pid = data.payload?.id; const pname = data.payload?.name;
+    // Reload players to avoid stale snapshots
+    const players = loadPlayers();
     selected = null;
-    if (pid != null && pid !== '') selected = players.find(pp => String(pp.id) === String(pid)) || null;
-    if (!selected && pname) selected = players.find(pp => String(pp.name).toLowerCase() === String(pname).toLowerCase()) || null;
+    if (pid != null && pid !== '') {
+      selected = players.find(pp => String(pp.id) === String(pid)) || null;
+    }
+    if (!selected && pname) {
+      selected = players.find(pp => String(pp.name).toLowerCase() === String(pname).toLowerCase()) || null;
+    }
+    try { console.debug('[analysis] selection', { pid, pname, resolved: selected ? { id: selected.id, name: selected.name } : null }); } catch {}
     update();
   });
   window.addEventListener('workspace:players-changed', () => { update(); });
