@@ -529,7 +529,7 @@ Result: Added `demos/ui/T-014_dashboard.html` with responsive grid panels, tabbe
   5. Press Escape, verify dropdown closes
 - **Success Criteria**: Seamless search experience
 
-### T-016: Player Analysis Display ⚠️
+### T-016: Player Analysis Display ⚠️ ✅
 **Complexity**: High | **Risk**: Medium
 - Create comprehensive player card
 - Display VBD metrics prominently
@@ -551,6 +551,8 @@ Result: Added `demos/ui/T-014_dashboard.html` with responsive grid panels, tabbe
   5. Check bid recommendation logic
   6. Measure update time in DevTools
 - **Success Criteria**: <100ms updates, clear visual indicators
+
+Result: Implemented `src/ui/analysis.js` and wired into dashboard/widgets and demo; shows VBD vs baseline, z-score, injury indicator, and bid recommendation using budget helpers. HITL PASS — in `demos/ui/T-014_dashboard.html`, select Healthy/Q/IR players and observe <100ms updates and color coding.
 
 ### T-017: Budget Tracker Component
 **Complexity**: Medium | **Risk**: Low
@@ -592,6 +594,8 @@ Result: Added `demos/ui/T-014_dashboard.html` with responsive grid panels, tabbe
   6. Remove player (undo)
   7. Check injury indicators display
 - **Success Criteria**: Clear roster visualization
+ 
+Note: Follow-up task queued — fix edge-case where roster may not refresh on first pick for user team; ensure robust pick→player join and add remove/undo controls directly in the dashboard widget (parity with demo).
 
 ## Phase 7: Draft Flow Implementation
 *Duration: 3-4 days | Risk: HIGH*
@@ -682,7 +686,7 @@ Result: Added `demos/ui/T-014_dashboard.html` with responsive grid panels, tabbe
   7. Continue draft
 - **Success Criteria**: Consistent undo/redo behavior
 
-### T-023: Position Scarcity Visualization
+### T-023: Position Scarcity Visualization ✅
 **Complexity**: Medium | **Risk**: Low
 - Create VBD curve for next 10 players
 - Color-code by tier breaks
@@ -701,6 +705,8 @@ Result: Added `demos/ui/T-014_dashboard.html` with responsive grid panels, tabbe
   5. Draft all but 1 TE
   6. Verify graceful display
 - **Success Criteria**: Clear scarcity visualization
+
+Result: Implemented `src/ui/tiersViz.js` with tier boxes and "players until drop" using existing VBD/tiers; auto-refreshes on draft events. HITL PASS — `demos/ui/T-014_dashboard.html` shows updates after drafting; edge cases (single-player, empty) handled.
 
 ## Phase 8: Error Handling & Recovery
 *Duration: 2 days | Risk: HIGH*

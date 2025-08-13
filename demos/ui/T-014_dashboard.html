@@ -101,8 +101,7 @@
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
-              <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
-              <p class="text-xs text-slate-600 mt-2">Analysis details will appear here after selection.</p>
+              <div id="analysisMount" class="w-full h-[14rem] border rounded"></div>
             </div>
             
           </div>
@@ -126,8 +125,7 @@
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
-              <div class="h-32 rounded bg-slate-100 animate-pulse"></div>
-              <p class="text-xs text-slate-600 mt-2">Tier visualization placeholder.</p>
+              <div id="tiersMount" class="w-full h-[14rem] border rounded"></div>
             </div>
             
           </div>
@@ -469,6 +467,23 @@
       // Replace legacy layout with new widget engine
       const root = document.querySelector('[data-dashboard-root]');
       initDashboard(root);
+      // Mount inline analysis and tiers when present in demo (non-widget path for HITL)
+      (async () => {
+        try {
+          const ana = document.getElementById('analysisMount');
+          if (ana) {
+            const mod = await import('/src/ui/analysis.js');
+            mod.initAnalysisWidget(ana);
+          }
+        } catch {}
+        try {
+          const t = document.getElementById('tiersMount');
+          if (t) {
+            const mod = await import('/src/ui/tiersViz.js');
+            mod.initTiersWidget(t);
+          }
+        } catch {}
+      })();
     </script>
   </body>
   </html>

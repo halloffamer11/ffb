@@ -1,0 +1,6 @@
+[
+  { "id": 101, "name": "Patrick Mahomes", "team": "KC", "position": "QB", "points": 360, "injuryStatus": 0 },
+  { "id": 102, "name": "Christian McCaffrey", "team": "SF", "position": "RB", "points": 340, "injuryStatus": 0 },
+  { "id": 103, "name": "Cooper Kupp", "team": "LAR", "position": "WR", "points": 300, "injuryStatus": "Q" }
+]
+

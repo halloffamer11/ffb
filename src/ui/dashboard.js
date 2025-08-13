@@ -13,7 +13,8 @@ export const WidgetRegistry = {
   tiers: { name: 'Position Tiers', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
   roster: { name: 'My Roster', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
   budget: { name: 'Budget Tracker', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
-  ledger: { name: 'Draft Ledger', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 }
+  ledger: { name: 'Draft Ledger', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
+  analysis: { name: 'Player Analysis', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 }
 };
 
 const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
@@ -370,7 +371,14 @@ function renderWidgetContents(type, widgetId, expanded = false) {
     return `<div class="w-full h-full"><div id="draft-${widgetId}" class="w-full h-full"></div></div>`;
   }
   if (type === 'tiers') {
-    return `<div class="w-full h-full p-3 overflow-auto text-slate-700">Tiers widget (coming soon)</div>`;
+    setTimeout(async () => {
+      try {
+        const mod = await import('./tiersViz.js');
+        const container = document.getElementById(`tiers-${widgetId}`);
+        if (container && mod.initTiersWidget) mod.initTiersWidget(container);
+      } catch {}
+    }, 0);
+    return `<div class="w-full h-full"><div id="tiers-${widgetId}" class="w-full h-full p-2 overflow-auto"></div></div>`;
   }
   if (type === 'roster') {
     setTimeout(async () => {
@@ -394,6 +402,16 @@ function renderWidgetContents(type, widgetId, expanded = false) {
       } catch {}
     }, 0);
     return `<div class="w-full h-full"><div id="ledger-${widgetId}" class="w-full h-full"></div></div>`;
+  }
+  if (type === 'analysis') {
+    setTimeout(async () => {
+      try {
+        const mod = await import('./analysis.js');
+        const container = document.getElementById(`analysis-${widgetId}`);
+        if (container && mod.initAnalysisWidget) mod.initAnalysisWidget(container);
+      } catch {}
+    }, 0);
+    return `<div class="w-full h-full"><div id="analysis-${widgetId}" class="w-full h-full p-2 overflow-auto"></div></div>`;
   }
   return `<div class="w-full h-full p-3">${type || ''}</div>`;
 }
