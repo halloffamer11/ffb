@@ -97,9 +97,13 @@
           if (!res.ok) { errors.textContent = JSON.stringify(res.errors, null, 2); return; }
           errors.textContent = '';
           current = withSourceTag(res.records, 'file');
-          document.getElementById('sourceLabel').textContent = 'file';
+          // Auto-apply to workspace to mirror prior behavior and trigger dependent UI refresh
+          const saveRes = savePlayersToWorkspace(current.map(({ __source, ...rest }) => rest));
+          if (!saveRes.ok) { errors.textContent = `Workspace save failed: ${saveRes.error}`; return; }
+          document.getElementById('sourceLabel').textContent = 'workspace';
           render(current.slice(0, 50));
           console.debug('[T-013] Loaded records', current.length);
+          try { window.parent?.dispatchEvent(new CustomEvent('workspace:players-changed')); } catch {}
         } catch (e) {
           errors.textContent = 'Load failed';
           console.error('[T-013] Load error', e);
