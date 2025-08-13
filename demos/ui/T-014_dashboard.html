@@ -34,7 +34,8 @@
       </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 py-4" data-dashboard-root>
+    <!--<main class="max-w-7xl mx-auto px-4 py-4" data-dashboard-root> -->
+    <main class="w-full max-w-none mx-auto px-4 py-4" data-dashboard-root></main>
       <!-- Loading state overlay -->
       <div id="loading" class="hidden fixed inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center">
         <div class="w-72 h-24 rounded border bg-white p-4 animate-pulse">
@@ -57,16 +58,13 @@
           </select>
           <button data-btn="add" class="px-3 py-1 border rounded">Add Widget</button>
         </div>
-        <div id="dashGrid" data-grid class="grid gap-4 h-[70vh]">
+        <!-- <div id="dashGrid" data-grid class="grid gap-4 h-[70vh]"> -->
+        <div id="dashGrid" data-grid class="grid gap-4 h-[calc(100vh-8rem)]">
           <!-- Panel: Search & Select (fixed full width) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="search" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Search & Select</span>
               <div class="flex items-center gap-1 text-xs">
-                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
-                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
-                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
-                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
                 <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
@@ -87,10 +85,6 @@
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Player Analysis</span>
               <div class="flex items-center gap-1 text-xs">
-                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
-                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
-                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
-                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
                 <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
@@ -111,10 +105,6 @@
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">Position Tiers</span>
               <div class="flex items-center gap-1 text-xs">
-                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
-                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
-                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
-                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
                 <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
@@ -135,10 +125,6 @@
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
               <span class="mr-auto">My Roster</span>
               <div class="flex items-center gap-1 text-xs">
-                <button class="btn-left px-2 py-1 border rounded" title="Move left">←</button>
-                <button class="btn-right px-2 py-1 border rounded" title="Move right">→</button>
-                <button class="btn-up px-2 py-1 border rounded" title="Move up">↑</button>
-                <button class="btn-down px-2 py-1 border rounded" title="Move down">↓</button>
                 <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
                 <button class="btn-h-plus px-2 py-1 border rounded">+</button>
