@@ -45,11 +45,13 @@ let saveTimer = null;
 }
 
 export function initDashboard(root) {
+  if (!root) { console.warn('[dashboard] initDashboard: root not found'); return; }
   const dash = loadDashboard();
   const state = { dash, edit: false, dragging: null, resizing: null };
 
   const toolbar = root.querySelector('[data-action="toolbar"]');
   const grid = root.querySelector('[data-grid]');
+  if (!grid) { console.warn('[dashboard] initDashboard: grid not found'); return; }
   let dragShield = null;
 
   grid.style.display = 'grid';

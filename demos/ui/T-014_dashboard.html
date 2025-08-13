@@ -35,7 +35,7 @@
     </header>
 
     <!--<main class="max-w-7xl mx-auto px-4 py-4" data-dashboard-root> -->
-    <main class="w-full max-w-none mx-auto px-4 py-4" data-dashboard-root></main>
+    <main class="w-full max-w-none mx-auto px-4 py-4"></main>
       <!-- Loading state overlay -->
       <div id="loading" class="hidden fixed inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center">
         <div class="w-72 h-24 rounded border bg-white p-4 animate-pulse">
@@ -48,7 +48,7 @@
       </div>
 
       <!-- Tabs -->
-      <section id="view-dashboard" class="view">
+      <section id="view-dashboard" class="view" data-dashboard-root>
         <div class="flex items-center gap-2 mb-3" data-action="toolbar">
           <button data-btn="edit" class="px-3 py-1 border rounded">Toggle Edit</button>
           <select data-select="widget" class="border p-1 text-sm">
@@ -450,9 +450,9 @@
         Array.from(grid.querySelectorAll('.panel')).forEach(p => { trimHeightForCollapsed(p); applyGridPosition(p); });
       }
 
-      // Replace legacy layout with new widget engine
+      // Replace legacy layout with new widget engine (ensure element exists)
       const root = document.querySelector('[data-dashboard-root]');
-      initDashboard(root);
+      if (root) { initDashboard(root); } else { console.warn('[T-014] dashboard root not found'); }
       // Mount inline analysis and tiers when present in demo (non-widget path for HITL)
       (async () => {
         try {
