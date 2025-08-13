@@ -60,6 +60,7 @@
       <span id="perfHud" class="text-xs text-slate-500 hidden"> | Avg: <span id="hudAvg">-</span> ms, p95: <span id="hudP95">-</span> ms <button id="hudReset" class="ml-1 underline">reset</button></span>
       <button id="reload" class="ml-auto px-3 py-2 rounded bg-slate-600 text-white">Reload Workspace</button>
       <button id="resetDraft" class="px-3 py-2 rounded bg-rose-600 text-white" title="Dev-only: clears picks and drafted flags">Reset Draft (dev)</button>
+      <button id="runCalcs" class="px-3 py-2 rounded bg-amber-600 text-white" title="Dev-only: compute analysis for all players">Run Calcs (dev)</button>
       <a href="./T-013_data_management.html" class="px-3 py-2 rounded bg-amber-600 text-white" target="_blank">Open T-013</a>
     </div>
 
@@ -334,6 +335,41 @@
         } catch (e) {
           console.error('Reset draft failed', e);
           alert('Reset failed');
+        }
+      });
+
+      // Dev: Run Calcs for all players and store to localStorage for debug
+      document.getElementById('runCalcs').addEventListener('click', async () => {
+        try {
+          // lazy import analysis VM bits to avoid bloat
+          const [{ calculatePlayerVBD }, { baselineForPosition }] = await Promise.all([
+            import('../../src/core/vbd.js'),
+            import('../../src/core/vbd.js')
+          ]);
+          const { stdDev } = await import('../../src/core/tiers.js');
+          const settingsMod = await import('../../src/ui/settings.js');
+          const settings = settingsMod.loadSettings();
+          const league = { teams: Number(settings.teams||12), starters: settings.roster||{} };
+          const all = normalizePlayers(loadPlayersFromWorkspace());
+          const withVbd = calculatePlayerVBD(all, league);
+          const byPos = new Map();
+          withVbd.forEach(p => {
+            const k = String(p.position||'').toUpperCase();
+            if (!byPos.has(k)) byPos.set(k, []);
+            byPos.get(k).push(p);
+          });
+          const out = withVbd.map(p => {
+            const baseline = baselineForPosition(withVbd, String(p.position||''), league);
+            const vals = (byPos.get(String(p.position||'').toUpperCase())||[]).map(x => Number(x.vbd||0));
+            const sigma = stdDev(vals);
+            const z = sigma > 0 ? (Number(p.vbd||0) / sigma) : 0;
+            return { id: p.id, name: p.name, team: p.team, position: p.position, points: p.points, vbd: Number(p.vbd||0), baseline, zScore: Number.isFinite(z)?Number(z.toFixed(2)):0 };
+          });
+          window.localStorage.setItem('debug::analysis_table', JSON.stringify(out));
+          alert(`Computed ${out.length} rows to debug::analysis_table`);
+        } catch (e) {
+          console.error('Run Calcs failed', e);
+          alert('Run Calcs failed');
         }
       });
       // If the parent toggles dash-drag-active, avoid auto reloads; we check inside reload()

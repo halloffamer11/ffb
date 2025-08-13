@@ -63,6 +63,19 @@ export function attachSettingsForm(formId, summaryId, errorsId) {
     hydrateForm(form, saved);
     renderSummary(summary, saved);
     syncOwnersGrid(form, saved);
+    // Minimal inline confirmation that auto-dismisses
+    try {
+      let tip = document.getElementById('saveTip');
+      if (!tip) {
+        tip = document.createElement('div');
+        tip.id = 'saveTip';
+        tip.className = 'mt-2 text-xs text-emerald-700';
+        form.appendChild(tip);
+      }
+      tip.textContent = 'Settings saved';
+      clearTimeout(tip.__t);
+      tip.__t = setTimeout(() => { try { tip.textContent = ''; } catch {} }, 1500);
+    } catch {}
   });
 
   // Keep owners list aligned as teams changes
