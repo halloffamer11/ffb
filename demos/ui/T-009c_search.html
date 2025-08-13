@@ -234,35 +234,23 @@
           const tr = document.createElement('tr');
           tr.setAttribute('role', 'row');
           tr.setAttribute('aria-selected', String(idx === selectedIdx));
-          if (r.drafted) tr.classList.add('opacity-60');
+          // Read-only view; no drafted styling now
           tr.innerHTML = `
             <td class="p-2 border-t name"></td>
             <td class="p-2 border-t">${escapeHtml(r.team ?? '')}</td>
             <td class="p-2 border-t">${escapeHtml(r.position ?? '')}</td>
             <td class="p-2 border-t">${escapeHtml(getAdp(r))}</td>
-            <td class="p-2 border-t ${injuryClass(r.injuryStatus)}">${STATUS_LABELS[normalizeInjuryStatus(r.injuryStatus)]}</td>
-            <td class="p-2 border-t ${r.drafted ? 'text-emerald-700' : 'text-slate-500'}">${r.drafted ? 'Yes' : 'No'}</td>
-            <td class="p-2 border-t space-x-1">
-              <button class="btn-select px-2 py-1 border rounded" data-id="${r.id || r.name}">Select</button>
-              <button class="btn-toggle px-2 py-1 border rounded" data-id="${r.id || r.name}">${r.drafted ? 'Mark Undrafted' : 'Mark Drafted'}</button>
-            </td>`;
+            <td class="p-2 border-t ${injuryClass(r.injuryStatus)}">${STATUS_LABELS[normalizeInjuryStatus(r.injuryStatus)]}</td>`;
           const nameTd = tr.querySelector('.name');
           nameTd.innerHTML = highlightName(r.name, query);
+          tr.addEventListener('click', () => selectRow(r));
           rowsEl.appendChild(tr);
         });
+      }
 
-        // Wire actions
-        rowsEl.querySelectorAll('button.btn-toggle[data-id]').forEach(btn => btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-id');
-          toggleDraftedById(id);
-        }));
-        rowsEl.querySelectorAll('button.btn-select[data-id]').forEach(btn => btn.addEventListener('click', (ev) => {
-          ev.preventDefault(); ev.stopPropagation();
-          const id = btn.getAttribute('data-id');
-          const p = players.find(pp => String(pp.id || pp.name) === String(id));
-          const msg = { type: 'player.selected', payload: { id: p?.id ?? '', name: p?.name ?? '' } };
-          try { window.parent?.postMessage(msg, '*'); } catch {}
-        }));
+      function selectRow(p) {
+        const msg = { type: 'player.selected', payload: { id: p?.id ?? '', name: p?.name ?? '' } };
+        try { window.parent?.postMessage(msg, '*'); } catch {}
       }
 
       function toggleDraftedById(id) {
@@ -283,15 +271,13 @@
         if (!total) return;
         if (e.key === 'ArrowDown') { selectedIdx = Math.min(total - 1, selectedIdx + 1); e.preventDefault(); render(lastResults, qEl.value || ''); return; }
         if (e.key === 'ArrowUp') { selectedIdx = Math.max(0, selectedIdx - 1); e.preventDefault(); render(lastResults, qEl.value || ''); return; }
-        if (e.key === 'Enter') {
+       if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           const sel = lastResults[selectedIdx >= 0 ? selectedIdx : 0];
           const id = sel?.id || sel?.name;
           if (id != null) {
-            // Keep Enter as toggle drafted for now, but also broadcast selection for Draft widget
             const p = players.find(pp => String(pp.id || pp.name) === String(id));
-            try { window.parent?.postMessage({ type: 'player.selected', payload: { id: p?.id ?? '', name: p?.name ?? '' } }, '*'); } catch {}
-            toggleDraftedById(id);
+            selectRow(p);
           }
         }
       }
@@ -317,7 +303,7 @@
         selectedIdx = -1; runSearch();
       }));
       document.addEventListener('keydown', onKeyDown);
-      document.getElementById('reload').addEventListener('click', reload);
+       document.getElementById('reload').addEventListener('click', reload);
       document.getElementById('resetDraft').addEventListener('click', () => {
         try {
           // Clear picks and drafted flags in workspace

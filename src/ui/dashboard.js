@@ -3,12 +3,12 @@
 
 import { createStorageAdapter } from '../adapters/storage.js';
 
-const GRID_ROWS = 4;
-const GRID_COLS = 8;
-const SAVE_DEBOUNCE_MS = 500;
+const GRID_ROWS = 6;
+const GRID_COLS = 12;
+const SAVE_DEBOUNCE_MS = 50;
 
 export const WidgetRegistry = {
-  search: { name: 'Search & Select', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 8, defaultH: 2 },
+  search: { name: 'Search & Select', minW: 2, minH: 1, maxW: 8, maxH: 12, defaultW: 8, defaultH: 2 },
   draft: { name: 'Draft Entry', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
   tiers: { name: 'Position Tiers', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
   roster: { name: 'My Roster', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
@@ -94,6 +94,9 @@ export function initDashboard(root) {
                   <circle cx=\"12\" cy=\"12\" r=\"1.6\"/>
                 </svg>
               </button>
+            ` : ''}
+            ${state.edit ? `
+              <div class=\"flex items-center gap-1 text-xs select-none min-w-[140px]\">\n                <span class=\"text-slate-500\">W</span>\n                <button class=\"btn-w-dec px-2 py-1 border rounded\">−</button>\n                <button class=\"btn-w-inc px-2 py-1 border rounded\">+</button>\n                <span class=\"text-slate-500 ml-2\">H</span>\n                <button class=\"btn-h-dec px-2 py-1 border rounded\">−</button>\n                <button class=\"btn-h-inc px-2 py-1 border rounded\">+</button>\n              </div>
             ` : ''}
             <span class="text-sm font-medium mr-auto select-none">${def.name}</span>
             ${state.edit ? `
