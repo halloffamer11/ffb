@@ -39,8 +39,8 @@
     </table>
 
       <script type="module">
-      import { loadPlayersFromFile, savePlayersToWorkspace, loadPlayersFromWorkspace, withSourceTag } from '../../src/ui/dataManagement.js';
-      import { normalizeInjuryStatus } from '../../src/core/schema.js';
+      import { loadPlayersFromFile, savePlayersToWorkspace, loadPlayersFromWorkspace, withSourceTag } from '/src/ui/dataManagement.js';
+      import { normalizeInjuryStatus } from '/src/core/schema.js';
 
       const fileInput = document.getElementById('fileInput');
       const gridBody = document.querySelector('#grid tbody');
@@ -90,40 +90,58 @@
       }
 
       document.getElementById('loadBtn').addEventListener('click', async () => {
-        const file = fileInput.files?.[0];
-        if (!file) { errors.textContent = 'Choose a CSV file first'; return; }
-        const res = await loadPlayersFromFile(file);
-        if (!res.ok) { errors.textContent = JSON.stringify(res.errors, null, 2); return; }
-        errors.textContent = '';
-        current = withSourceTag(res.records, 'file');
-        document.getElementById('sourceLabel').textContent = 'file';
-        render(current.slice(0, 50));
+        try {
+          const file = fileInput.files?.[0];
+          if (!file) { errors.textContent = 'Choose a CSV file first'; return; }
+          const res = await loadPlayersFromFile(file);
+          if (!res.ok) { errors.textContent = JSON.stringify(res.errors, null, 2); return; }
+          errors.textContent = '';
+          current = withSourceTag(res.records, 'file');
+          document.getElementById('sourceLabel').textContent = 'file';
+          render(current.slice(0, 50));
+          console.debug('[T-013] Loaded records', current.length);
+        } catch (e) {
+          errors.textContent = 'Load failed';
+          console.error('[T-013] Load error', e);
+        }
       });
 
       document.getElementById('saveBtn').addEventListener('click', () => {
-        if (!current.length) { errors.textContent = 'No data loaded'; return; }
-        const r = savePlayersToWorkspace(current.map(({ __source, ...rest }) => rest));
-        errors.textContent = r.ok ? '' : `Save failed: ${r.error}`;
-        if (r.ok) {
-          alert('Saved to workspace');
-          try {
-            // Write a backup snapshot here too (same namespace as workspace)
-            const players = (loadPlayersFromWorkspace() || []).slice();
-            window.localStorage.setItem('workspace::__backup::manual_' + Date.now(), JSON.stringify({ version: '1.0.0', timestamp: Date.now(), state: { players }, size: JSON.stringify({ players }).length }));
-          } catch {}
+        try {
+          if (!current.length) { errors.textContent = 'No data loaded'; return; }
+          const r = savePlayersToWorkspace(current.map(({ __source, ...rest }) => rest));
+          errors.textContent = r.ok ? '' : `Save failed: ${r.error}`;
+          if (r.ok) {
+            alert('Saved to workspace');
+            try {
+              // Write a backup snapshot here too (same namespace as workspace)
+              const players = (loadPlayersFromWorkspace() || []).slice();
+              window.localStorage.setItem('workspace::__backup::manual_' + Date.now(), JSON.stringify({ version: '1.0.0', timestamp: Date.now(), state: { players }, size: JSON.stringify({ players }).length }));
+              // Broadcast change for other widgets
+              window.parent?.dispatchEvent(new CustomEvent('workspace:players-changed'));
+            } catch {}
+          }
+        } catch (e) {
+          errors.textContent = 'Save failed';
+          console.error('[T-013] Save error', e);
         }
       });
 
       document.getElementById('exportBtn').addEventListener('click', () => {
-        if (!current.length) { errors.textContent = 'No data to export'; return; }
-        const header = ['name','team','position','points','injury'];
-        const lines = [header.join(',')];
-        for (const r of current) lines.push([r.name, r.team, r.position, r.points, r.injuryStatus ?? ''].join(','));
-        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url; a.download = 'players_export.csv'; a.click();
-        URL.revokeObjectURL(url);
+        try {
+          if (!current.length) { errors.textContent = 'No data to export'; return; }
+          const header = ['name','team','position','points','injury'];
+          const lines = [header.join(',')];
+          for (const r of current) lines.push([r.name, r.team, r.position, r.points, r.injuryStatus ?? ''].join(','));
+          const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url; a.download = 'players_export.csv'; a.click();
+          URL.revokeObjectURL(url);
+        } catch (e) {
+          errors.textContent = 'Export failed';
+          console.error('[T-013] Export error', e);
+        }
       });
 
       // Load from workspace on page load

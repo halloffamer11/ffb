@@ -59,6 +59,7 @@
       <span class="text-sm text-slate-600">Time: <span id="time">0</span> ms</span>
       <span id="perfHud" class="text-xs text-slate-500 hidden"> | Avg: <span id="hudAvg">-</span> ms, p95: <span id="hudP95">-</span> ms <button id="hudReset" class="ml-1 underline">reset</button></span>
       <button id="reload" class="ml-auto px-3 py-2 rounded bg-slate-600 text-white">Reload Workspace</button>
+      <button id="resetDraft" class="px-3 py-2 rounded bg-rose-600 text-white" title="Dev-only: clears picks and drafted flags">Reset Draft (dev)</button>
       <a href="./T-013_data_management.html" class="px-3 py-2 rounded bg-amber-600 text-white" target="_blank">Open T-013</a>
     </div>
 
@@ -316,6 +317,25 @@
       }));
       document.addEventListener('keydown', onKeyDown);
       document.getElementById('reload').addEventListener('click', reload);
+      document.getElementById('resetDraft').addEventListener('click', () => {
+        try {
+          // Clear picks and drafted flags in workspace
+          const sRaw = window.localStorage.getItem('workspace::state');
+          let st = sRaw ? JSON.parse(sRaw) : { draft: { picks: [] } };
+          st.draft = { picks: [] };
+          window.localStorage.setItem('workspace::state', JSON.stringify(st));
+          const pRaw = window.localStorage.getItem('workspace::players');
+          const players = pRaw ? JSON.parse(pRaw).map(r => ({ ...r, drafted: false })) : [];
+          window.localStorage.setItem('workspace::players', JSON.stringify(players));
+          alert('Draft reset (dev only).');
+          reload();
+          try { window.parent?.dispatchEvent(new CustomEvent('workspace:state-changed')); } catch {}
+          try { window.parent?.dispatchEvent(new CustomEvent('workspace:players-changed')); } catch {}
+        } catch (e) {
+          console.error('Reset draft failed', e);
+          alert('Reset failed');
+        }
+      });
       // If the parent toggles dash-drag-active, avoid auto reloads; we check inside reload()
 
       // Reflect external changes to workspace players (e.g., draft widget updates)
