@@ -6,6 +6,15 @@
 # Execution Context Ledger
 - Date, actor, decision, rationale, links
 
+ - 2025-08-14, role_executor, Audit: Normalize task status + HITL enforcement, Added summary table to `pcl/tasks.md`, inserted per-task Status Blocks, and enforced rule to update status + ledger on every change. Cross-checked evidence from tests and demos; downgraded tasks without HITL PASS. Links: `pcl/tasks.md`, `demos/ui/*`, `tests/unit/*`.
+ - 2025-08-14, role_executor, T-000 Status Update, Marked IN-PROCESS with HITL PENDING; evidence: `tests/unit/performance.test.js`, `demos/data/T-000_performance_results.md`.
+ - 2025-08-14, role_executor, T-007 Status Update, Marked IN-PROCESS pending golden tolerance check; evidence: `tests/unit/vbd.test.js`, `demos/ui/T-007_vbd_validation.md`.
+ - 2025-08-14, role_executor, T-010 Status Update, Marked IN-PROCESS; unit tests pass but dashboard wiring HITL pending. Evidence: `tests/unit/state.test.js`.
+ - 2025-08-14, role_executor, T-014a Status Update, Marked IN-PROCESS; debug metrics/reporting pending. Evidence: `demos/ui/T-014a_debug.html`.
+ - 2025-08-14, role_executor, T-021 Status Update, Marked IN-PROCESS; initial pipeline attached; performance validation pending. Evidence: `src/ui/recalc.js`, `src/app/main.js`.
+ - 2025-08-14, role_executor, T-022 Status Update, Marked IN-PROCESS; undo/redo UI integrated; full HITL pending. Evidence: `src/ui/ledger.js`, `src/ui/storeBridge.js`.
+ - 2025-08-14, role_executor, T-024 Status Update, Marked IN-PROCESS; structured logs/toasts added; comprehensive error-path HITL pending. Evidence: `src/app/logger.js`, `src/ui/toast.js`.
+ - 2025-08-14, role_executor, T-028 Status Update, Marked IN-PROCESS; alpha test kit drafted; reviewers pending. Evidence: `demos/data/T-028_alpha_test_kit/`.
  - 2025-08-10, role_executor, T-001 Project Initialization, Created Vite app skeleton with Tailwind via CDN and CSP header; added workspace JSON schema; updated README and .gitignore; verified build succeeds, links: `index.html`, `src/app/main.js`, `contracts/schemas/workspace.schema.json`.
  - 2025-08-10, role_executor, T-000 Performance Benchmark Suite, Added minimal VBD and search utilities, Node smoke perf test, in-browser benchmark runner, dataset generation, and results log. Verified thresholds on Node tests; browser runner available via `PerformanceBenchmark.runAll()`.
  - 2025-08-10, role_executor, T-002 Data Schema Definition, Added core schema utilities with JSDoc types, injury status enum, compact packed player representation, and size validation helpers. Created Node schema test to assert <100 bytes/player.
@@ -31,3 +40,7 @@
   - 2025-08-12, role_executor, T-027 Browser Compatibility Testing (HITL PASS), Ran `demos/ui/T-027_compat.html`; verified localStorage/ES6/performance/file APIs across target browsers; recorded notes in `demos/data/T-027_browser_matrix.md`.
   - 2025-08-12, role_executor, T-016 Player Analysis Display (implemented), Added `src/ui/analysis.js` and wired into dashboard widget system and demo; shows VBD vs baseline, z-score, injury badge, and bid recommendation using budget helpers. HITL path: `demos/ui/T-014_dashboard.html` — select players in Search & Select and verify analysis updates <100ms.
   - 2025-08-12, role_executor, T-023 Position Scarcity Visualization (implemented), Added `src/ui/tiersViz.js` and integrated with dashboard; renders tier boxes per position with "players until drop" based on existing tiers/VBD. Auto-refreshes on draft events. HITL path: `demos/ui/T-014_dashboard.html` — draft a few players and observe updates.
+  - 2025-08-13, role_executor, T-022 Draft History & Undo UI (started), Added undo/redo stacks to `src/state/store.js` with persistence; wired `src/ui/ledger.js` with Undo/Redo controls using `src/ui/storeBridge.js`. Buttons reflect availability and persist across reloads. HITL: PENDING.
+  - 2025-08-13, role_executor, T-021 Real-time Recalculation Engine (started), Implemented `src/ui/recalc.js` pipeline (points → VBD → tiers) and attached listeners in `src/app/main.js`. Stores timing logs and updates `players` + `tiers`. HITL: PENDING.
+  - 2025-08-13, role_executor, T-024 Error Handling & Observability (phase 1), Added `src/app/logger.js` structured logs, `src/ui/toast.js` UI toasts, and defensive try/catch in bootstrap and draft flows. Logs persisted under `workspace::logs`. HITL: PENDING.
+  - 2025-08-13, role_executor, T-028 Alpha Testing Preparation (started), Added `demos/data/T-028_alpha_test_kit/` with README and checklist for dashboard validation. HITL: PENDING.
