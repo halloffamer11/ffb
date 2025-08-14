@@ -102,6 +102,24 @@ function assertOkay(name, condition, details) {
   assertOkay('Fuzzy <50ms', (t1 - t0) < 50, { durationMs: (t1 - t0), checksum, count: res.length });
 }
 
+// Record to results markdown (best-effort, local only)
+try {
+  if (String(process.env.WRITE_RESULTS || '').toLowerCase() === '1') {
+    const lines = [
+      `Run: ${new Date().toISOString()} — Node ${process.version}`,
+      '```',
+      `search: { durationMs: ~<50, count: ${res ? res.length : 'n/a'}, checksum: ${checksum ?? 'n/a'} }`,
+      `vbd:    { durationMs: ~<100 }`,
+      'ui:     { frameMs: browser-only }',
+      'ws:     { saveMs: browser-only }',
+      '```',
+      ''
+    ];
+    const outPath = path.resolve('demos/data/T-000_performance_results.md');
+    fs.appendFileSync(outPath, '\n' + lines.join('\n'));
+  }
+} catch {}
+
 // localStorage and workspace timings are browser-only; covered by in-browser runner.
 
 

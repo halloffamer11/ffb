@@ -144,6 +144,8 @@
         const goldByName = Object.fromEntries(goldWithVbd.map(p => [p.name, p]));
         const rows = [];
         const missing = [];
+        let sumAbsPctPts = 0;
+        let sumAbsPctVbd = 0;
 
         for (const g of goldenWithPoints) {
           const c = currentByName[g.name];
@@ -154,16 +156,21 @@
           const vbdDelta = Math.abs(cv - gv);
           const within = (ptsDelta / Math.max(1, g.points || 1)) <= tolerance && (vbdDelta / Math.max(1, Math.abs(gv) || 1)) <= tolerance;
           rows.push({ name: g.name, ptsDelta, vbdDelta, within });
+          // accumulate percentage errors (MAPE components)
+          sumAbsPctPts += (ptsDelta / Math.max(1, Math.abs(g.points || 1)));
+          sumAbsPctVbd += (Math.abs(vbdDelta) / Math.max(1, Math.abs(gv) || 1));
         }
 
         const maePts = rows.reduce((a, r) => a + r.ptsDelta, 0) / (rows.length || 1);
         const maeVbd = rows.reduce((a, r) => a + r.vbdDelta, 0) / (rows.length || 1);
         const withinPct = rows.length ? (rows.filter(r => r.within).length / rows.length) * 100 : 0;
+        const maePtsPct = rows.length ? (sumAbsPctPts / rows.length) * 100 : 0;
+        const maeVbdPct = rows.length ? (sumAbsPctVbd / rows.length) * 100 : 0;
 
         renderTable(rows);
-        summaryEl.textContent = JSON.stringify({ count: rows.length, tolerancePct: tolPct, maePts: round(maePts,2), maeVbd: round(maeVbd,2), withinPct: round(withinPct,1) }, null, 2);
+        summaryEl.textContent = JSON.stringify({ count: rows.length, tolerancePct: tolPct, maePts: round(maePts,2), maeVbd: round(maeVbd,2), maePtsPct: round(maePtsPct,2), maeVbdPct: round(maeVbdPct,2), withinPct: round(withinPct,1) }, null, 2);
         missingEl.textContent = missing.join('\n');
-        lastResults = { rows, maePts, maeVbd, withinPct, missing, tolerance: tolPct };
+        lastResults = { rows, maePts, maeVbd, maePtsPct, maeVbdPct, withinPct, missing, tolerance: tolPct };
       });
 
       document.getElementById('exportMd').addEventListener('click', () => {
@@ -215,6 +222,8 @@
         lines.push(`Count: ${res.rows.length}`);
         lines.push(`MAE Points: ${round(res.maePts,2)}`);
         lines.push(`MAE VBD: ${round(res.maeVbd,2)}`);
+        lines.push(`MAE Points %: ${round(res.maePtsPct,2)}%`);
+        lines.push(`MAE VBD %: ${round(res.maeVbdPct,2)}%`);
         lines.push(`Within Tolerance: ${round(res.withinPct,1)}%`);
         lines.push('');
         lines.push('| Player | PtsΔ | VBDΔ | Within |');

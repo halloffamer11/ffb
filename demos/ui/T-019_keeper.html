@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-019 Keeper Entry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-2">T-019 Keeper Entry</h1>
+    <p class="text-sm text-slate-600 mb-4">Enter keepers by searching/selecting a player and assigning to a team with cost. Budgets will reflect keepers.</p>
+
+    <div class="grid grid-cols-2 gap-4">
+      <iframe src="./T-009c_search.html?hud=0" class="w-full h-[70vh] border rounded"></iframe>
+      <div>
+        <div class="mb-2 p-3 bg-white border rounded">
+          <div class="text-sm font-medium mb-2">Selected</div>
+          <div id="sel" class="text-sm text-slate-800">—</div>
+        </div>
+        <div class="p-3 bg-white border rounded space-y-2">
+          <div class="flex items-center gap-2">
+            <label class="text-sm">Team
+              <select id="team" class="border p-1 ml-1"></select>
+            </label>
+            <label class="text-sm">Cost <input id="cost" type="number" min="0" value="0" class="border p-1 w-24 ml-1"></label>
+            <button id="save" class="px-3 py-2 rounded bg-emerald-600 text-white">Save Keeper</button>
+            <span id="msg" class="text-xs text-slate-600"></span>
+          </div>
+          <div class="text-xs text-slate-600">Keepers affect remaining budgets and max bids.</div>
+        </div>
+        <div class="mt-4 p-3 bg-white border rounded">
+          <div class="text-sm font-medium mb-2">Budgets</div>
+          <div class="overflow-auto max-h-[40vh]">
+            <table id="bud" class="min-w-full text-sm">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { createStorageAdapter } from '/src/adapters/storage.js';
+      import { computeAllTeamBudgets } from '/src/core/budget.js';
+      import { loadSettings as loadSettingsUi, saveSettings as saveSettingsUi } from '/src/ui/settings.js';
+
+      const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+      const selEl = document.getElementById('sel');
+      const teamSel = document.getElementById('team');
+      const costEl = document.getElementById('cost');
+      const msgEl = document.getElementById('msg');
+      const saveBtn = document.getElementById('save');
+      const budTable = document.getElementById('bud');
+
+      let selected = null;
+
+      function loadSettings() { return loadSettingsUi(); }
+      function saveSettings(s) { return saveSettingsUi(s); }
+      function loadPicks() { const s = store.get('state'); return s?.draft?.picks || []; }
+
+      function fmtPlayer(p) { return p ? `${p.name} · ${p.team} · ${p.position}` : '—'; }
+
+      function refreshOwners() {
+        const s = loadSettings();
+        teamSel.innerHTML = (s.owners || []).map(o => `<option value="${o.id}">${o.team} (${o.name})</option>`).join('');
+      }
+
+      function renderBudgets() {
+        const s = loadSettings();
+        const rows = computeAllTeamBudgets(s, loadPicks());
+        const thead = budTable.querySelector('thead');
+        const tbody = budTable.querySelector('tbody');
+        if (thead) thead.innerHTML = `<tr>
+          <th class="text-left p-2">Team</th>
+          <th class="text-right p-2">Remaining</th>
+          <th class="text-right p-2">Spent</th>
+          <th class="text-right p-2">Spots</th>
+          <th class="text-right p-2">Max Bid</th>
+          <th class="text-right p-2">Avg $/Spot</th>
+        </tr>`;
+        if (tbody) {
+          tbody.innerHTML = '';
+          rows.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="p-2 border-t">${r.teamName}</td>
+              <td class="p-2 border-t text-right">$${r.remaining}</td>
+              <td class="p-2 border-t text-right">$${r.spent}</td>
+              <td class="p-2 border-t text-right">${r.spotsRemaining}/${r.rosterTotal}</td>
+              <td class="p-2 border-t text-right">$${r.maxBid}</td>
+              <td class="p-2 border-t text-right">$${r.avgPerSpot.toFixed(1)}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      function setSelected(p) {
+        selected = p || null;
+        selEl.textContent = fmtPlayer(selected);
+        msgEl.textContent = '';
+      }
+
+      // Listen to search iframe selections
+      window.addEventListener('message', (e) => {
+        const data = e?.data;
+        if (!data || data.type !== 'player.selected') return;
+        const pid = data.payload?.id;
+        const pname = data.payload?.name;
+        try {
+          const arr = store.get('players') || [];
+          let p = null;
+          if (pid != null && pid !== '') p = arr.find(pp => String(pp.id) === String(pid));
+          if (!p && pname) p = arr.find(pp => String(pp.name).toLowerCase() === String(pname).toLowerCase());
+          if (p) setSelected(p);
+        } catch {}
+      });
+
+      saveBtn.addEventListener('click', () => {
+        const s = loadSettings();
+        if (!Array.isArray(s.keepers)) s.keepers = [];
+        if (!selected) { msgEl.textContent = 'Select a player first.'; return; }
+        const teamId = Number(teamSel.value || 1);
+        const cost = Math.max(0, Number(costEl.value || 0));
+        // Append keeper (no duplicate check for simplicity)
+        s.keepers.push({ teamId, cost, playerId: selected.id, playerName: selected.name });
+        saveSettings(s);
+        msgEl.textContent = 'Keeper saved.';
+        renderBudgets();
+      });
+
+      refreshOwners();
+      renderBudgets();
+      window.addEventListener('storage', (e) => {
+        if (!e) return;
+        const k = String(e.key || '');
+        if (k.includes('workspace::leagueSettings') || k.includes('workspace::state')) renderBudgets();
+      });
+    </script>
+  </body>
+  </html>
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-019 Keeper Entry</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-2">T-019 Keeper Entry</h1>
+    <p class="text-sm text-slate-600 mb-4">Enter keepers by searching/selecting a player and assigning to a team with cost. Budgets will reflect keepers.</p>
+
+    <div class="grid grid-cols-2 gap-4">
+      <iframe src="./T-009c_search.html?hud=0" class="w-full h-[70vh] border rounded"></iframe>
+      <div>
+        <div class="mb-2 p-3 bg-white border rounded">
+          <div class="text-sm font-medium mb-2">Selected</div>
+          <div id="sel" class="text-sm text-slate-800">—</div>
+        </div>
+        <div class="p-3 bg-white border rounded space-y-2">
+          <div class="flex items-center gap-2">
+            <label class="text-sm">Team
+              <select id="team" class="border p-1 ml-1"></select>
+            </label>
+            <label class="text-sm">Cost <input id="cost" type="number" min="0" value="0" class="border p-1 w-24 ml-1"></label>
+            <button id="save" class="px-3 py-2 rounded bg-emerald-600 text-white">Save Keeper</button>
+            <span id="msg" class="text-xs text-slate-600"></span>
+          </div>
+          <div class="text-xs text-slate-600">Keepers affect remaining budgets and max bids.</div>
+        </div>
+        <div class="mt-4 p-3 bg-white border rounded">
+          <div class="text-sm font-medium mb-2">Budgets</div>
+          <div class="overflow-auto max-h-[40vh]">
+            <table id="bud" class="min-w-full text-sm">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script type="module">
+      import { createStorageAdapter } from '/src/adapters/storage.js';
+      import { computeAllTeamBudgets } from '/src/core/budget.js';
+      import { loadSettings as loadSettingsUi, saveSettings as saveSettingsUi } from '/src/ui/settings.js';
+
+      const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+      const selEl = document.getElementById('sel');
+      const teamSel = document.getElementById('team');
+      const costEl = document.getElementById('cost');
+      const msgEl = document.getElementById('msg');
+      const saveBtn = document.getElementById('save');
+      const budTable = document.getElementById('bud');
+
+      let selected = null;
+
+      function loadSettings() { return loadSettingsUi(); }
+      function saveSettings(s) { return saveSettingsUi(s); }
+      function loadPicks() { const s = store.get('state'); return s?.draft?.picks || []; }
+
+      function fmtPlayer(p) { return p ? `${p.name} · ${p.team} · ${p.position}` : '—'; }
+
+      function refreshOwners() {
+        const s = loadSettings();
+        teamSel.innerHTML = (s.owners || []).map(o => `<option value="${o.id}">${o.team} (${o.name})</option>`).join('');
+      }
+
+      function renderBudgets() {
+        const s = loadSettings();
+        const rows = computeAllTeamBudgets(s, loadPicks());
+        const thead = budTable.querySelector('thead');
+        const tbody = budTable.querySelector('tbody');
+        if (thead) thead.innerHTML = `<tr>
+          <th class="text-left p-2">Team</th>
+          <th class="text-right p-2">Remaining</th>
+          <th class="text-right p-2">Spent</th>
+          <th class="text-right p-2">Spots</th>
+          <th class="text-right p-2">Max Bid</th>
+          <th class="text-right p-2">Avg $/Spot</th>
+        </tr>`;
+        if (tbody) {
+          tbody.innerHTML = '';
+          rows.forEach(r => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td class="p-2 border-t">${r.teamName}</td>
+              <td class="p-2 border-t text-right">$${r.remaining}</td>
+              <td class="p-2 border-t text-right">$${r.spent}</td>
+              <td class="p-2 border-t text-right">${r.spotsRemaining}/${r.rosterTotal}</td>
+              <td class="p-2 border-t text-right">$${r.maxBid}</td>
+              <td class="p-2 border-t text-right">$${r.avgPerSpot.toFixed(1)}</td>`;
+            tbody.appendChild(tr);
+          });
+        }
+      }
+
+      function setSelected(p) {
+        selected = p || null;
+        selEl.textContent = fmtPlayer(selected);
+        msgEl.textContent = '';
+      }
+
+      // Listen to search iframe selections
+      window.addEventListener('message', (e) => {
+        const data = e?.data;
+        if (!data || data.type !== 'player.selected') return;
+        const pid = data.payload?.id;
+        const pname = data.payload?.name;
+        try {
+          const arr = store.get('players') || [];
+          let p = null;
+          if (pid != null && pid !== '') p = arr.find(pp => String(pp.id) === String(pid));
+          if (!p && pname) p = arr.find(pp => String(pp.name).toLowerCase() === String(pname).toLowerCase());
+          if (p) setSelected(p);
+        } catch {}
+      });
+
+      saveBtn.addEventListener('click', () => {
+        const s = loadSettings();
+        if (!Array.isArray(s.keepers)) s.keepers = [];
+        if (!selected) { msgEl.textContent = 'Select a player first.'; return; }
+        const teamId = Number(teamSel.value || 1);
+        const cost = Math.max(0, Number(costEl.value || 0));
+        // Append keeper (no duplicate check for simplicity)
+        s.keepers.push({ teamId, cost, playerId: selected.id, playerName: selected.name });
+        saveSettings(s);
+        msgEl.textContent = 'Keeper saved.';
+        renderBudgets();
+      });
+
+      refreshOwners();
+      renderBudgets();
+      window.addEventListener('storage', (e) => {
+        if (!e) return;
+        const k = String(e.key || '');
+        if (k.includes('workspace::leagueSettings') || k.includes('workspace::state')) renderBudgets();
+      });
+    </script>
+  </body>
+  </html>
+
+
