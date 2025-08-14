@@ -1,0 +1,3 @@
+pcl/tasks.md merge=ours
+pcl/context.md merge=union
+.gsl/* merge=ours
