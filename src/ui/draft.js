@@ -1,5 +1,6 @@
 import { createStorageAdapter } from '../adapters/storage.js';
 import { storeBridge } from './storeBridge.js';
+import { parseQuickEntry, formatPickLogLine, isPlayerAlreadyDrafted } from './draftUtils.js';
 import { showToast } from './toast.js';
 // Draft widget relies on Search & Select widget for player selection
 
@@ -63,6 +64,8 @@ export function initDraftWidget(container) {
         <input id="price" type="number" min="1" value="1" class="border p-1 rounded w-20" />
       </label>
       <button id="draftBtn" class="px-3 py-2 rounded bg-blue-600 text-white">Draft</button>
+      <label class="ml-2 text-xs">Quick: <input id="quick" type="text" placeholder="team price e.g., 3 25" class="border p-1 rounded w-32" /></label>
+      <label class="ml-2 text-xs">Edit Pick # <input id="editIdx" type="number" min="1" value="" class="border p-1 rounded w-16" /></label>
       <span id="msg" class="text-xs text-slate-500"></span>
     </div>
     <div id="log" class="mt-2 text-xs text-slate-700 bg-slate-50 border rounded p-2 h-20 overflow-auto"></div>
@@ -110,11 +113,18 @@ export function initDraftWidget(container) {
     if (p) setSelected(p);
   });
 
-  draftBtn?.addEventListener('click', () => {
-    const teamId = Number(teamSel?.value || 1);
-    const pr = Number(price?.value || 1);
+  function commitDraft(teamId, pr) {
     if (!selected) { msg.textContent = 'Select a player in Search & Select.'; return; }
     if (!Number.isFinite(pr) || pr < 1) { msg.textContent = 'Enter a valid price.'; return; }
+    // Already drafted guard
+    try {
+      const stCheck = storage.get('state') || { draft: { picks: [] } };
+      const picksNow = Array.isArray(stCheck?.draft?.picks) ? stCheck.draft.picks : [];
+      if (isPlayerAlreadyDrafted(picksNow, selected)) {
+        msg.textContent = 'Player already drafted.';
+        return;
+      }
+    } catch {}
     // Enforce roster limits with FLEX + BENCH policy
     try {
       const settings = storage.get('leagueSettings') || {}; const roster = settings.roster || {};
@@ -138,7 +148,8 @@ export function initDraftWidget(container) {
     } catch {}
     // Normalize keys for robust joins (string id + name)
     const pick = { playerId: selected.id, playerName: selected.name, teamId: Number(teamId), price: pr };
-    try { storeBridge.addPick(pick); } catch {
+    let usedStore = false;
+    try { storeBridge.addPick(pick); usedStore = true; } catch {
       const st = loadState();
       st.draft = st.draft || { picks: [] };
       st.draft.picks.push({ ...pick, timestamp: Date.now() });
@@ -170,18 +181,44 @@ export function initDraftWidget(container) {
     try { showToast(msg.textContent, 'success', 2000); } catch {}
     // Persistent confirmation line: "R# P# team draft player for $XX"
     try {
-      const totalPicks = st.draft.picks.length; // after append
+      const stNow = usedStore ? storeBridge.getState() : loadState();
+      const totalPicks = Array.isArray(stNow?.draft?.picks) ? stNow.draft.picks.length : 0; // after append
       const teams = Number(settings?.teams || settings?.owners?.length || 12);
-      const round = Math.ceil(totalPicks / teams);
-      const pickInRound = ((totalPicks - 1) % teams) + 1;
       const teamName = settings.owners.find(o => o.id === teamId)?.team || `Team ${teamId}`;
-      const line = `[#${totalPicks} R${round} P${pickInRound}] ${teamName} draft ${selected.name} for $${pr}`;
+      const line = formatPickLogLine({ overall: totalPicks, teamName, playerName: selected.name, price: pr, teams });
       const div = document.createElement('div');
       div.textContent = line;
       logEl?.prepend(div);
     } catch {}
     // Clear selection
     setSelected(null);
+  }
+
+  draftBtn?.addEventListener('click', (e) => {
+    const idx = Number((wrapper.querySelector('#editIdx')?.value) || '');
+    const teamId = Number(teamSel?.value || 1);
+    const pr = Number(price?.value || 1);
+    if (Number.isInteger(idx) && idx > 0) {
+      const update = { playerId: selected?.id, playerName: selected?.name, teamId, price: pr };
+      try { storeBridge.editPick(idx, update); showToast(`Edited pick #${idx}`, 'success', 1500); } catch {}
+      try { window.dispatchEvent(new CustomEvent('workspace:state-changed')); } catch {}
+      setSelected(null);
+      const editIdxEl = wrapper.querySelector('#editIdx'); if (editIdxEl) editIdxEl.value = '';
+      return;
+    }
+    commitDraft(teamId, pr);
+  });
+
+  // Quick entry: parse when Enter pressed in quick input
+  const quick = wrapper.querySelector('#quick');
+  quick?.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter') return;
+    const parsed = parseQuickEntry(quick.value || '');
+    if (!parsed) { msg.textContent = 'Quick entry: expected "team price"'; return; }
+    teamSel.value = String(parsed.teamId);
+    price.value = String(parsed.price);
+    commitDraft(parsed.teamId, parsed.price);
+    quick.value = '';
   });
 }
 
