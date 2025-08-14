@@ -34,8 +34,7 @@
       </div>
     </header>
 
-    <!--<main class="max-w-7xl mx-auto px-4 py-4" data-dashboard-root> -->
-    <main class="w-full max-w-none mx-auto px-4 py-4"></main>
+    <main class="w-full max-w-none px-4 py-4" data-dashboard-root>
       <!-- Loading state overlay -->
       <div id="loading" class="hidden fixed inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center">
         <div class="w-72 h-24 rounded border bg-white p-4 animate-pulse">
@@ -48,7 +47,7 @@
       </div>
 
       <!-- Tabs -->
-      <section id="view-dashboard" class="view" data-dashboard-root>
+      <section id="view-dashboard" class="view">
         <div class="flex items-center gap-2 mb-3" data-action="toolbar">
           <button data-btn="edit" class="px-3 py-1 border rounded">Toggle Edit</button>
           <select data-select="widget" class="border p-1 text-sm">
@@ -57,9 +56,20 @@
             <option value="budget">Budget Tracker</option>
           </select>
           <button data-btn="add" class="px-3 py-1 border rounded">Add Widget</button>
+          <div class="ml-auto flex items-center gap-2 text-xs">
+            <select data-select="presetList" class="border p-1 rounded min-w-[12rem]">
+              <option value="">Load Preset…</option>
+            </select>
+            <button data-btn="wipePresets" class="px-2 py-1 border rounded text-rose-700" title="Remove all custom presets">Wipe Presets</button>
+            <span class="inline-flex items-center gap-2 pl-2 border-l ml-2">
+              <input data-input="presetName" type="text" placeholder="Preset name" class="border p-1 rounded" />
+              <button data-btn="savePreset" class="px-2 py-1 border rounded">Save Preset</button>
+              <button data-btn="loadPreset" class="px-2 py-1 border rounded">Load Preset</button>
+            </span>
+          </div>
         </div>
-        <!-- <div id="dashGrid" data-grid class="grid gap-4 h-[70vh]"> -->
-        <div id="dashGrid" data-grid class="grid gap-4 h-[calc(100vh-8rem)]">
+        <!-- Grid fills viewport height minus header/margins; keep a reasonable minimum -->
+        <div id="dashGrid" data-grid class="grid gap-4 min-h-[28rem] h-[calc(100vh-10rem)]">
           <!-- Panel: Search & Select (fixed full width) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="search" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
@@ -169,8 +179,8 @@
       </section>
 
       <section id="view-settings" class="view hidden">
-        <div class="rounded border bg-white p-3">
-          <iframe src="./T-012_settings.html" class="w-full h-[36rem] border rounded"></iframe>
+        <div class="rounded border bg-white p-3 min-h-[calc(100vh-8rem)]">
+          <iframe src="./T-012_settings.html" class="w-full h-[calc(100vh-10rem)] border rounded"></iframe>
         </div>
       </section>
 

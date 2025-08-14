@@ -28,6 +28,7 @@ export class DraftStore {
     this.undoStack = []; // array of state snapshots
     this.maxUndo = 10;
     this.actionLog = []; // { type, ts, durationMs }
+    this.redoStack = [];
   }
 
   /** @returns {object} */
@@ -58,6 +59,8 @@ export class DraftStore {
     validateAction(action);
     // snapshot for undo
     this._pushUndoSnapshot();
+    // New action invalidates redo history
+    this.redoStack = [];
 
     const t0 = performanceNow();
     this._apply(action);
@@ -73,10 +76,35 @@ export class DraftStore {
   undo() {
     if (this.undoStack.length === 0) return false;
     const prev = this.undoStack.pop();
+    // current -> redo, prev -> state
+    this.redoStack.push(deepClone(this.state));
     this.state = deepClone(prev);
     this._emit('change', this.getState());
     this._saveAsync();
     return true;
+  }
+
+  /** Redo last undone change, if any */
+  redo() {
+    if (this.redoStack.length === 0) return false;
+    const next = this.redoStack.pop();
+    // current -> undo, next -> state
+    this._pushUndoSnapshot();
+    this.state = deepClone(next);
+    this._emit('change', this.getState());
+    this._saveAsync();
+    return true;
+  }
+
+  /** @returns {boolean} */
+  canUndo() { return this.undoStack.length > 0; }
+  /** @returns {boolean} */
+  canRedo() { return this.redoStack.length > 0; }
+
+  /** Hydrate undo/redo history (e.g., from storage) */
+  hydrateHistory(undoArr, redoArr) {
+    if (Array.isArray(undoArr)) this.undoStack = deepClone(undoArr);
+    if (Array.isArray(redoArr)) this.redoStack = deepClone(redoArr);
   }
 
   /** Internal: apply action to state (pure mutation isolated here) */
@@ -138,7 +166,14 @@ export class DraftStore {
     if (!this.storage || typeof this.storage.set !== 'function') return;
     // Non-blocking save after state update
     setTimeout(() => {
-      try { this.storage.set('state', this.state); } catch {}
+      try {
+        this.storage.set('state', this.state);
+        // Persist limited history for undo/redo per T-022
+        // Keep shallow copies; storage adapter JSON-serializes
+        this.storage.set('state.undo', this.undoStack.slice(-this.maxUndo));
+        this.storage.set('state.redo', this.redoStack.slice(-this.maxUndo));
+        this.storage.set('state.actionLog', this.actionLog.slice(-100));
+      } catch {}
     }, 0);
   }
 }

@@ -1,4 +1,6 @@
 import { createStorageAdapter } from '../adapters/storage.js';
+import { storeBridge } from './storeBridge.js';
+import { showToast } from './toast.js';
 // Draft widget relies on Search & Select widget for player selection
 
 const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
@@ -113,29 +115,35 @@ export function initDraftWidget(container) {
     const pr = Number(price?.value || 1);
     if (!selected) { msg.textContent = 'Select a player in Search & Select.'; return; }
     if (!Number.isFinite(pr) || pr < 1) { msg.textContent = 'Enter a valid price.'; return; }
-    // Enforce position/roster limits
+    // Enforce roster limits with FLEX + BENCH policy
     try {
       const settings = storage.get('leagueSettings') || {}; const roster = settings.roster || {};
-      const owners = settings.owners || []; const teams = Number(settings.teams || owners.length || 12);
       const stCheck = storage.get('state') || { draft: { picks: [] } };
       const picksNow = Array.isArray(stCheck?.draft?.picks) ? stCheck.draft.picks : [];
       const myPicks = picksNow.filter(p => Number(p.teamId) === teamId);
       const players = storage.get('players') || [];
       const idToPos = new Map(players.map(p => [String(p.id), String(p.position)]));
-      const myPosCounts = myPicks.reduce((acc, p) => { const pos = idToPos.get(String(p.playerId)) || ''; acc[pos] = (acc[pos]||0)+1; return acc; }, {});
-      const targetPos = String(selected.position || '');
-      const limit = Number(roster[targetPos] || 0) + (targetPos === 'FLEX' ? 0 : 0); // Simple: ignore FLEX allocation here
-      if (limit > 0 && (myPosCounts[targetPos] || 0) >= limit) {
-        msg.textContent = `Roster full at ${targetPos} (${limit}).`;
+      const posCounts = myPicks.reduce((acc, p) => { const pos = idToPos.get(String(p.playerId)) || ''; acc[pos] = (acc[pos]||0)+1; return acc; }, {});
+      const targetPos = String(selected.position || '').toUpperCase();
+      const posMin = Number(roster[targetPos] || 0);
+      const flexSlots = Number(roster.FLEX || 0);
+      const benchSlots = Number(roster.BENCH || 0);
+      const flexEligible = (targetPos === 'RB' || targetPos === 'WR' || targetPos === 'TE') ? flexSlots : 0;
+      const posMax = posMin + flexEligible + benchSlots;
+      const cur = Number(posCounts[targetPos] || 0);
+      if (posMax > 0 && cur >= posMax) {
+        msg.textContent = `Roster limit reached at ${targetPos} (max ${posMax}).`;
         return;
       }
     } catch {}
-    const st = loadState();
-    st.draft = st.draft || { picks: [] };
     // Normalize keys for robust joins (string id + name)
-    const pick = { playerId: selected.id, playerName: selected.name, teamId: Number(teamId), price: pr, timestamp: Date.now() };
-    st.draft.picks.push(pick);
-    saveState(st);
+    const pick = { playerId: selected.id, playerName: selected.name, teamId: Number(teamId), price: pr };
+    try { storeBridge.addPick(pick); } catch {
+      const st = loadState();
+      st.draft = st.draft || { picks: [] };
+      st.draft.picks.push({ ...pick, timestamp: Date.now() });
+      saveState(st);
+    }
     // Notify in-app listeners (widgets) immediately
     try { window.dispatchEvent(new CustomEvent('workspace:state-changed')); } catch {}
     // Also mark player as drafted in workspace players to keep Search UI in sync
@@ -159,6 +167,7 @@ export function initDraftWidget(container) {
     // Notify players-changed as well for any widgets relying on player flags
     try { window.dispatchEvent(new CustomEvent('workspace:players-changed')); } catch {}
     msg.textContent = `Drafted ${selected.name} for $${pr} to ${settings.owners.find(o => o.id === teamId)?.team || 'Team ' + teamId}`;
+    try { showToast(msg.textContent, 'success', 2000); } catch {}
     // Persistent confirmation line: "R# P# team draft player for $XX"
     try {
       const totalPicks = st.draft.picks.length; // after append

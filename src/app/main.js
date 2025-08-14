@@ -19,10 +19,21 @@ export function validateEnvironment() {
   }
 }
 
+import { logStructured } from './logger.js';
+import { attachRecalcListeners, recalcAll } from '../ui/recalc.js';
+import { showToast } from '../ui/toast.js';
+
 function bootstrap() {
   validateEnvironment();
   // Keep initial bootstrap minimal per KISS/YAGNI
   console.log('FFB app bootstrapped');
+  try {
+    attachRecalcListeners();
+    setTimeout(() => { recalcAll(); }, 0);
+  } catch (err) {
+    logStructured('error', 'bootstrap:recalc_attach_failed', { error: String(err && err.message || err) });
+    try { showToast('Recalc initialization failed', 'warn'); } catch {}
+  }
 }
 
 bootstrap();
