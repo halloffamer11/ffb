@@ -59,12 +59,14 @@
       <span class="text-sm text-slate-600">Time: <span id="time">0</span> ms</span>
       <span id="perfHud" class="text-xs text-slate-500 hidden"> | Avg: <span id="hudAvg">-</span> ms, p95: <span id="hudP95">-</span> ms <button id="hudReset" class="ml-1 underline">reset</button></span>
       <button id="reload" class="ml-auto px-3 py-2 rounded bg-slate-600 text-white">Reload Workspace</button>
+      <button id="resetDraft" class="px-3 py-2 rounded bg-rose-600 text-white" title="Dev-only: clears picks and drafted flags">Reset Draft (dev)</button>
+      <button id="runCalcs" class="px-3 py-2 rounded bg-amber-600 text-white" title="Dev-only: compute analysis for all players">Run Calcs (dev)</button>
       <a href="./T-013_data_management.html" class="px-3 py-2 rounded bg-amber-600 text-white" target="_blank">Open T-013</a>
     </div>
 
     <div id="notice" class="text-amber-700 text-sm mb-3"></div>
 
-    <table class="min-w-full bg-white rounded border text-sm">
+      <table class="min-w-full bg-white rounded border text-sm">
       <thead class="bg-slate-100">
         <tr>
           <th class="text-left p-2">name</th>
@@ -72,8 +74,6 @@
           <th class="text-left p-2">pos</th>
           <th class="text-left p-2">ADP</th>
           <th class="text-left p-2">injury</th>
-          <th class="text-left p-2">drafted</th>
-          <th class="text-left p-2">action</th>
         </tr>
       </thead>
       <tbody id="rows"></tbody>
@@ -232,27 +232,29 @@
           const tr = document.createElement('tr');
           tr.setAttribute('role', 'row');
           tr.setAttribute('aria-selected', String(idx === selectedIdx));
-          if (r.drafted) tr.classList.add('opacity-60');
+          // Read-only view
           tr.innerHTML = `
             <td class="p-2 border-t name"></td>
             <td class="p-2 border-t">${escapeHtml(r.team ?? '')}</td>
             <td class="p-2 border-t">${escapeHtml(r.position ?? '')}</td>
             <td class="p-2 border-t">${escapeHtml(getAdp(r))}</td>
-            <td class="p-2 border-t ${injuryClass(r.injuryStatus)}">${STATUS_LABELS[normalizeInjuryStatus(r.injuryStatus)]}</td>
-            <td class="p-2 border-t ${r.drafted ? 'text-emerald-700' : 'text-slate-500'}">${r.drafted ? 'Yes' : 'No'}</td>
-            <td class="p-2 border-t">
-              <button class="px-2 py-1 border rounded" data-id="${r.id || r.name}">${r.drafted ? 'Mark Undrafted' : 'Mark Drafted'}</button>
-            </td>`;
+            <td class="p-2 border-t ${injuryClass(r.injuryStatus)}">${STATUS_LABELS[normalizeInjuryStatus(r.injuryStatus)]}</td>`;
           const nameTd = tr.querySelector('.name');
           nameTd.innerHTML = highlightName(r.name, query);
+          tr.addEventListener('click', (ev) => {
+            // Update selection state so row highlights identically to keyboard
+            selectedIdx = idx;
+            render(results, query);
+            // Commit selection (same behavior as Enter/Space)
+            selectRow(r);
+          });
           rowsEl.appendChild(tr);
         });
+      }
 
-        // Wire actions
-        rowsEl.querySelectorAll('button[data-id]').forEach(btn => btn.addEventListener('click', () => {
-          const id = btn.getAttribute('data-id');
-          toggleDraftedById(id);
-        }));
+      function selectRow(p) {
+        const msg = { type: 'player.selected', payload: { id: p?.id ?? '', name: p?.name ?? '' } };
+        try { window.parent?.postMessage(msg, '*'); } catch {}
       }
 
       function toggleDraftedById(id) {
@@ -266,18 +268,21 @@
         runSearch();
       }
 
-      // Keyboard navigation: ↑/↓ to move, Enter to toggle drafted
+      // Keyboard navigation: ↑/↓ to move, Enter/Space to select
       function onKeyDown(e) {
         const total = lastResults.length;
-        if (!['ArrowDown','ArrowUp','Enter'].includes(e.key)) return;
+        if (!['ArrowDown','ArrowUp','Enter',' '].includes(e.key)) return;
         if (!total) return;
         if (e.key === 'ArrowDown') { selectedIdx = Math.min(total - 1, selectedIdx + 1); e.preventDefault(); render(lastResults, qEl.value || ''); return; }
         if (e.key === 'ArrowUp') { selectedIdx = Math.max(0, selectedIdx - 1); e.preventDefault(); render(lastResults, qEl.value || ''); return; }
-        if (e.key === 'Enter') {
+       if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
           const sel = lastResults[selectedIdx >= 0 ? selectedIdx : 0];
           const id = sel?.id || sel?.name;
-          if (id != null) toggleDraftedById(id);
+          if (id != null) {
+            const p = players.find(pp => String(pp.id || pp.name) === String(id));
+            selectRow(p);
+          }
         }
       }
 
@@ -302,8 +307,72 @@
         selectedIdx = -1; runSearch();
       }));
       document.addEventListener('keydown', onKeyDown);
-      document.getElementById('reload').addEventListener('click', reload);
+       document.getElementById('reload').addEventListener('click', reload);
+      document.getElementById('resetDraft').addEventListener('click', () => {
+        try {
+          // Clear picks and drafted flags in workspace
+          const sRaw = window.localStorage.getItem('workspace::state');
+          let st = sRaw ? JSON.parse(sRaw) : { draft: { picks: [] } };
+          st.draft = { picks: [] };
+          window.localStorage.setItem('workspace::state', JSON.stringify(st));
+          const pRaw = window.localStorage.getItem('workspace::players');
+          const players = pRaw ? JSON.parse(pRaw).map(r => ({ ...r, drafted: false })) : [];
+          window.localStorage.setItem('workspace::players', JSON.stringify(players));
+          alert('Draft reset (dev only).');
+          reload();
+          try { window.parent?.dispatchEvent(new CustomEvent('workspace:state-changed')); } catch {}
+          try { window.parent?.dispatchEvent(new CustomEvent('workspace:players-changed')); } catch {}
+        } catch (e) {
+          console.error('Reset draft failed', e);
+          alert('Reset failed');
+        }
+      });
+
+      // Dev: Run Calcs for all players and store to localStorage for debug
+      document.getElementById('runCalcs').addEventListener('click', async () => {
+        try {
+          // lazy import analysis VM bits to avoid bloat
+          const [{ calculatePlayerVBD }, { baselineForPosition }] = await Promise.all([
+            import('../../src/core/vbd.js'),
+            import('../../src/core/vbd.js')
+          ]);
+          const { stdDev } = await import('../../src/core/tiers.js');
+          const settingsMod = await import('../../src/ui/settings.js');
+          const settings = settingsMod.loadSettings();
+          const league = { teams: Number(settings.teams||12), starters: settings.roster||{} };
+          const all = normalizePlayers(loadPlayersFromWorkspace());
+          const withVbd = calculatePlayerVBD(all, league);
+          const byPos = new Map();
+          withVbd.forEach(p => {
+            const k = String(p.position||'').toUpperCase();
+            if (!byPos.has(k)) byPos.set(k, []);
+            byPos.get(k).push(p);
+          });
+          const out = withVbd.map(p => {
+            const baseline = baselineForPosition(withVbd, String(p.position||''), league);
+            const vals = (byPos.get(String(p.position||'').toUpperCase())||[]).map(x => Number(x.vbd||0));
+            const sigma = stdDev(vals);
+            const z = sigma > 0 ? (Number(p.vbd||0) / sigma) : 0;
+            return { id: p.id, name: p.name, team: p.team, position: p.position, points: p.points, vbd: Number(p.vbd||0), baseline, zScore: Number.isFinite(z)?Number(z.toFixed(2)):0 };
+          });
+          window.localStorage.setItem('debug::analysis_table', JSON.stringify(out));
+          alert(`Computed ${out.length} rows to debug::analysis_table`);
+        } catch (e) {
+          console.error('Run Calcs failed', e);
+          alert('Run Calcs failed');
+        }
+      });
       // If the parent toggles dash-drag-active, avoid auto reloads; we check inside reload()
+
+      // Reflect external changes to workspace players (e.g., draft widget updates)
+      window.addEventListener('storage', (e) => {
+        try {
+          if (!e) return;
+          // Vite dev server may prepend origin; use includes
+          if (String(e.key || '').includes('workspace::players')) reload();
+          if (String(e.key || '').includes('workspace::state')) reload();
+        } catch {}
+      });
 
       // Initial
       reload();

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-027 Browser Compatibility</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-4">T-027 Browser Compatibility</h1>
+    <p class="text-sm text-slate-600 mb-3">Run this page in target browsers and private modes. Record results in the matrix below.</p>
+
+    <div id="report" class="bg-white border rounded p-3 text-sm whitespace-pre-wrap"></div>
+
+    <script>
+      (function(){
+        const features = {
+          localStorage: (function(){ try{ const k='__probe__'; localStorage.setItem(k,'1'); localStorage.removeItem(k); return true; }catch{return false;} })(),
+          es6: (function(){ try{ new Function('const a=1; let b=2; return a+b;')(); return true; }catch{return false;} })(),
+          performance: 'performance' in window,
+          fileAPI: 'File' in window,
+          userAgent: navigator.userAgent
+        };
+        const warnings = [];
+        if (!features.localStorage) warnings.push('localStorage unavailable: app will refuse to run');
+        if (!features.es6) warnings.push('ES6 unsupported: upgrade browser');
+        const report = [
+          `User Agent: ${features.userAgent}`,
+          `localStorage: ${features.localStorage}`,
+          `ES6: ${features.es6}`,
+          `performance API: ${features.performance}`,
+          `File API: ${features.fileAPI}`,
+          warnings.length ? `Warnings: ${warnings.join('; ')}` : 'Warnings: none'
+        ].join('\n');
+        document.getElementById('report').textContent = report;
+      })();
+    </script>
+  </body>
+  </html>
+
+

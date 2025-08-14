@@ -1,0 +1,35 @@
+/** Simple toast notifications (T-024 UI feedback) */
+let host = null;
+
+export function showToast(text, type = 'info', timeoutMs = 2500) {
+  ensureHost();
+  const item = document.createElement('div');
+  item.className = `px-3 py-2 rounded shadow text-white text-sm mb-2 ${color(type)}`;
+  item.textContent = String(text || '');
+  host.appendChild(item);
+  setTimeout(() => {
+    try { item.remove(); } catch {}
+  }, timeoutMs);
+}
+
+function ensureHost() {
+  if (host && document.body.contains(host)) return;
+  host = document.createElement('div');
+  host.style.position = 'fixed';
+  host.style.bottom = '12px';
+  host.style.right = '12px';
+  host.style.zIndex = '4000';
+  host.style.pointerEvents = 'none';
+  document.body.appendChild(host);
+}
+
+function color(type) {
+  switch (String(type || 'info')) {
+    case 'success': return 'bg-emerald-600';
+    case 'error': return 'bg-rose-600';
+    case 'warn': return 'bg-amber-600';
+    default: return 'bg-slate-800';
+  }
+}
+
+

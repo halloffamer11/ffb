@@ -12,6 +12,30 @@
 
     <div class="space-y-6">
       <details open class="border rounded">
+        <summary class="px-3 py-2 font-medium cursor-pointer select-none">Live Data Explorer (dev)</summary>
+        <div class="p-3 pt-0 space-y-2">
+          <div class="flex items-center gap-2">
+            <label class="text-sm">Dataset
+              <select id="dataKey" class="border p-1 ml-1">
+                <option value="workspace::players">workspace::players</option>
+                <option value="workspace::state">workspace::state</option>
+                <option value="debug::analysis_table">debug::analysis_table</option>
+              </select>
+            </label>
+            <button id="refreshData" class="px-3 py-1 rounded bg-slate-600 text-white">Refresh</button>
+            <button id="exportCsv" class="px-3 py-1 rounded bg-emerald-600 text-white">Export CSV</button>
+            <span id="dataStatus" class="text-xs text-slate-600"></span>
+          </div>
+          <div class="max-h-96 overflow-auto">
+            <table id="dataTable" class="min-w-full bg-white rounded border text-xs">
+              <thead class="bg-slate-100"></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+      </details>
+
+      <details open class="border rounded">
         <summary class="px-3 py-2 font-medium cursor-pointer select-none">League Settings</summary>
         <div class="p-3 pt-0">
           <iframe src="./T-012_settings.html" class="w-full h-96 border rounded"></iframe>
@@ -49,6 +73,7 @@
           </div>
         </div>
       </details>
+
     </div>
 
     <script type="module">
@@ -234,6 +259,52 @@
       }
 
       function round(n, d=1) { const p = 10**d; return Math.round(n*p)/p; }
+
+      // ===== Live Data Explorer =====
+      function toArrayLike(value) {
+        if (Array.isArray(value)) return value;
+        if (value && typeof value === 'object' && Array.isArray(value.picks)) return value.picks;
+        return [];
+      }
+      function renderTableFromArray(arr) {
+        const thead = document.querySelector('#dataTable thead');
+        const tbody = document.querySelector('#dataTable tbody');
+        thead.innerHTML = ''; tbody.innerHTML = '';
+        if (!Array.isArray(arr) || arr.length === 0) return;
+        const cols = Array.from(new Set(arr.flatMap(row => Object.keys(row))));
+        const trh = document.createElement('tr');
+        cols.forEach(k => { const th = document.createElement('th'); th.className='text-left p-2'; th.textContent = k; trh.appendChild(th); });
+        thead.appendChild(trh);
+        arr.forEach(row => {
+          const tr = document.createElement('tr');
+          cols.forEach(k => { const td=document.createElement('td'); td.className='p-2 border-t'; td.textContent = String(row[k] ?? ''); tr.appendChild(td); });
+          tbody.appendChild(tr);
+        });
+      }
+      function refreshExplorer() {
+        const key = document.getElementById('dataKey').value;
+        const raw = window.localStorage.getItem(key);
+        const parsed = raw ? JSON.parse(raw) : (key.endsWith('players') ? [] : {});
+        const arr = toArrayLike(parsed);
+        renderTableFromArray(arr);
+        document.getElementById('dataStatus').textContent = `rows: ${arr.length}`;
+        return { key, arr };
+      }
+      document.getElementById('refreshData').addEventListener('click', refreshExplorer);
+      document.getElementById('exportCsv').addEventListener('click', () => {
+        const { key, arr } = refreshExplorer();
+        if (!arr.length) { alert('No rows to export'); return; }
+        const cols = Array.from(new Set(arr.flatMap(row => Object.keys(row))));
+        const lines = [cols.join(',')];
+        arr.forEach(row => lines.push(cols.map(k => String(row[k] ?? '')).join(',')));
+        const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `${key.replace(/[:]/g,'_')}.csv`; a.click();
+        URL.revokeObjectURL(url);
+      });
+      // Initial render
+      refreshExplorer();
     </script>
   </body>
   </html>
