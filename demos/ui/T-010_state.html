@@ -1,160 +1,264 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>T-010 State Management Demo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="bg-slate-50 text-slate-900 p-6">
-    <h1 class="text-2xl font-semibold mb-2">T-010 State Management Demo</h1>
-    <p class="text-sm text-slate-600 mb-4">Validate store updates, pub/sub, 10-level undo, action logging, and non-blocking save.</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>T-010 State Management Dashboard Integration</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 p-6">
+  <h1 class="text-2xl font-semibold mb-2">T-010 State Management Dashboard Integration</h1>
+  <p class="text-sm text-slate-600 mb-4">Complete state management with event bus, undo/redo, and dashboard sync.</p>
 
-    <div class="grid gap-4 md:grid-cols-2">
-      <section class="border rounded p-3">
-        <h2 class="font-medium mb-2">Controls</h2>
+  <div class="grid grid-cols-2 gap-6">
+    <!-- State Management Controls -->
+    <div class="space-y-4">
+      <div class="border rounded p-4">
+        <h2 class="font-medium mb-2">State Actions</h2>
         <div class="space-y-2">
-          <div class="flex gap-2 flex-wrap items-center">
-            <button id="btnSet10" class="px-2 py-1 border rounded">Settings: teams=10</button>
-            <button id="btnSet12" class="px-2 py-1 border rounded">Settings: teams=12</button>
-            <span class="text-xs text-slate-600">Current teams: <span id="teams">-</span></span>
-          </div>
-          <div class="flex gap-2 flex-wrap items-center">
-            <button id="btnImport" class="px-2 py-1 border rounded">Import 3 Players</button>
-            <button id="btnToggleB" class="px-2 py-1 border rounded">Toggle Drafted (id=2)</button>
-          </div>
-          <div class="flex gap-2 flex-wrap items-center">
-            <button id="btnAddPick" class="px-2 py-1 border rounded">Add Pick (id=1, $25)</button>
-            <button id="btnEditPick" class="px-2 py-1 border rounded">Edit Pick #1 → $30</button>
-            <button id="btnAddMany" class="px-2 py-1 border rounded">Add 12 Picks (Perf)</button>
-          </div>
-          <div class="flex gap-2 flex-wrap items-center">
-            <button id="btnUndo" class="px-2 py-1 border rounded">Undo</button>
-            <span class="text-xs text-slate-600">Undo depth: <span id="undoDepth">0</span> / 10</span>
-          </div>
-          <div class="text-xs text-slate-600">Saved snapshot bytes: <span id="savedBytes">-</span></div>
+          <button id="addPlayer" class="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+            Add Sample Player
+          </button>
+          <button id="draftPlayer" class="px-3 py-1 bg-green-600 text-white rounded text-sm">
+            Draft Random Player
+          </button>
+          <button id="updateSettings" class="px-3 py-1 bg-purple-600 text-white rounded text-sm">
+            Update Settings
+          </button>
         </div>
-      </section>
+      </div>
 
-      <section class="border rounded p-3">
-        <h2 class="font-medium mb-2">State</h2>
-        <pre id="state" class="bg-white border rounded p-2 text-xs overflow-auto max-h-72"></pre>
-      </section>
+      <div class="border rounded p-4">
+        <h2 class="font-medium mb-2">Undo/Redo</h2>
+        <div class="flex gap-2">
+          <button id="undo" class="px-3 py-1 bg-slate-600 text-white rounded text-sm disabled:opacity-50">
+            ← Undo
+          </button>
+          <button id="redo" class="px-3 py-1 bg-slate-600 text-white rounded text-sm disabled:opacity-50">
+            Redo →
+          </button>
+          <span id="undoCount" class="text-sm text-slate-600"></span>
+        </div>
+      </div>
 
-      <section class="border rounded p-3 md:col-span-2">
-        <h2 class="font-medium mb-2">Players</h2>
-        <table class="min-w-full bg-white rounded border text-sm">
-          <thead class="bg-slate-100"><tr><th class="text-left p-2">id</th><th class="text-left p-2">name</th><th class="text-left p-2">drafted</th></tr></thead>
-          <tbody id="players"></tbody>
-        </table>
-      </section>
+      <div class="border rounded p-4">
+        <h2 class="font-medium mb-2">Event Bus</h2>
+        <div class="h-32 overflow-auto bg-slate-100 rounded p-2 text-xs" id="eventLog"></div>
+      </div>
 
-      <section class="border rounded p-3 md:col-span-2">
-        <h2 class="font-medium mb-2">Draft Picks</h2>
-        <table class="min-w-full bg-white rounded border text-sm">
-          <thead class="bg-slate-100"><tr><th class="text-left p-2">#</th><th class="text-left p-2">playerId</th><th class="text-left p-2">teamId</th><th class="text-left p-2">price</th></tr></thead>
-          <tbody id="picks"></tbody>
-        </table>
-      </section>
-
-      <section class="border rounded p-3 md:col-span-2">
+      <div class="border rounded p-4">
         <h2 class="font-medium mb-2">Action Log</h2>
-        <table class="min-w-full bg-white rounded border text-sm">
-          <thead class="bg-slate-100"><tr><th class="text-left p-2">time</th><th class="text-left p-2">type</th><th class="text-left p-2">duration (ms)</th></tr></thead>
-        </table>
-        <div class="max-h-48 overflow-auto">
-          <table class="min-w-full bg-white rounded border text-sm"><tbody id="log"></tbody></table>
-        </div>
-      </section>
+        <div class="h-32 overflow-auto bg-slate-100 rounded p-2 text-xs" id="actionLog"></div>
+      </div>
     </div>
 
-    <script type="module">
-      import { DraftStore } from '/src/state/store.js';
-      import { createStorageAdapter } from '/src/adapters/storage.js';
+    <!-- Current State Display -->
+    <div class="space-y-4">
+      <div class="border rounded p-4">
+        <h2 class="font-medium mb-2">Current State</h2>
+        <pre id="stateDisplay" class="text-xs bg-slate-100 rounded p-2 overflow-auto h-96"></pre>
+      </div>
 
-      const storage = createStorageAdapter({ namespace: 'state_demo', version: '1.0.0' });
-      const store = new DraftStore({ storageAdapter: storage, initialState: { settings: { teams: 12 }, players: [], draft: { picks: [] } } });
+      <div class="border rounded p-4">
+        <h2 class="font-medium mb-2">Dashboard Components</h2>
+        <div class="space-y-2 text-sm">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 bg-green-500 rounded-full"></span>
+            <span>Players: <span id="playerCount">0</span></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 bg-blue-500 rounded-full"></span>
+            <span>Picks: <span id="pickCount">0</span></span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 bg-purple-500 rounded-full"></span>
+            <span>Teams: <span id="teamCount">12</span></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-      const el = (id) => document.getElementById(id);
-      const stateEl = el('state');
-      const playersEl = el('players');
-      const picksEl = el('picks');
-      const logEl = el('log');
-      const teamsEl = el('teams');
-      const undoDepthEl = el('undoDepth');
-      const savedBytesEl = el('savedBytes');
+  <!-- Human Validation -->
+  <div class="mt-8 border-t pt-4">
+    <h2 class="font-semibold mb-2">Human Validation Steps</h2>
+    <ol class="list-decimal list-inside space-y-1 text-sm">
+      <li>Click "Add Sample Player" - verify state updates and event fires</li>
+      <li>Click "Draft Random Player" - verify pick added to state</li>
+      <li>Click "Undo" - verify previous state restored</li>
+      <li>Click "Redo" - verify action replayed</li>
+      <li>Click "Update Settings" - verify settings change propagates</li>
+      <li>Verify event log shows all state changes</li>
+      <li>Verify action log tracks all dispatched actions</li>
+      <li>✅ PASS if all state changes sync correctly with <100ms response</li>
+    </ol>
+  </div>
 
-      // Renderers
-      function renderAll() {
-        const s = store.getState();
-        stateEl.textContent = JSON.stringify(s, null, 2);
-        teamsEl.textContent = String(s.settings?.teams ?? '-');
-        renderPlayers(s.players);
-        renderPicks(s.draft?.picks || []);
-        renderLog();
-        updateSavedBytes();
-      }
+  <script type="module">
+    import { DraftStore } from '../../src/state/store.js';
+    import { createStorageAdapter } from '../../src/adapters/storage.js';
 
-      function renderPlayers(rows) {
-        playersEl.innerHTML = '';
-        for (const r of rows) {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td class="p-2 border-t">${r.id ?? ''}</td><td class="p-2 border-t">${r.name ?? ''}</td><td class="p-2 border-t ${r.drafted ? 'text-emerald-700' : 'text-slate-500'}">${r.drafted ? 'Yes' : 'No'}</td>`;
-          playersEl.appendChild(tr);
+    // Create store with storage adapter for persistence
+    const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+    const store = new DraftStore({
+      initialState: {
+        players: [],
+        draft: { picks: [] },
+        settings: { teams: 12, budget: 200 }
+      },
+      storageAdapter: storage
+    });
+
+    // Dashboard update function
+    function updateDashboard() {
+      const state = store.getState();
+      
+      // Update state display
+      document.getElementById('stateDisplay').textContent = JSON.stringify(state, null, 2);
+      
+      // Update counts
+      document.getElementById('playerCount').textContent = state.players?.length || 0;
+      document.getElementById('pickCount').textContent = state.draft?.picks?.length || 0;
+      document.getElementById('teamCount').textContent = state.settings?.teams || 12;
+      
+      // Update undo/redo buttons
+      document.getElementById('undo').disabled = !store.canUndo();
+      document.getElementById('redo').disabled = !store.canRedo();
+      document.getElementById('undoCount').textContent = `Stack: ${store.undoStack.length}/${store.maxUndo}`;
+    }
+
+    // Event logging
+    function logEvent(type, payload) {
+      const log = document.getElementById('eventLog');
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.innerHTML = `<span class="text-slate-500">[${time}]</span> ${type}: ${JSON.stringify(payload).substring(0, 50)}`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // Action logging
+    function logAction(action) {
+      const log = document.getElementById('actionLog');
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.innerHTML = `<span class="text-slate-500">[${time}]</span> ${action.type} (${action.durationMs || 0}ms)`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // Subscribe to store events
+    store.subscribe('change', (payload) => {
+      logEvent('change', payload);
+      updateDashboard();
+    });
+
+    store.subscribe('action', (payload) => {
+      logAction(payload);
+    });
+
+    // Button handlers
+    document.getElementById('addPlayer').addEventListener('click', () => {
+      const playerId = Date.now();
+      store.dispatch({
+        type: 'ADD_PLAYER',
+        payload: {
+          id: playerId,
+          name: `Player ${playerId % 100}`,
+          position: ['QB', 'RB', 'WR', 'TE'][Math.floor(Math.random() * 4)],
+          points: Math.floor(Math.random() * 200) + 100
         }
-      }
-
-      function renderPicks(rows) {
-        picksEl.innerHTML = '';
-        rows.forEach((r, idx) => {
-          const tr = document.createElement('tr');
-          tr.innerHTML = `<td class="p-2 border-t">${idx + 1}</td><td class="p-2 border-t">${r.playerId}</td><td class="p-2 border-t">${r.teamId}</td><td class="p-2 border-t">${r.price}</td>`;
-          picksEl.appendChild(tr);
-        });
-      }
-
-      function renderLog() {
-        logEl.innerHTML = '';
-        const rows = store.actionLog.slice(-50).reverse();
-        for (const r of rows) {
-          const tr = document.createElement('tr');
-          const dt = new Date(r.ts).toLocaleTimeString();
-          tr.innerHTML = `<td class="p-2 border-t">${dt}</td><td class="p-2 border-t">${r.type}</td><td class="p-2 border-t">${(r.durationMs ?? 0).toFixed(1)}</td>`;
-          logEl.appendChild(tr);
-        }
-        undoDepthEl.textContent = String(store.undoStack.length);
-      }
-
-      function updateSavedBytes() {
-        // Best effort read from adapter
-        try {
-          const json = window.localStorage.getItem('state_demo::state');
-          savedBytesEl.textContent = json ? String(json.length) : '0';
-        } catch { savedBytesEl.textContent = '—'; }
-      }
-
-      // Event wiring
-      store.subscribe('change', renderAll);
-      store.subscribe('action', () => setTimeout(updateSavedBytes, 20));
-
-      // Controls
-      el('btnSet10').addEventListener('click', () => store.dispatch({ type: 'SET_SETTINGS', payload: { teams: 10 } }));
-      el('btnSet12').addEventListener('click', () => store.dispatch({ type: 'SET_SETTINGS', payload: { teams: 12 } }));
-      el('btnImport').addEventListener('click', () => store.dispatch({ type: 'IMPORT_PLAYERS', payload: [
-        { id: 1, name: 'A' }, { id: 2, name: 'B' }, { id: 3, name: 'C' }
-      ] }));
-      el('btnToggleB').addEventListener('click', () => store.dispatch({ type: 'PLAYER_TOGGLE_DRAFTED', payload: { id: 2 } }));
-      el('btnAddPick').addEventListener('click', () => store.dispatch({ type: 'DRAFT_PICK_ADD', payload: { playerId: 1, teamId: 1, price: 25 } }));
-      el('btnEditPick').addEventListener('click', () => store.dispatch({ type: 'DRAFT_PICK_EDIT', payload: { index: 0, update: { price: 30 } } }));
-      el('btnAddMany').addEventListener('click', () => {
-        for (let i = 0; i < 12; i += 1) store.dispatch({ type: 'DRAFT_PICK_ADD', payload: { playerId: (i % 3)+1, teamId: (i % 4)+1, price: 5 + i } });
       });
-      el('btnUndo').addEventListener('click', () => { store.undo(); });
+    });
 
-      // Initial render
-      renderAll();
-    </script>
-  </body>
-  </html>
+    document.getElementById('draftPlayer').addEventListener('click', () => {
+      const state = store.getState();
+      if (state.players.length === 0) {
+        alert('Add some players first!');
+        return;
+      }
+      
+      const undrafted = state.players.filter(p => !state.draft.picks.find(pick => pick.playerId === p.id));
+      if (undrafted.length === 0) {
+        alert('All players drafted!');
+        return;
+      }
+      
+      const player = undrafted[Math.floor(Math.random() * undrafted.length)];
+      store.dispatch({
+        type: 'DRAFT_PLAYER',
+        payload: {
+          playerId: player.id,
+          teamId: Math.floor(Math.random() * 12) + 1,
+          price: Math.floor(Math.random() * 50) + 10
+        }
+      });
+    });
 
+    document.getElementById('updateSettings').addEventListener('click', () => {
+      const teams = Math.floor(Math.random() * 5) + 10; // 10-14 teams
+      store.dispatch({
+        type: 'UPDATE_SETTINGS',
+        payload: {
+          teams,
+          budget: teams === 14 ? 250 : 200
+        }
+      });
+    });
 
+    document.getElementById('undo').addEventListener('click', () => {
+      const result = store.undo();
+      if (result) {
+        logEvent('undo', { success: true });
+      }
+    });
+
+    document.getElementById('redo').addEventListener('click', () => {
+      const result = store.redo();
+      if (result) {
+        logEvent('redo', { success: true });
+      }
+    });
+
+    // Add reducer for handling actions
+    store.reducer = function(state, action) {
+      switch (action.type) {
+        case 'ADD_PLAYER':
+          return {
+            ...state,
+            players: [...(state.players || []), action.payload]
+          };
+        
+        case 'DRAFT_PLAYER':
+          return {
+            ...state,
+            draft: {
+              ...state.draft,
+              picks: [...(state.draft?.picks || []), action.payload]
+            }
+          };
+        
+        case 'UPDATE_SETTINGS':
+          return {
+            ...state,
+            settings: { ...state.settings, ...action.payload }
+          };
+        
+        default:
+          return state;
+      }
+    };
+
+    // Initial dashboard update
+    updateDashboard();
+    logEvent('initialized', { version: store.version });
+
+    // Test performance
+    console.time('100 dispatches');
+    for (let i = 0; i < 100; i++) {
+      store.dispatch({ type: 'TEST', payload: i });
+    }
+    console.timeEnd('100 dispatches');
+  </script>
+</body>
+</html>
