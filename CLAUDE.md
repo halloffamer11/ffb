@@ -6,39 +6,80 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FFB (Fantasy Football Bid) Draft Helper - A client-side web application for managing fantasy football auction drafts. Built using vanilla JavaScript with no framework dependencies, following USDAD (Unified Software Development and Delivery) methodology with three-layer context architecture.
 
-## IMPORTANT: HITL Validation Protocol
+## MANDATORY: HITL Validation Protocol
 
-**When completing tasks that require Human-In-The-Loop (HITL) validation:**
+**EVERY TASK SHALL AND MUST conduct a Human-In-The-Loop (HITL) validation event.**
 
-1. **PAUSE before marking task complete** - After implementing a feature, STOP and provide the user with:
-   - The validation page URL (e.g., `demos/ui/T-XXX_validation.html`)
-   - Step-by-step validation instructions
-   - Expected outcomes for each step
-   - Pass/fail criteria
+This is NOT optional. Claude SHALL:
 
-2. **Wait for user confirmation** - Do not:
-   - Mark task as CPT (complete) in tasks.md
-   - Update HITL status to PASS
-   - Merge branches
-   - Continue to next task
-   
-   Until the user explicitly confirms: "HITL validation passed" or provides feedback
+### 1. CREATE a Human-Readable Validation Target
+- **MUST** create an HTML page in `demos/ui/T-XXX_validation.html` 
+- Page **MUST** be accessible via dev server (`npm run dev`)
+- Page **MUST** demonstrate the implemented feature interactively
+- Page **MUST** include test controls and sample data if needed
 
-3. **Example validation pause format:**
-   ```
-   ## HITL Validation Required for T-XXX
+### 2. PROVIDE Validation Instructions  
+- **MUST** include step-by-step validation procedures
+- **MUST** specify expected outcomes for each action
+- **MUST** define clear, measurable pass/fail criteria
+- **MUST** include setup instructions (dev server, test data, etc.)
+
+### 3. PROVIDE Implementation Summary
+- **MUST** briefly describe what code was added/modified
+- **MUST** explain the feature's purpose and functionality  
+- **MUST** list key files that were changed
+- **MUST** note any dependencies or integration points
+
+### 4. PAUSE and WAIT for User Confirmation
+Claude **SHALL NOT**:
+- Mark task as CPT (complete) in `pcl/tasks.md`
+- Update HITL status to PASS
+- Make commits beyond the implementation
+- Merge branches  
+- Continue to next task
+
+Until user explicitly confirms: **"HITL validation passed"**
+
+### Required Validation Template
+
+Every task validation MUST follow this format:
+
+```markdown
+## HITL Validation Required for T-XXX: [Task Name]
+
+### Implementation Summary
+- **Purpose**: [Brief description of what this feature does]
+- **Code Added**: [Key files and components created/modified]
+- **Integration**: [How this connects to existing system]
+
+### Validation Instructions
+1. **Setup**: 
+   - Start dev server: `npm run dev`
+   - Load test data: [if applicable]
    
-   Please validate the implementation:
-   
-   1. Start dev server: `npm run dev`
-   2. Open: http://localhost:5173/demos/ui/T-XXX_validation.html
-   3. Perform these steps:
-      - Step 1: [action] → Expected: [outcome]
-      - Step 2: [action] → Expected: [outcome]
-   4. Pass criteria: [specific measurable criteria]
-   
-   Please confirm validation results before I proceed.
-   ```
+2. **Access**: Open http://localhost:XXXX/demos/ui/T-XXX_validation.html
+
+3. **Test Steps**:
+   - Step 1: [specific action] → Expected: [specific outcome]
+   - Step 2: [specific action] → Expected: [specific outcome]
+   - Step N: [specific action] → Expected: [specific outcome]
+
+4. **Pass Criteria**: 
+   - [Measurable criterion 1]
+   - [Measurable criterion 2]
+   - [Overall success condition]
+
+### Files Changed
+- [List of modified/created files with brief description]
+
+**Please confirm validation results before I proceed.**
+```
+
+### Enforcement Rules
+1. **NO EXCEPTIONS**: Every task, no matter how small, requires HITL validation
+2. **NO SHORTCUTS**: Tasks cannot be marked complete without validation page
+3. **NO ASSUMPTIONS**: User must explicitly confirm validation passed
+4. **NO PROCEEDING**: Next task cannot begin until current validation confirmed
 
 ## Essential Commands
 
@@ -113,9 +154,14 @@ node tests/unit/search_fuzzy.test.js   # Fuzzy search tests
 ### Development Workflow
 
 1. **Task Tracking**: Tasks defined in `pcl/tasks.md` with acceptance criteria
-2. **Human Validation**: Demo pages in `demos/ui/` for HITL (Human-In-The-Loop) testing
-3. **Unit Tests**: Minimal Node-based tests in `tests/unit/`
-4. **Execution Ledger**: Track decisions in `pcl/context.md`
+2. **Implementation**: Code the feature following architecture patterns
+3. **MANDATORY HITL Validation**: Create validation page and instructions - **NO EXCEPTIONS**
+4. **User Confirmation**: Wait for explicit "HITL validation passed" before proceeding
+5. **Task Completion**: Mark as CPT in `pcl/tasks.md` only after validation confirmed
+6. **Unit Tests**: Minimal Node-based tests in `tests/unit/` (where applicable)
+7. **Execution Ledger**: Track decisions in `pcl/context.md`
+
+**Critical**: Steps 3-5 are mandatory checkpoints. No task can bypass HITL validation.
 
 ### Performance Targets
 - Search operations: <50ms for 300 players
@@ -124,10 +170,11 @@ node tests/unit/search_fuzzy.test.js   # Fuzzy search tests
 - Bundle size: <200KB minified
 
 ### Testing Approach
-- Unit tests run directly with Node (no test framework)
-- HITL validation using demo pages (`demos/ui/T-*.html`)
+- **MANDATORY HITL validation**: Every task requires validation page (`demos/ui/T-*.html`) - NO EXCEPTIONS
+- Unit tests run directly with Node (no test framework) where applicable
 - Performance benchmarks via `tests/unit/performance.test.js`
 - Browser compatibility matrix in `demos/data/T-027_browser_matrix.md`
+- **All features must be human-validated before task completion**
 
 ### Data Management
 - CSV import with BOM/CRLF handling
