@@ -25,7 +25,7 @@
 | T-012 | League Settings UI | CPT | PASS | demos/ui/T-012_settings.html |
 | T-013 | Data Management UI | CPT | PASS | demos/ui/T-013_data_management.html |
 | T-014 | Dashboard Layout | CPT | PASS | demos/ui/T-014_dashboard.html |
-| T-014a | Debug Tab Implementation | CPT | PENDING | demos/ui/T-014a_debug.html; demos/ui/T-014a_validation.md |
+| T-014a | Debug Tab Implementation | CPT | PASS | demos/ui/T-014a_debug.html; demos/ui/T-014a_validation.md |
 | T-015 | Player Search Component | CPT | PASS | src/ui/searchComponent.js; demos/ui/T-015_search_component.html |
 | T-016 | Player Analysis Display | CPT | PASS | src/ui/analysis.js; demos/data/T-016_analysis_players.json |
 | T-017 | Budget Tracker Component | CPT | PASS | demos/ui/T-017_budget.html |
