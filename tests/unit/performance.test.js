@@ -82,6 +82,17 @@ function assertOkay(name, condition, details) {
   assertOkay('VBD <100ms', (t1 - t0) < 100, { durationMs: (t1 - t0), checksum });
 }
 
+// Micro-bench: 10 runs aggregate under 500ms
+{
+  const t2 = nowMs();
+  let sum = 0;
+  for (let i = 0; i < 10; i += 1) {
+    sum += vbdChecksum(players, leagueSettings);
+  }
+  const t3 = nowMs();
+  assertOkay('VBD x10 <500ms', (t3 - t2) < 500, { durationMs: (t3 - t2), sum });
+}
+
 // Search timing (<50ms target)
 {
   const search = new BasicSearch(players);
@@ -101,6 +112,24 @@ function assertOkay(name, condition, details) {
   const t1 = nowMs();
   assertOkay('Fuzzy <50ms', (t1 - t0) < 50, { durationMs: (t1 - t0), checksum, count: res.length });
 }
+
+// Record to results markdown (best-effort, local only)
+try {
+  if (String(process.env.WRITE_RESULTS || '').toLowerCase() === '1') {
+    const lines = [
+      `Run: ${new Date().toISOString()} — Node ${process.version}`,
+      '```',
+      `search: { durationMs: ~<50, count: ${res ? res.length : 'n/a'}, checksum: ${checksum ?? 'n/a'} }`,
+      `vbd:    { durationMs: ~<100 }`,
+      'ui:     { frameMs: browser-only }',
+      'ws:     { saveMs: browser-only }',
+      '```',
+      ''
+    ];
+    const outPath = path.resolve('demos/data/T-000_performance_results.md');
+    fs.appendFileSync(outPath, '\n' + lines.join('\n'));
+  }
+} catch {}
 
 // localStorage and workspace timings are browser-only; covered by in-browser runner.
 

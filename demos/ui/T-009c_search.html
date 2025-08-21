@@ -241,6 +241,8 @@
             <td class="p-2 border-t ${injuryClass(r.injuryStatus)}">${STATUS_LABELS[normalizeInjuryStatus(r.injuryStatus)]}</td>`;
           const nameTd = tr.querySelector('.name');
           nameTd.innerHTML = highlightName(r.name, query);
+          tr.addEventListener('mouseenter', () => showHoverPreview(r));
+          tr.addEventListener('mouseleave', hideHoverPreview);
           tr.addEventListener('click', (ev) => {
             // Update selection state so row highlights identically to keyboard
             selectedIdx = idx;
@@ -255,6 +257,32 @@
       function selectRow(p) {
         const msg = { type: 'player.selected', payload: { id: p?.id ?? '', name: p?.name ?? '' } };
         try { window.parent?.postMessage(msg, '*'); } catch {}
+      }
+
+      // Lightweight hover preview HUD (name, team, position, points)
+      let hoverDiv = null;
+      function ensureHover() {
+        if (!hoverDiv) {
+          hoverDiv = document.createElement('div');
+          hoverDiv.className = 'fixed z-50 bg-slate-800 text-white text-xs px-2 py-1 rounded shadow pointer-events-none';
+          document.body.appendChild(hoverDiv);
+        }
+      }
+      function showHoverPreview(p) {
+        ensureHover();
+        const pts = (p && Number.isFinite(Number(p.points))) ? Number(p.points).toFixed(1) : '-';
+        hoverDiv.textContent = `${p.name} · ${p.team} · ${p.position} · pts ${pts}`;
+        document.addEventListener('mousemove', positionHover, { passive: true });
+      }
+      function hideHoverPreview() {
+        if (hoverDiv) hoverDiv.style.display = 'none';
+        document.removeEventListener('mousemove', positionHover);
+      }
+      function positionHover(e) {
+        if (!hoverDiv) return;
+        hoverDiv.style.display = 'block';
+        hoverDiv.style.left = `${e.clientX + 12}px`;
+        hoverDiv.style.top = `${e.clientY + 12}px`;
       }
 
       function toggleDraftedById(id) {

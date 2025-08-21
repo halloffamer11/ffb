@@ -9,7 +9,10 @@
     "preview": "vite preview --port 5173"
   },
   "devDependencies": {
-    "vite": "^5.4.0"
+    "vite": "^7.1.2"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/server-puppeteer": "^2025.5.12",
+    "puppeteer": "^24.16.2"
   }
 }
-
