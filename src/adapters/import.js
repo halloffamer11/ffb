@@ -112,14 +112,22 @@ export function normalizeRow(row, mapping, rowIndex) {
   if (mapping.injuryStatus != null) {
     injuryStatusCode = normalizeInjuryStatus(row[mapping.injuryStatus]);
   }
+  // Generate a unique ID for each player
+  const id = `${name.toLowerCase().replace(/[^a-z0-9]/g, '')}_${Date.now()}_${rowIndex}`;
+  
   return {
     ok: true,
     value: {
+      id,
       name,
       team,
       position,
       points,
-      injuryStatus: injuryStatusCode
+      injuryStatus: injuryStatusCode,
+      // Add projections structure for compatibility
+      projections: {
+        stats: {}
+      }
     }
   };
 }

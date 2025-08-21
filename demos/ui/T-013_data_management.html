@@ -84,7 +84,7 @@
               <td class="p-2">${r.name || ''}</td>
               <td class="p-2">${r.team || ''}</td>
               <td class="p-2">${r.position || ''}</td>
-              <td class="p-2">${r.points || ''}</td>
+              <td class="p-2">${r.points != null ? Number(r.points).toFixed(1) : ''}</td>
               <td class="p-2">
                 <select class="injSel border rounded p-1 text-xs" data-idx="${globalIdx}">
                   ${STATUS_LABELS.map(label => 
