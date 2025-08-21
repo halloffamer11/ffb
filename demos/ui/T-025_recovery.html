@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T-025: Draft Recovery System</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4 max-w-4xl">
+    <h1 class="text-2xl font-bold mb-4">T-025: Draft Recovery System</h1>
+    
+    <!-- Recovery Controls -->
+    <div class="bg-white rounded-lg shadow p-6 mb-4">
+      <h2 class="text-lg font-semibold mb-4">Recovery Controls</h2>
+      
+      <div class="grid grid-cols-2 gap-4">
+        <button id="simulateCrash" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+          Simulate Crash
+        </button>
+        <button id="manualBackup" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Create Manual Backup
+        </button>
+        <button id="checkIntegrity" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+          Check Integrity
+        </button>
+        <button id="exportWorkspace" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700">
+          Export Workspace
+        </button>
+        <button id="showBackups" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">
+          Show Backups
+        </button>
+        <button id="clearCrashMarker" class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-700">
+          Clear Crash Marker
+        </button>
+      </div>
+    </div>
+    
+    <!-- Status Display -->
+    <div class="bg-white rounded-lg shadow p-6 mb-4">
+      <h2 class="text-lg font-semibold mb-4">System Status</h2>
+      <div id="status" class="space-y-2"></div>
+    </div>
+    
+    <!-- Backup List -->
+    <div class="bg-white rounded-lg shadow p-6 mb-4">
+      <h2 class="text-lg font-semibold mb-4">Available Backups</h2>
+      <div id="backupList" class="space-y-2"></div>
+    </div>
+    
+    <!-- Test Scenario -->
+    <div class="bg-white rounded-lg shadow p-6">
+      <h2 class="text-lg font-semibold mb-4">Test Scenario</h2>
+      <ol class="list-decimal list-inside space-y-2 text-sm">
+        <li>Add some draft picks using the draft interface</li>
+        <li>Click "Simulate Crash" to mark session as crashed</li>
+        <li>Refresh the page</li>
+        <li>Recovery modal should appear with backup options</li>
+        <li>Select a backup to restore draft state</li>
+      </ol>
+      
+      <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+        <p class="text-sm text-yellow-800">
+          <strong>Note:</strong> The recovery system automatically creates backups every 30 seconds and on every state change.
+        </p>
+      </div>
+    </div>
+    
+    <!-- Mini Draft Interface -->
+    <div class="bg-white rounded-lg shadow p-6 mt-4">
+      <h2 class="text-lg font-semibold mb-4">Quick Draft Entry (for testing)</h2>
+      <div class="flex gap-2">
+        <input id="playerName" type="text" placeholder="Player name" class="flex-1 px-3 py-2 border rounded" />
+        <input id="price" type="number" placeholder="Price" min="1" value="10" class="w-24 px-3 py-2 border rounded" />
+        <button id="addPick" class="px-4 py-2 bg-blue-600 text-white rounded">Add Pick</button>
+      </div>
+      <div id="picks" class="mt-4 text-sm"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { recoveryManager } from '/src/ui/recovery.js';
+    import { storeBridge } from '/src/ui/storeBridge.js';
+    import { createStorageAdapter } from '/src/adapters/storage.js';
+    
+    const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+    
+    // Initialize recovery if not already done
+    recoveryManager.init();
+    
+    function updateStatus() {
+      const crashMarker = localStorage.getItem('workspace::crash_detection');
+      const session = localStorage.getItem('workspace::session');
+      const lastBeat = session ? new Date(parseInt(session)).toLocaleTimeString() : 'N/A';
+      const state = storeBridge.getState();
+      const picks = state?.draft?.picks || [];
+      
+      document.getElementById('status').innerHTML = `
+        <div class="flex justify-between">
+          <span>Crash Detection:</span>
+          <span class="font-mono ${crashMarker === 'active' ? 'text-red-600' : 'text-green-600'}">
+            ${crashMarker || 'not set'}
+          </span>
+        </div>
+        <div class="flex justify-between">
+          <span>Last Heartbeat:</span>
+          <span class="font-mono">${lastBeat}</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Current Picks:</span>
+          <span class="font-mono">${picks.length}</span>
+        </div>
+        <div class="flex justify-between">
+          <span>Integrity Check:</span>
+          <span id="integrityStatus" class="font-mono">Not checked</span>
+        </div>
+      `;
+    }
+    
+    function updateBackups() {
+      const backups = recoveryManager.getBackups();
+      
+      if (backups.length === 0) {
+        document.getElementById('backupList').innerHTML = '<p class="text-gray-500">No backups available</p>';
+      } else {
+        document.getElementById('backupList').innerHTML = backups.map((backup, idx) => `
+          <div class="border rounded p-3">
+            <div class="flex justify-between">
+              <span class="font-medium">Backup ${idx + 1}</span>
+              <span class="text-sm text-gray-600">${new Date(backup.timestamp).toLocaleString()}</span>
+            </div>
+            <div class="text-sm text-gray-500 mt-1">
+              ${backup.state?.draft?.picks?.length || 0} picks,
+              ${backup.players?.length || 0} players
+            </div>
+          </div>
+        `).join('');
+      }
+    }
+    
+    function updatePicks() {
+      const state = storeBridge.getState();
+      const picks = state?.draft?.picks || [];
+      
+      if (picks.length === 0) {
+        document.getElementById('picks').innerHTML = '<p class="text-gray-500">No picks yet</p>';
+      } else {
+        document.getElementById('picks').innerHTML = '<div class="space-y-1">' + 
+          picks.slice(-5).reverse().map(p => 
+            `<div>${p.playerName} - $${p.price}</div>`
+          ).join('') + '</div>';
+      }
+    }
+    
+    // Event handlers
+    document.getElementById('simulateCrash').addEventListener('click', () => {
+      localStorage.setItem('workspace::crash_detection', 'active');
+      alert('Crash marker set. Refresh the page to see recovery UI.');
+      updateStatus();
+    });
+    
+    document.getElementById('manualBackup').addEventListener('click', () => {
+      recoveryManager.triggerManualBackup();
+      updateBackups();
+    });
+    
+    document.getElementById('checkIntegrity').addEventListener('click', () => {
+      const result = recoveryManager.checkIntegrity();
+      const status = document.getElementById('integrityStatus');
+      
+      if (result.ok) {
+        status.textContent = '✓ OK';
+        status.className = 'font-mono text-green-600';
+      } else {
+        status.textContent = '✗ Issues found';
+        status.className = 'font-mono text-red-600';
+        alert('Integrity issues:\n' + result.issues.join('\n'));
+      }
+    });
+    
+    document.getElementById('exportWorkspace').addEventListener('click', () => {
+      recoveryManager.exportWorkspace();
+    });
+    
+    document.getElementById('showBackups').addEventListener('click', () => {
+      const backups = recoveryManager.getBackups();
+      console.log('Backups:', backups);
+      alert(`${backups.length} backup(s) available. Check console for details.`);
+    });
+    
+    document.getElementById('clearCrashMarker').addEventListener('click', () => {
+      localStorage.setItem('workspace::crash_detection', 'closed');
+      updateStatus();
+    });
+    
+    // Mini draft interface
+    document.getElementById('addPick').addEventListener('click', () => {
+      const name = document.getElementById('playerName').value;
+      const price = parseInt(document.getElementById('price').value);
+      
+      if (!name || !price) return;
+      
+      storeBridge.addPick({
+        playerId: 'test_' + Date.now(),
+        playerName: name,
+        teamId: 1,
+        price
+      });
+      
+      document.getElementById('playerName').value = '';
+      updatePicks();
+      updateStatus();
+      updateBackups();
+    });
+    
+    // Subscribe to changes
+    storeBridge.subscribe('change', () => {
+      updateStatus();
+      updatePicks();
+    });
+    
+    // Initial update
+    updateStatus();
+    updateBackups();
+    updatePicks();
+    
+    // Update status every second
+    setInterval(updateStatus, 1000);
+  </script>
+</body>
+</html>

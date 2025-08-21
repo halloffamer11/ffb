@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T-019: Keeper Entry Mode</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4">
+    <h1 class="text-2xl font-bold mb-4">T-019: Keeper Entry Mode Demo</h1>
+    
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Keeper Entry Widget -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b bg-gray-50">
+          <h2 class="font-semibold">Keeper Entry</h2>
+        </div>
+        <div id="keeperWidget" class="h-[600px] overflow-auto"></div>
+      </div>
+      
+      <!-- Draft Status -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b bg-gray-50">
+          <h2 class="font-semibold">Draft Status</h2>
+        </div>
+        <div class="p-4">
+          <div id="draftStatus" class="space-y-2"></div>
+          <div class="mt-4 p-4 bg-gray-50 rounded">
+            <h3 class="font-medium mb-2">Budget Status</h3>
+            <div id="budgetStatus"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Test Controls -->
+    <div class="mt-4 p-4 bg-white rounded-lg shadow">
+      <h3 class="font-semibold mb-2">Test Controls</h3>
+      <div class="flex gap-2">
+        <button id="loadSamplePlayers" class="px-4 py-2 bg-blue-600 text-white rounded">
+          Load Sample Players
+        </button>
+        <button id="clearKeepers" class="px-4 py-2 bg-red-600 text-white rounded">
+          Clear All Keepers
+        </button>
+        <button id="showState" class="px-4 py-2 bg-gray-600 text-white rounded">
+          Show State
+        </button>
+      </div>
+      <pre id="stateDisplay" class="mt-4 p-2 bg-gray-50 rounded text-xs overflow-auto hidden"></pre>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initKeeperWidget } from '/src/ui/keeper.js';
+    import { createStorageAdapter } from '/src/adapters/storage.js';
+    import { storeBridge } from '/src/ui/storeBridge.js';
+    
+    const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+    
+    // Initialize keeper widget
+    initKeeperWidget(document.getElementById('keeperWidget'));
+    
+    // Update draft status display
+    function updateStatus() {
+      const state = storeBridge.getState();
+      const keepers = state?.draft?.keepers || [];
+      const picks = state?.draft?.picks || [];
+      const settings = storage.get('leagueSettings') || {};
+      
+      const keeperPicks = picks.filter(p => p.isKeeper);
+      const regularPicks = picks.filter(p => !p.isKeeper);
+      
+      document.getElementById('draftStatus').innerHTML = `
+        <div>Keepers Selected: ${keepers.length}</div>
+        <div>Keeper Picks in Draft: ${keeperPicks.length}</div>
+        <div>Regular Draft Picks: ${regularPicks.length}</div>
+        <div>Total Picks: ${picks.length}</div>
+      `;
+      
+      const totalKeeperCost = keepers.reduce((sum, k) => sum + (k.cost || 0), 0);
+      const budget = settings.budget || 200;
+      
+      document.getElementById('budgetStatus').innerHTML = `
+        <div>Starting Budget: $${budget}</div>
+        <div>Keeper Costs: $${totalKeeperCost}</div>
+        <div>Remaining for Draft: $${budget - totalKeeperCost}</div>
+      `;
+    }
+    
+    // Subscribe to changes
+    storeBridge.subscribe('change', updateStatus);
+    window.addEventListener('keeper:draft-started', () => {
+      updateStatus();
+      alert('Draft started! Keepers have been added to draft picks.');
+    });
+    
+    // Test controls
+    document.getElementById('loadSamplePlayers').addEventListener('click', () => {
+      const samplePlayers = [
+        { id: 'p1', name: 'Patrick Mahomes', team: 'KC', position: 'QB', points: 400 },
+        { id: 'p2', name: 'Christian McCaffrey', team: 'SF', position: 'RB', points: 350 },
+        { id: 'p3', name: 'Tyreek Hill', team: 'MIA', position: 'WR', points: 320 },
+        { id: 'p4', name: 'Travis Kelce', team: 'KC', position: 'TE', points: 280 },
+        { id: 'p5', name: 'Justin Jefferson', team: 'MIN', position: 'WR', points: 310 },
+        { id: 'p6', name: 'Austin Ekeler', team: 'LAC', position: 'RB', points: 290 },
+        { id: 'p7', name: 'Stefon Diggs', team: 'BUF', position: 'WR', points: 300 },
+        { id: 'p8', name: 'Josh Allen', team: 'BUF', position: 'QB', points: 380 },
+        { id: 'p9', name: 'Saquon Barkley', team: 'NYG', position: 'RB', points: 270 },
+        { id: 'p10', name: 'Mark Andrews', team: 'BAL', position: 'TE', points: 250 }
+      ];
+      
+      storage.set('players', samplePlayers);
+      storage.set('leagueSettings', {
+        teams: 12,
+        userTeamId: 1,
+        budget: 200,
+        owners: Array.from({length: 12}, (_, i) => ({
+          id: i + 1,
+          team: `Team ${i + 1}`,
+          name: `Owner ${i + 1}`
+        }))
+      });
+      
+      location.reload();
+    });
+    
+    document.getElementById('clearKeepers').addEventListener('click', () => {
+      storeBridge.dispatch({ type: 'KEEPER_CLEAR' });
+      updateStatus();
+    });
+    
+    document.getElementById('showState').addEventListener('click', () => {
+      const state = storeBridge.getState();
+      const display = document.getElementById('stateDisplay');
+      display.textContent = JSON.stringify(state.draft, null, 2);
+      display.classList.toggle('hidden');
+    });
+    
+    // Initial update
+    updateStatus();
+  </script>
+</body>
+</html>
