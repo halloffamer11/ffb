@@ -17,7 +17,16 @@ export async function recalcAll() {
   try {
     const league = storage.get('leagueSettings') || {};
     const players = storage.get('players') || [];
-    const state = storage.get('state') || { draft: { picks: [] } };
+    
+    // Get state from store bridge for consistency
+    let state;
+    try {
+      const { storeBridge } = await import('./storeBridge.js');
+      state = storeBridge.getState();
+    } catch {
+      state = storage.get('state') || { draft: { picks: [] } };
+    }
+    
     if (!Array.isArray(players) || players.length === 0) return;
 
     const scoring = autoConfigure(league?.scoring?.preset || 'PPR', league?.scoring?.overrides || {});

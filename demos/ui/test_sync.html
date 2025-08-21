@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test Draft Sync</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 p-8">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-2xl font-bold mb-6">Test Draft Sync</h1>
+    
+    <div class="grid grid-cols-2 gap-4 mb-6">
+      <!-- Draft Entry -->
+      <div class="bg-white border rounded-lg shadow-sm">
+        <div class="p-4 border-b bg-slate-50">
+          <h2 class="font-semibold">Draft Entry</h2>
+        </div>
+        <div id="draftWidget" class="h-64"></div>
+      </div>
+      
+      <!-- Draft Ledger -->
+      <div class="bg-white border rounded-lg shadow-sm">
+        <div class="p-4 border-b bg-slate-50">
+          <h2 class="font-semibold">Draft Ledger</h2>
+        </div>
+        <div id="ledgerWidget" class="h-64"></div>
+      </div>
+    </div>
+    
+    <!-- Store State Debug -->
+    <div class="bg-white border rounded-lg shadow-sm p-4">
+      <h2 class="font-semibold mb-2">Store State</h2>
+      <pre id="storeState" class="text-xs bg-gray-50 p-2 rounded overflow-auto"></pre>
+    </div>
+    
+    <!-- Test Controls -->
+    <div class="mt-4 flex gap-2">
+      <button id="loadSampleData" class="px-4 py-2 bg-blue-600 text-white rounded">Load Sample Data</button>
+      <button id="refreshState" class="px-4 py-2 bg-gray-600 text-white rounded">Refresh State</button>
+      <button id="clearPicks" class="px-4 py-2 bg-red-600 text-white rounded">Clear All Picks</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initDraftWidget } from '/src/ui/draft.js';
+    import { initLedgerWidget } from '/src/ui/ledger.js';
+    import { storeBridge } from '/src/ui/storeBridge.js';
+    import { createStorageAdapter } from '/src/adapters/storage.js';
+    
+    const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+    
+    // Initialize widgets
+    initDraftWidget(document.getElementById('draftWidget'));
+    initLedgerWidget(document.getElementById('ledgerWidget'));
+    
+    // Display store state
+    function displayState() {
+      const state = storeBridge.getState();
+      const pickCount = state?.draft?.picks?.length || 0;
+      const display = {
+        pickCount,
+        canUndo: storeBridge.canUndo(),
+        canRedo: storeBridge.canRedo(),
+        lastPick: state?.draft?.picks?.[pickCount - 1] || null
+      };
+      document.getElementById('storeState').textContent = JSON.stringify(display, null, 2);
+    }
+    
+    // Subscribe to changes
+    storeBridge.subscribe('change', displayState);
+    displayState();
+    
+    // Test controls
+    document.getElementById('loadSampleData').addEventListener('click', () => {
+      // Load sample players
+      const samplePlayers = [
+        { id: 'p1', name: 'Patrick Mahomes', team: 'KC', position: 'QB', projections: { stats: { passYds: 5000, passTd: 40 } } },
+        { id: 'p2', name: 'Christian McCaffrey', team: 'SF', position: 'RB', projections: { stats: { rushYds: 1200, rushTd: 10, rec: 60, recYds: 500 } } },
+        { id: 'p3', name: 'Tyreek Hill', team: 'MIA', position: 'WR', projections: { stats: { rec: 110, recYds: 1700, recTd: 12 } } },
+        { id: 'p4', name: 'Travis Kelce', team: 'KC', position: 'TE', projections: { stats: { rec: 95, recYds: 1200, recTd: 8 } } }
+      ];
+      storage.set('players', samplePlayers);
+      
+      // Set up basic league settings
+      storage.set('leagueSettings', {
+        teams: 12,
+        userTeamId: 1,
+        owners: Array.from({length: 12}, (_, i) => ({
+          id: i + 1,
+          team: `Team ${i + 1}`,
+          name: `Owner ${i + 1}`,
+          order: i + 1
+        })),
+        roster: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, BENCH: 5 },
+        scoring: { preset: 'PPR' }
+      });
+      
+      window.location.reload();
+    });
+    
+    document.getElementById('refreshState').addEventListener('click', displayState);
+    
+    document.getElementById('clearPicks').addEventListener('click', () => {
+      const state = storeBridge.getState();
+      state.draft.picks = [];
+      storage.set('state', state);
+      window.location.reload();
+    });
+  </script>
+</body>
+</html>
