@@ -6,11 +6,13 @@
     <title>T-014a Debug Validation</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="bg-slate-50 text-slate-900 p-6">
-    <h1 class="text-2xl font-semibold mb-2">T-014a Debug Validation</h1>
-    <p class="text-sm text-slate-600 mb-4">Development-only validation tab. Configure league settings, load/import players, then run golden comparison.</p>
+  <body class="bg-slate-50 text-slate-900 h-screen flex flex-col">
+    <div class="px-6 pt-4 pb-2">
+      <h1 class="text-2xl font-semibold">Debug Validation</h1>
+      <p class="text-sm text-slate-600">Development-only validation tab. Configure league settings, load/import players, then run golden comparison.</p>
+    </div>
 
-    <div class="space-y-6">
+    <div class="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
       <details open class="border rounded">
         <summary class="px-3 py-2 font-medium cursor-pointer select-none">Live Data Explorer (dev)</summary>
         <div class="p-3 pt-0 space-y-2">
@@ -26,51 +28,110 @@
             <button id="exportCsv" class="px-3 py-1 rounded bg-emerald-600 text-white">Export CSV</button>
             <span id="dataStatus" class="text-xs text-slate-600"></span>
           </div>
-          <div class="max-h-96 overflow-auto">
-            <table id="dataTable" class="min-w-full bg-white rounded border text-xs">
-              <thead class="bg-slate-100"></thead>
-              <tbody></tbody>
+          <div class="max-h-[30rem] overflow-auto border rounded bg-white">
+            <table id="dataTable" class="min-w-full text-xs">
+              <thead class="bg-slate-100 border-b sticky top-0 z-10"></thead>
+              <tbody class="divide-y divide-slate-100"></tbody>
             </table>
           </div>
         </div>
       </details>
 
-      <details open class="border rounded">
+      <details class="border rounded">
         <summary class="px-3 py-2 font-medium cursor-pointer select-none">League Settings</summary>
         <div class="p-3 pt-0">
-          <iframe src="./T-012_settings.html" class="w-full h-96 border rounded"></iframe>
+          <iframe src="./T-012_settings.html" class="w-full h-[40rem] border rounded"></iframe>
         </div>
       </details>
 
-      <details open class="border rounded">
+      <details class="border rounded">
         <summary class="px-3 py-2 font-medium cursor-pointer select-none">Data Management</summary>
         <div class="p-3 pt-0">
-          <iframe src="./T-013_data_management.html" class="w-full h-96 border rounded"></iframe>
+          <iframe src="./T-013_data_management.html" class="w-full h-[40rem] border rounded"></iframe>
         </div>
       </details>
 
       <details open class="border rounded">
-        <summary class="px-3 py-2 font-medium cursor-pointer select-none">Golden & Validation</summary>
+        <summary class="px-3 py-2 font-medium cursor-pointer select-none">Golden Dataset Validation</summary>
         <div class="p-3 pt-0 space-y-3">
-          <div class="space-x-2">
+          <div class="flex flex-wrap gap-2">
+            <select id="goldenDataset" class="border p-2 rounded">
+              <option value="../../testdata/golden/debug_validation_set.csv">Debug Set (4 players)</option>
+              <option value="../../testdata/golden/debug_validation_full.csv">Full Set (65 players)</option>
+            </select>
             <button id="loadGolden" class="px-3 py-2 rounded bg-slate-600 text-white">Load Golden Data</button>
-            <label>Tolerance (%) <input id="tolerance" type="number" step="0.1" value="1.0" class="border p-1 w-24"></label>
-            <button id="run" class="px-3 py-2 rounded bg-blue-600 text-white">Run Validation</button>
-            <button id="exportMd" class="px-3 py-2 rounded bg-emerald-600 text-white">Export Markdown</button>
             <button id="useGoldenAsCurrent" class="px-3 py-2 rounded bg-amber-600 text-white">Use Golden as Current</button>
           </div>
-          <div class="text-xs text-slate-600">Status: Current <span id="curCount">0</span> rows, Golden <span id="goldCount">0</span> rows</div>
-          <div id="summary" class="text-sm"></div>
-          <div class="max-h-96 overflow-auto">
-            <table id="results" class="min-w-full bg-white rounded border text-sm">
-              <thead class="bg-slate-100"><tr><th class="text-left p-2">name</th><th class="text-left p-2">PtsΔ</th><th class="text-left p-2">VBDΔ</th><th class="text-left p-2">within</th></tr></thead>
-              <tbody></tbody>
-            </table>
+          
+          <div class="flex flex-wrap gap-2 items-center">
+            <label class="flex items-center gap-1">
+              <span>Tolerance:</span>
+              <input id="tolerance" type="number" step="0.1" value="1.0" min="0.1" max="10" class="border p-1 w-20 rounded">
+              <span>%</span>
+            </label>
+            <button id="run" class="px-3 py-2 rounded bg-blue-600 text-white disabled:opacity-50">Run Validation</button>
+            <button id="exportMd" class="px-3 py-2 rounded bg-emerald-600 text-white">Export Report</button>
           </div>
-          <div>
-            <h3 class="font-medium">Missing</h3>
-            <pre id="missing" class="bg-white border rounded p-2 text-xs"></pre>
+          
+          <div class="grid grid-cols-2 gap-4 text-sm">
+            <div class="bg-slate-100 p-3 rounded">
+              <h3 class="font-semibold mb-2">Dataset Status</h3>
+              <div class="space-y-1 text-xs">
+                <div>Current Players: <span id="curCount" class="font-mono font-semibold">0</span></div>
+                <div>Golden Players: <span id="goldCount" class="font-mono font-semibold">0</span></div>
+                <div>Matched Players: <span id="matchedCount" class="font-mono font-semibold">0</span></div>
+                <div>Missing Players: <span id="missingCount" class="font-mono font-semibold">0</span></div>
+              </div>
+            </div>
+            
+            <div class="bg-emerald-50 p-3 rounded">
+              <h3 class="font-semibold mb-2">Validation Metrics</h3>
+              <div class="space-y-1 text-xs">
+                <div>MAE Points: <span id="maePts" class="font-mono font-semibold">—</span></div>
+                <div>MAE VBD: <span id="maeVbd" class="font-mono font-semibold">—</span></div>
+                <div>MAPE Points: <span id="mapePts" class="font-mono font-semibold">—</span>%</div>
+                <div>MAPE VBD: <span id="mapeVbd" class="font-mono font-semibold">—</span>%</div>
+                <div>Within Tolerance: <span id="withinTol" class="font-mono font-semibold">—</span>%</div>
+              </div>
+            </div>
           </div>
+          
+          <div class="space-y-2">
+            <h3 class="font-semibold">Player Comparison</h3>
+            <div class="flex gap-2 mb-2">
+              <button id="showAll" class="px-2 py-1 text-xs rounded bg-slate-200">Show All</button>
+              <button id="showErrors" class="px-2 py-1 text-xs rounded bg-rose-100">Errors Only</button>
+              <button id="sortByError" class="px-2 py-1 text-xs rounded bg-amber-100">Sort by Error</button>
+            </div>
+            <div class="max-h-[30rem] overflow-auto border rounded">
+              <table id="results" class="min-w-full bg-white text-sm">
+                <thead class="bg-slate-100 sticky top-0">
+                  <tr>
+                    <th class="text-left p-2 border-r">Player</th>
+                    <th class="text-center p-2 border-r" colspan="3">Points</th>
+                    <th class="text-center p-2 border-r" colspan="3">VBD</th>
+                    <th class="text-center p-2">Status</th>
+                  </tr>
+                  <tr class="text-xs">
+                    <th class="text-left p-2 border-r">Name</th>
+                    <th class="text-right p-1 border-r">Current</th>
+                    <th class="text-right p-1 border-r">Golden</th>
+                    <th class="text-right p-1 border-r">Δ</th>
+                    <th class="text-right p-1 border-r">Current</th>
+                    <th class="text-right p-1 border-r">Golden</th>
+                    <th class="text-right p-1 border-r">Δ</th>
+                    <th class="text-center p-1">Pass</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
+          </div>
+          
+          <details class="border rounded">
+            <summary class="px-2 py-1 text-sm font-medium cursor-pointer">Missing Players</summary>
+            <pre id="missing" class="bg-white p-2 text-xs max-h-32 overflow-auto"></pre>
+          </details>
         </div>
       </details>
 
@@ -85,7 +146,6 @@
 
       const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
       const tbody = document.querySelector('#results tbody');
-      const summaryEl = document.getElementById('summary');
       const missingEl = document.getElementById('missing');
 
       let golden = [];
@@ -114,11 +174,16 @@
       }
 
       document.getElementById('loadGolden').addEventListener('click', async () => {
-        const text = await fetch('../../testdata/golden/debug_validation_set.csv').then(r => r.text());
-        golden = parseCsvToObjects(text);
-        alert(`Loaded golden: ${golden.length} rows`);
-        refreshCounts();
-        backupWorkspacePlayers('afterLoadGolden');
+        const dataset = document.getElementById('goldenDataset').value;
+        try {
+          const text = await fetch(dataset).then(r => r.text());
+          golden = parseCsvToObjects(text);
+          alert(`Loaded golden dataset: ${golden.length} players`);
+          refreshCounts();
+          backupWorkspacePlayers('afterLoadGolden');
+        } catch (error) {
+          alert(`Failed to load golden dataset: ${error.message}`);
+        }
       });
 
       document.getElementById('run').addEventListener('click', () => {
@@ -142,6 +207,7 @@
         const goldWithVbd = calculatePlayerVBD(goldenWithPoints, leagueSettings);
 
         const goldByName = Object.fromEntries(goldWithVbd.map(p => [p.name, p]));
+        const curVbdByName = Object.fromEntries(curWithVbd.map(p => [p.name, p]));
         const rows = [];
         const missing = [];
         let sumAbsPctPts = 0;
@@ -149,26 +215,63 @@
 
         for (const g of goldenWithPoints) {
           const c = currentByName[g.name];
-          if (!c) { missing.push(g.name); continue; }
-          const gv = goldByName[g.name]?.vbd ?? 0;
-          const cv = curWithVbd.find(p => p.name === g.name)?.vbd ?? 0;
-          const ptsDelta = Math.abs((c.points || 0) - (g.points || 0));
-          const vbdDelta = Math.abs(cv - gv);
-          const within = (ptsDelta / Math.max(1, g.points || 1)) <= tolerance && (vbdDelta / Math.max(1, Math.abs(gv) || 1)) <= tolerance;
-          rows.push({ name: g.name, ptsDelta, vbdDelta, within });
+          const gGold = goldByName[g.name];
+          if (!c) { 
+            missing.push(g.name); 
+            continue; 
+          }
+          const cVbd = curVbdByName[g.name];
+          const gv = gGold?.vbd ?? 0;
+          const cv = cVbd?.vbd ?? 0;
+          const ptsDelta = (c.points || 0) - (g.points || 0);
+          const vbdDelta = cv - gv;
+          const ptsPctError = Math.abs(ptsDelta) / Math.max(1, Math.abs(g.points || 1));
+          const vbdPctError = Math.abs(vbdDelta) / Math.max(1, Math.abs(gv) || 1);
+          const within = ptsPctError <= tolerance && vbdPctError <= tolerance;
+          
+          rows.push({ 
+            name: g.name,
+            position: g.position,
+            team: g.team,
+            currentPts: c.points || 0,
+            goldenPts: g.points || 0,
+            ptsDelta,
+            currentVbd: cv,
+            goldenVbd: gv,
+            vbdDelta,
+            ptsPctError,
+            vbdPctError,
+            within 
+          });
+          
           // accumulate percentage errors (MAPE components)
-          sumAbsPctPts += (ptsDelta / Math.max(1, Math.abs(g.points || 1)));
-          sumAbsPctVbd += (Math.abs(vbdDelta) / Math.max(1, Math.abs(gv) || 1));
+          sumAbsPctPts += ptsPctError;
+          sumAbsPctVbd += vbdPctError;
         }
 
-        const maePts = rows.reduce((a, r) => a + r.ptsDelta, 0) / (rows.length || 1);
-        const maeVbd = rows.reduce((a, r) => a + r.vbdDelta, 0) / (rows.length || 1);
+        const maePts = rows.reduce((a, r) => a + Math.abs(r.ptsDelta), 0) / (rows.length || 1);
+        const maeVbd = rows.reduce((a, r) => a + Math.abs(r.vbdDelta), 0) / (rows.length || 1);
         const withinPct = rows.length ? (rows.filter(r => r.within).length / rows.length) * 100 : 0;
         const maePtsPct = rows.length ? (sumAbsPctPts / rows.length) * 100 : 0;
         const maeVbdPct = rows.length ? (sumAbsPctVbd / rows.length) * 100 : 0;
 
+        // Update metrics display
+        document.getElementById('matchedCount').textContent = rows.length;
+        document.getElementById('missingCount').textContent = missing.length;
+        document.getElementById('maePts').textContent = round(maePts, 2);
+        document.getElementById('maeVbd').textContent = round(maeVbd, 2);
+        document.getElementById('mapePts').textContent = round(maePtsPct, 2);
+        document.getElementById('mapeVbd').textContent = round(maeVbdPct, 2);
+        document.getElementById('withinTol').textContent = round(withinPct, 1);
+        
+        // Color code the metrics
+        const withinEl = document.getElementById('withinTol');
+        withinEl.classList.remove('text-emerald-600', 'text-amber-600', 'text-rose-600');
+        if (withinPct >= 95) withinEl.classList.add('text-emerald-600');
+        else if (withinPct >= 80) withinEl.classList.add('text-amber-600');
+        else withinEl.classList.add('text-rose-600');
+
         renderTable(rows);
-        summaryEl.textContent = JSON.stringify({ count: rows.length, tolerancePct: tolPct, maePts: round(maePts,2), maeVbd: round(maeVbd,2), maePtsPct: round(maePtsPct,2), maeVbdPct: round(maeVbdPct,2), withinPct: round(withinPct,1) }, null, 2);
         missingEl.textContent = missing.join('\n');
         lastResults = { rows, maePts, maeVbd, maePtsPct, maeVbdPct, withinPct, missing, tolerance: tolPct };
       });
@@ -204,38 +307,152 @@
       // Initial counts
       refreshCounts();
 
+      let currentFilter = 'all';
+      let currentSort = 'default';
+      let allRows = [];
+      
       function renderTable(rows) {
+        allRows = rows;
+        applyFiltersAndSort();
+      }
+      
+      function applyFiltersAndSort() {
+        let displayRows = [...allRows];
+        
+        // Apply filter
+        if (currentFilter === 'errors') {
+          displayRows = displayRows.filter(r => !r.within);
+        }
+        
+        // Apply sort
+        if (currentSort === 'error') {
+          displayRows.sort((a, b) => {
+            const aError = Math.max(a.ptsPctError, a.vbdPctError);
+            const bError = Math.max(b.ptsPctError, b.vbdPctError);
+            return bError - aError;
+          });
+        }
+        
         tbody.innerHTML = '';
-        for (const r of rows) {
+        for (const r of displayRows) {
           const tr = document.createElement('tr');
-          const within = r.within ? 'text-emerald-700' : 'text-rose-700';
-          tr.innerHTML = `<td class="p-2 border-t">${r.name}</td><td class="p-2 border-t">${r.ptsDelta.toFixed(2)}</td><td class="p-2 border-t">${r.vbdDelta.toFixed(2)}</td><td class="p-2 border-t ${within}">${r.within ? '✓' : '✗'}</td>`;
+          tr.className = 'hover:bg-slate-50';
+          
+          const ptsDeltaColor = Math.abs(r.ptsDelta) > 10 ? 'text-rose-600' : Math.abs(r.ptsDelta) > 5 ? 'text-amber-600' : 'text-slate-600';
+          const vbdDeltaColor = Math.abs(r.vbdDelta) > 10 ? 'text-rose-600' : Math.abs(r.vbdDelta) > 5 ? 'text-amber-600' : 'text-slate-600';
+          const statusIcon = r.within ? '<span class="text-emerald-600">✓</span>' : '<span class="text-rose-600">✗</span>';
+          
+          tr.innerHTML = `
+            <td class="p-2 border-t border-r text-sm">
+              <div class="font-medium">${r.name}</div>
+              <div class="text-xs text-slate-500">${r.position} - ${r.team}</div>
+            </td>
+            <td class="p-1 border-t text-right text-xs">${r.currentPts.toFixed(1)}</td>
+            <td class="p-1 border-t text-right text-xs">${r.goldenPts.toFixed(1)}</td>
+            <td class="p-1 border-t border-r text-right text-xs ${ptsDeltaColor}">${r.ptsDelta > 0 ? '+' : ''}${r.ptsDelta.toFixed(1)}</td>
+            <td class="p-1 border-t text-right text-xs">${r.currentVbd.toFixed(1)}</td>
+            <td class="p-1 border-t text-right text-xs">${r.goldenVbd.toFixed(1)}</td>
+            <td class="p-1 border-t border-r text-right text-xs ${vbdDeltaColor}">${r.vbdDelta > 0 ? '+' : ''}${r.vbdDelta.toFixed(1)}</td>
+            <td class="p-1 border-t text-center">${statusIcon}</td>
+          `;
           tbody.appendChild(tr);
         }
       }
+      
+      // Filter and sort buttons
+      document.getElementById('showAll').addEventListener('click', () => {
+        currentFilter = 'all';
+        applyFiltersAndSort();
+      });
+      
+      document.getElementById('showErrors').addEventListener('click', () => {
+        currentFilter = 'errors';
+        applyFiltersAndSort();
+      });
+      
+      document.getElementById('sortByError').addEventListener('click', () => {
+        currentSort = currentSort === 'error' ? 'default' : 'error';
+        applyFiltersAndSort();
+      });
 
       function toMarkdown(res) {
         const lines = [];
-        lines.push(`# Debug Validation Report`);
+        const timestamp = new Date().toISOString().split('T')[0];
+        
+        lines.push(`# Golden Dataset Validation Report`);
+        lines.push(`*Generated: ${timestamp}*`);
         lines.push('');
-        lines.push(`Tolerance: ${res.tolerance}%`);
-        lines.push(`Count: ${res.rows.length}`);
-        lines.push(`MAE Points: ${round(res.maePts,2)}`);
-        lines.push(`MAE VBD: ${round(res.maeVbd,2)}`);
-        lines.push(`MAE Points %: ${round(res.maePtsPct,2)}%`);
-        lines.push(`MAE VBD %: ${round(res.maeVbdPct,2)}%`);
-        lines.push(`Within Tolerance: ${round(res.withinPct,1)}%`);
+        
+        lines.push('## Summary Metrics');
         lines.push('');
-        lines.push('| Player | PtsΔ | VBDΔ | Within |');
-        lines.push('|---|---:|---:|:---:|');
-        for (const r of res.rows) lines.push(`| ${r.name} | ${r.ptsDelta.toFixed(2)} | ${r.vbdDelta.toFixed(2)} | ${r.within ? '✓' : '✗'} |`);
-        if (res.missing.length) {
-          lines.push('');
-          lines.push('## Missing in Current Data');
-          for (const m of res.missing) lines.push(`- ${m}`);
+        lines.push('| Metric | Value | Status |');
+        lines.push('|--------|------:|:------:|');
+        lines.push(`| Tolerance | ${res.tolerance}% | - |`);
+        lines.push(`| Players Matched | ${res.rows.length} | - |`);
+        lines.push(`| Players Missing | ${res.missing.length} | ${res.missing.length === 0 ? '✅' : '⚠️'} |`);
+        lines.push(`| **MAE Points** | **${round(res.maePts,2)}** | ${res.maePts < 1 ? '✅' : res.maePts < 5 ? '⚠️' : '❌'} |`);
+        lines.push(`| **MAE VBD** | **${round(res.maeVbd,2)}** | ${res.maeVbd < 1 ? '✅' : res.maeVbd < 5 ? '⚠️' : '❌'} |`);
+        lines.push(`| MAPE Points | ${round(res.maePtsPct,2)}% | ${res.maePtsPct < 1 ? '✅' : res.maePtsPct < 5 ? '⚠️' : '❌'} |`);
+        lines.push(`| MAPE VBD | ${round(res.maeVbdPct,2)}% | ${res.maeVbdPct < 5 ? '✅' : res.maeVbdPct < 10 ? '⚠️' : '❌'} |`);
+        lines.push(`| **Within Tolerance** | **${round(res.withinPct,1)}%** | ${res.withinPct >= 95 ? '✅' : res.withinPct >= 80 ? '⚠️' : '❌'} |`);
+        lines.push('');
+        
+        // Add interpretation
+        lines.push('## Validation Result');
+        lines.push('');
+        if (res.withinPct >= 95 && res.maePts < 1 && res.maeVbd < 1) {
+          lines.push('✅ **PASS**: All metrics meet expected targets. The calculations are highly accurate.');
+        } else if (res.withinPct >= 80) {
+          lines.push('⚠️ **WARNING**: Some calculations are outside tolerance. Review the detailed comparison below.');
+        } else {
+          lines.push('❌ **FAIL**: Significant deviations detected. Calculations need review.');
         }
         lines.push('');
-        lines.push('> Generated by T-014a Debug Validator');
+        
+        // Detailed comparison - only show errors if many players
+        lines.push('## Detailed Player Comparison');
+        lines.push('');
+        
+        const errorsOnly = res.rows.filter(r => !r.within);
+        if (errorsOnly.length > 0 && errorsOnly.length < res.rows.length) {
+          lines.push(`### Players Outside Tolerance (${errorsOnly.length})`);
+          lines.push('');
+          lines.push('| Player | Position | Points (Cur/Gold/Δ) | VBD (Cur/Gold/Δ) |');
+          lines.push('|--------|:--------:|--------------------:|------------------:|');
+          
+          errorsOnly.slice(0, 20).forEach(r => {
+            lines.push(`| ${r.name} | ${r.position} | ${r.currentPts.toFixed(1)}/${r.goldenPts.toFixed(1)}/${r.ptsDelta > 0 ? '+' : ''}${r.ptsDelta.toFixed(1)} | ${r.currentVbd.toFixed(1)}/${r.goldenVbd.toFixed(1)}/${r.vbdDelta > 0 ? '+' : ''}${r.vbdDelta.toFixed(1)} |`);
+          });
+          
+          if (errorsOnly.length > 20) {
+            lines.push(`| ... | ... | *${errorsOnly.length - 20} more players* | ... |`);
+          }
+        } else {
+          // Show all players if small dataset or all have errors
+          lines.push('| Player | Position | Points (Cur/Gold/Δ) | VBD (Cur/Gold/Δ) | Status |');
+          lines.push('|--------|:--------:|--------------------:|------------------:|:------:|');
+          
+          res.rows.forEach(r => {
+            lines.push(`| ${r.name} | ${r.position} | ${r.currentPts.toFixed(1)}/${r.goldenPts.toFixed(1)}/${r.ptsDelta > 0 ? '+' : ''}${r.ptsDelta.toFixed(1)} | ${r.currentVbd.toFixed(1)}/${r.goldenVbd.toFixed(1)}/${r.vbdDelta > 0 ? '+' : ''}${r.vbdDelta.toFixed(1)} | ${r.within ? '✓' : '✗'} |`);
+          });
+        }
+        
+        if (res.missing.length > 0) {
+          lines.push('');
+          lines.push('### Missing Players');
+          lines.push('');
+          res.missing.slice(0, 10).forEach(m => lines.push(`- ${m}`));
+          if (res.missing.length > 10) {
+            lines.push(`- *... and ${res.missing.length - 10} more*`);
+          }
+        }
+        
+        lines.push('');
+        lines.push('---');
+        lines.push('');
+        lines.push('> Generated by FFB Debug Validator (T-014a)');
+        lines.push('> Target: MAE < 1%, Within Tolerance > 95%');
+        
         return lines.join('\n');
       }
 
@@ -282,7 +499,7 @@
         if (!Array.isArray(arr) || arr.length === 0) return;
         const cols = Array.from(new Set(arr.flatMap(row => Object.keys(row))));
         const trh = document.createElement('tr');
-        cols.forEach(k => { const th = document.createElement('th'); th.className='text-left p-2'; th.textContent = k; trh.appendChild(th); });
+        cols.forEach(k => { const th = document.createElement('th'); th.className='text-left p-2 bg-slate-100'; th.textContent = k; trh.appendChild(th); });
         thead.appendChild(trh);
         arr.forEach(row => {
           const tr = document.createElement('tr');

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test Sticky Headers</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .table-container {
+        height: 400px;
+        overflow: auto;
+        position: relative;
+      }
+      .table-container thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <h1 class="text-2xl font-semibold mb-4">Test Sticky Table Headers</h1>
+    
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Test Table 1 -->
+      <div>
+        <h2 class="text-lg font-medium mb-2">Table 1: Data Management Style</h2>
+        <div class="table-container border rounded bg-white">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="bg-slate-100 border-b">
+                <th class="text-left p-2 bg-slate-100">ID</th>
+                <th class="text-left p-2 bg-slate-100">Name</th>
+                <th class="text-left p-2 bg-slate-100">Value</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <script>
+                for (let i = 1; i <= 50; i++) {
+                  document.write(`
+                    <tr>
+                      <td class="p-2">${i}</td>
+                      <td class="p-2">Item ${i}</td>
+                      <td class="p-2">Value ${i * 10}</td>
+                    </tr>
+                  `);
+                }
+              </script>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Test Table 2 -->
+      <div>
+        <h2 class="text-lg font-medium mb-2">Table 2: Search Style</h2>
+        <div class="table-container border rounded bg-white">
+          <table class="min-w-full text-sm">
+            <thead>
+              <tr class="bg-slate-100 border-b">
+                <th class="text-left p-2 bg-slate-100">Player</th>
+                <th class="text-left p-2 bg-slate-100">Team</th>
+                <th class="text-left p-2 bg-slate-100">Points</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <script>
+                const players = ['Patrick Mahomes', 'Josh Allen', 'Lamar Jackson', 'Jalen Hurts', 'Joe Burrow'];
+                const teams = ['KC', 'BUF', 'BAL', 'PHI', 'CIN'];
+                for (let i = 0; i < 50; i++) {
+                  const idx = i % 5;
+                  document.write(`
+                    <tr>
+                      <td class="p-2">${players[idx]} ${Math.floor(i/5) + 1}</td>
+                      <td class="p-2">${teams[idx]}</td>
+                      <td class="p-2">${300 - (i * 3)}</td>
+                    </tr>
+                  `);
+                }
+              </script>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-6 p-4 bg-blue-50 rounded">
+      <h3 class="font-medium mb-2">Testing Instructions:</h3>
+      <ol class="list-decimal pl-5 space-y-1 text-sm">
+        <li>Scroll each table - headers should remain visible at the top</li>
+        <li>Headers should have gray background (bg-slate-100)</li>
+        <li>Content should scroll behind headers, not show through</li>
+        <li>Both tables should behave identically</li>
+      </ol>
+    </div>
+  </body>
+</html>

@@ -6,123 +6,216 @@
     <title>T-012 League Settings</title>
     <script src="https://cdn.tailwindcss.com"></script>
   </head>
-  <body class="bg-slate-50 text-slate-900 p-6">
-    <h1 class="text-2xl font-semibold mb-4">T-012 League Settings</h1>
+  <body class="bg-slate-50 text-slate-900 h-screen flex flex-col">
+    <div class="px-6 pt-4 pb-2">
+      <h1 class="text-2xl font-semibold">League Settings</h1>
+    </div>
 
-    <form id="settingsForm" class="space-y-4 max-w-xl">
-      <div class="grid grid-cols-2 gap-4">
-        <label class="block">Teams
-          <input name="teams" type="number" min="8" max="14" value="12" class="border p-2 w-full" />
-        </label>
-        <label class="block">Budget
-          <div class="flex items-center gap-2">
-            <span class="text-slate-500">$</span>
-            <input name="budget" type="number" min="50" max="1000" value="200" class="border p-2 w-full" />
+    <div class="flex-1 px-6 pb-4">
+      <form id="settingsForm" class="h-full flex gap-6">
+        <!-- Left Column: League Settings -->
+        <div class="flex-1 max-w-2xl space-y-3">
+          <!-- Basic Settings -->
+          <div class="grid grid-cols-3 gap-3">
+            <label class="block text-sm">
+              <span class="text-slate-600">Teams</span>
+              <input name="teams" type="number" min="8" max="14" value="12" class="border rounded p-2 w-full" />
+            </label>
+            <label class="block text-sm">
+              <span class="text-slate-600">Budget</span>
+              <div class="flex items-center gap-1">
+                <span class="text-slate-500">$</span>
+                <input name="budget" type="number" min="50" max="1000" value="200" class="border rounded p-2 w-full" />
+              </div>
+            </label>
+            <label class="block text-sm">
+              <span class="text-slate-600">Min Bid</span>
+              <div class="flex items-center gap-1">
+                <span class="text-slate-500">$</span>
+                <input name="minBid" type="number" min="1" value="1" class="border rounded p-2 w-full" />
+              </div>
+            </label>
           </div>
-        </label>
-      </div>
 
-      <fieldset class="border p-3 rounded">
-        <legend class="font-medium">Roster Starters</legend>
-        <div class="grid grid-cols-4 gap-3">
-          <label>QB <input name="r_QB" type="number" min="0" value="1" class="border p-1 w-16" /></label>
-          <label>RB <input name="r_RB" type="number" min="0" value="2" class="border p-1 w-16" /></label>
-          <label>WR <input name="r_WR" type="number" min="0" value="2" class="border p-1 w-16" /></label>
-          <label>TE <input name="r_TE" type="number" min="0" value="1" class="border p-1 w-16" /></label>
-          <label>FLEX <input name="r_FLEX" type="number" min="0" value="1" class="border p-1 w-16" /></label>
-          <label>K <input name="r_K" type="number" min="0" value="1" class="border p-1 w-16" /></label>
-          <label>DST <input name="r_DST" type="number" min="0" value="1" class="border p-1 w-16" /></label>
-          <label>BENCH <input name="r_BENCH" type="number" min="0" value="6" class="border p-1 w-16" /></label>
-        </div>
-        <div class="text-sm text-slate-600 mt-2">Roster Total: <span id="rosterTotal">0</span></div>
-      </fieldset>
+          <!-- Roster Configuration -->
+          <fieldset class="border rounded p-3">
+            <legend class="font-medium text-sm px-1">Roster Starters</legend>
+            <div class="grid grid-cols-4 gap-2 text-sm">
+              <label class="flex items-center gap-1">
+                <span class="w-12">QB</span>
+                <input name="r_QB" type="number" min="0" value="1" class="border rounded p-1 w-14" />
+              </label>
+              <label class="flex items-center gap-1">
+                <span class="w-12">RB</span>
+                <input name="r_RB" type="number" min="0" value="2" class="border rounded p-1 w-14" />
+              </label>
+              <label class="flex items-center gap-1">
+                <span class="w-12">WR</span>
+                <input name="r_WR" type="number" min="0" value="2" class="border rounded p-1 w-14" />
+              </label>
+              <label class="flex items-center gap-1">
+                <span class="w-12">TE</span>
+                <input name="r_TE" type="number" min="0" value="1" class="border rounded p-1 w-14" />
+              </label>
+              <label class="flex items-center gap-1">
+                <span class="w-12">FLEX</span>
+                <input name="r_FLEX" type="number" min="0" value="1" class="border rounded p-1 w-14" />
+              </label>
+              <label class="flex items-center gap-1">
+                <span class="w-12">K</span>
+                <input name="r_K" type="number" min="0" value="1" class="border rounded p-1 w-14" />
+              </label>
+              <label class="flex items-center gap-1">
+                <span class="w-12">DST</span>
+                <input name="r_DST" type="number" min="0" value="1" class="border rounded p-1 w-14" />
+              </label>
+              <label class="flex items-center gap-1">
+                <span class="w-12">BENCH</span>
+                <input name="r_BENCH" type="number" min="0" value="6" class="border rounded p-1 w-14" />
+              </label>
+            </div>
+            <div class="text-xs text-slate-600 mt-2">Roster Total: <span id="rosterTotal">0</span> | Rounds: <span id="derivedRounds">0</span></div>
+          </fieldset>
 
-      <fieldset class="border p-3 rounded">
-        <legend class="font-medium">Flex Slots</legend>
-        <div id="flexSlots" class="space-y-1"></div>
-      </fieldset>
+          <!-- Flex Configuration -->
+          <fieldset class="border rounded p-3">
+            <legend class="font-medium text-sm px-1">Flex Positions</legend>
+            <div id="flexSlots" class="space-y-1 text-sm"></div>
+          </fieldset>
 
-      <div class="grid grid-cols-2 gap-4">
-        <label class="block">Scoring Preset
-          <select name="scoringPreset" class="border p-2 w-full">
-            <option value="PPR">PPR</option>
-            <option value="HALF">Half PPR</option>
-            <option value="STD">Standard</option>
-            <option value="CUSTOM">Custom</option>
-          </select>
-        </label>
-        
-      </div>
-
-      <details class="border p-3 rounded">
-        <summary class="font-medium cursor-pointer select-none">Scoring Overrides (optional)</summary>
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
-          <label>Pass yds / pt <input name="s_passYdsPerPt" type="number" step="0.1" class="border p-1 w-full" placeholder="25" /></label>
-          <label>Pass TDs <input name="s_passTds" type="number" step="0.1" class="border p-1 w-full" placeholder="4" /></label>
-          <label>INT <input name="s_passInt" type="number" step="0.1" class="border p-1 w-full" placeholder="-2" /></label>
-          <label>Rush yds / pt <input name="s_rushYdsPerPt" type="number" step="0.1" class="border p-1 w-full" placeholder="10" /></label>
-          <label>Rush TDs <input name="s_rushTds" type="number" step="0.1" class="border p-1 w-full" placeholder="6" /></label>
-          <label>REC <input name="s_rec" type="number" step="0.1" class="border p-1 w-full" placeholder="1 (PPR)" /></label>
-          <label>Rec yds / pt <input name="s_recYdsPerPt" type="number" step="0.1" class="border p-1 w-full" placeholder="10" /></label>
-          <label>Rec TDs <input name="s_recTds" type="number" step="0.1" class="border p-1 w-full" placeholder="6" /></label>
-          <label>Fumbles <input name="s_fumbles" type="number" step="0.1" class="border p-1 w-full" placeholder="-2" /></label>
-        </div>
-        <div class="mt-2 text-xs text-slate-600">Leave blank to use the scoring preset defaults.</div>
-      </details>
-
-      <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <label class="block">Minimum Bid
-          <div class="flex items-center gap-2">
-            <span class="text-slate-500">$</span>
-            <input name="minBid" type="number" min="1" value="1" class="border p-2 w-full" />
+          <!-- Scoring Settings -->
+          <div class="grid grid-cols-2 gap-3">
+            <label class="block text-sm">
+              <span class="text-slate-600">Scoring Preset</span>
+              <select name="scoringPreset" class="border rounded p-2 w-full">
+                <option value="PPR">PPR</option>
+                <option value="HALF">Half PPR</option>
+                <option value="STD">Standard</option>
+                <option value="CUSTOM">Custom</option>
+              </select>
+            </label>
+            <label class="block text-sm">
+              <span class="text-slate-600">Draft Type</span>
+              <select name="draftType" class="border rounded p-2 w-full">
+                <option value="SNAKE">Snake</option>
+                <option value="LINEAR">Linear</option>
+              </select>
+            </label>
           </div>
-        </label>
-        <label class="block">Rounds
-          <input name="rounds" type="number" min="1" value="16" class="border p-2 w-full" />
-        </label>
-        <label class="block">Draft Type
-          <select name="draftType" class="border p-2 w-full">
-            <option value="SNAKE">Snake</option>
-            <option value="LINEAR">Linear</option>
-          </select>
-        </label>
-        
-      </div>
 
-      <div>
-        <div class="flex items-center justify-between">
-          <h3 class="font-medium">Owners & Draft Order</h3>
-          <div class="space-x-2">
-            <button id="resetOwners" type="button" class="px-3 py-2 rounded bg-rose-600 text-white">Reset Owners</button>
-            <button id="resetAll" type="button" class="px-3 py-2 rounded bg-amber-600 text-white">Reset League Settings</button>
+          <!-- Scoring Overrides -->
+          <details class="border rounded p-3">
+            <summary class="font-medium text-sm cursor-pointer select-none">Scoring Overrides (optional)</summary>
+            <div class="grid grid-cols-3 gap-2 mt-3 text-xs">
+              <label>
+                <span class="text-slate-600">Pass yds/pt</span>
+                <input name="s_passYdsPerPt" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="25" />
+              </label>
+              <label>
+                <span class="text-slate-600">Pass TDs</span>
+                <input name="s_passTds" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="4" />
+              </label>
+              <label>
+                <span class="text-slate-600">INT</span>
+                <input name="s_passInt" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="-2" />
+              </label>
+              <label>
+                <span class="text-slate-600">Rush yds/pt</span>
+                <input name="s_rushYdsPerPt" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="10" />
+              </label>
+              <label>
+                <span class="text-slate-600">Rush TDs</span>
+                <input name="s_rushTds" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="6" />
+              </label>
+              <label>
+                <span class="text-slate-600">REC</span>
+                <input name="s_rec" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="1" />
+              </label>
+              <label>
+                <span class="text-slate-600">Rec yds/pt</span>
+                <input name="s_recYdsPerPt" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="10" />
+              </label>
+              <label>
+                <span class="text-slate-600">Rec TDs</span>
+                <input name="s_recTds" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="6" />
+              </label>
+              <label>
+                <span class="text-slate-600">Fumbles</span>
+                <input name="s_fumbles" type="number" step="0.1" class="border rounded p-1 w-full" placeholder="-2" />
+              </label>
+            </div>
+            <div class="mt-2 text-xs text-slate-500">Leave blank to use preset defaults</div>
+          </details>
+
+          <!-- Hidden rounds field -->
+          <input name="rounds" type="hidden" value="16" />
+
+          <!-- Actions and Errors -->
+          <div class="flex items-center gap-3">
+            <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700">Save Settings</button>
+            <div id="errors" class="text-rose-600 text-sm"></div>
           </div>
         </div>
-        <table class="min-w-full bg-white rounded border text-sm mt-2">
-          <thead class="bg-slate-100"><tr><th class="text-left p-2 w-24">Draft Order</th><th class="text-left p-2">Team Name</th><th class="text-left p-2">Owner Name</th><th class="text-left p-2 w-24">Me</th></tr></thead>
-          <tbody id="ownersGrid"></tbody>
-        </table>
-      </div>
 
-      <div id="errors" class="text-rose-600 whitespace-pre-wrap"></div>
-      <button type="submit" class="px-4 py-2 rounded bg-blue-600 text-white">Save Settings</button>
-    </form>
+        <!-- Right Column: Owners & Draft Order -->
+        <div class="flex-1 max-w-xl">
+          <div class="sticky top-0">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-medium">Owners & Draft Order</h3>
+              <div class="space-x-2">
+                <button id="resetOwners" type="button" class="px-3 py-1 text-sm rounded bg-slate-600 text-white hover:bg-slate-700">Reset Owners</button>
+                <button id="resetAll" type="button" class="px-3 py-1 text-sm rounded bg-amber-600 text-white hover:bg-amber-700">Reset All</button>
+              </div>
+            </div>
+            <div class="border rounded bg-white overflow-auto max-h-[calc(100vh-12rem)]">
+              <table class="min-w-full text-sm">
+                <thead class="bg-slate-100 border-b sticky top-0 z-10">
+                  <tr>
+                    <th class="text-left p-2 w-16 bg-slate-100">Order</th>
+                    <th class="text-left p-2 bg-slate-100">Team Name</th>
+                    <th class="text-left p-2 bg-slate-100">Owner Name</th>
+                    <th class="text-center p-2 w-16 bg-slate-100">Me</th>
+                  </tr>
+                </thead>
+                <tbody id="ownersGrid" class="divide-y divide-slate-100"></tbody>
+              </table>
+            </div>
+            <div class="text-xs text-slate-500 mt-2">Drag rows to reorder draft positions</div>
+          </div>
+        </div>
+      </form>
+    </div>
 
-    <h2 class="text-xl font-medium mt-6">Summary</h2>
-    <pre id="summary" class="bg-white border rounded p-3 text-sm overflow-auto"></pre>
-
-    
+    <!-- Hidden summary element for compatibility -->
+    <pre id="summary" class="hidden"></pre>
 
     <script type="module">
       import { attachSettingsForm, regenerateOwnersGrid, resetLeagueSettings } from '../../src/ui/settings.js';
       const form = document.getElementById('settingsForm');
+      
+      // Update rounds when roster total changes
+      const updateDerivedRounds = () => {
+        const total = Array.from(form.querySelectorAll('[name^="r_"]'))
+          .reduce((sum, input) => sum + Number(input.value || 0), 0);
+        document.getElementById('rosterTotal').textContent = total;
+        document.getElementById('derivedRounds').textContent = total;
+        form.rounds.value = total;
+      };
+      
+      // Attach listeners to roster inputs
+      form.querySelectorAll('[name^="r_"]').forEach(input => {
+        input.addEventListener('input', updateDerivedRounds);
+      });
+      updateDerivedRounds();
+      
       attachSettingsForm('settingsForm', 'summary', 'errors');
+      
       document.getElementById('resetOwners').addEventListener('click', () => {
         const teams = Number(form.teams.value || 12);
         regenerateOwnersGrid(form, teams, true);
       });
+      
       document.getElementById('resetAll').addEventListener('click', () => resetLeagueSettings('settingsForm', 'summary'));
     </script>
   </body>
   </html>
-
-

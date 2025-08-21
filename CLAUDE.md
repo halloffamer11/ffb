@@ -6,6 +6,40 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 FFB (Fantasy Football Bid) Draft Helper - A client-side web application for managing fantasy football auction drafts. Built using vanilla JavaScript with no framework dependencies, following USDAD (Unified Software Development and Delivery) methodology with three-layer context architecture.
 
+## IMPORTANT: HITL Validation Protocol
+
+**When completing tasks that require Human-In-The-Loop (HITL) validation:**
+
+1. **PAUSE before marking task complete** - After implementing a feature, STOP and provide the user with:
+   - The validation page URL (e.g., `demos/ui/T-XXX_validation.html`)
+   - Step-by-step validation instructions
+   - Expected outcomes for each step
+   - Pass/fail criteria
+
+2. **Wait for user confirmation** - Do not:
+   - Mark task as CPT (complete) in tasks.md
+   - Update HITL status to PASS
+   - Merge branches
+   - Continue to next task
+   
+   Until the user explicitly confirms: "HITL validation passed" or provides feedback
+
+3. **Example validation pause format:**
+   ```
+   ## HITL Validation Required for T-XXX
+   
+   Please validate the implementation:
+   
+   1. Start dev server: `npm run dev`
+   2. Open: http://localhost:5173/demos/ui/T-XXX_validation.html
+   3. Perform these steps:
+      - Step 1: [action] → Expected: [outcome]
+      - Step 2: [action] → Expected: [outcome]
+   4. Pass criteria: [specific measurable criteria]
+   
+   Please confirm validation results before I proceed.
+   ```
+
 ## Essential Commands
 
 ### Development

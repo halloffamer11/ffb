@@ -34,7 +34,7 @@
       </div>
     </header>
 
-    <main class="w-full max-w-none px-4 py-4" data-dashboard-root>
+    <main class="w-full max-w-none px-4 py-3" data-dashboard-root>
       <!-- Loading state overlay -->
       <div id="loading" class="hidden fixed inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center">
         <div class="w-72 h-24 rounded border bg-white p-4 animate-pulse">
@@ -68,8 +68,8 @@
             </span>
           </div>
         </div>
-        <!-- Grid fills viewport height minus header/margins; keep a reasonable minimum -->
-        <div id="dashGrid" data-grid class="grid gap-4 min-h-[28rem] h-[calc(100vh-10rem)]">
+        <!-- Grid fills viewport height minus header and toolbar -->
+        <div id="dashGrid" data-grid class="grid gap-4 min-h-[40rem] h-[calc(100vh-9rem)]">
           <!-- Panel: Search & Select (fixed full width) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="search" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
@@ -179,20 +179,20 @@
       </section>
 
       <section id="view-settings" class="view hidden">
-        <div class="rounded border bg-white p-3 min-h-[calc(100vh-8rem)]">
-          <iframe src="./T-012_settings.html" class="w-full h-[calc(100vh-10rem)] border rounded"></iframe>
+        <div class="rounded border bg-white p-3 h-[calc(100vh-8rem)]">
+          <iframe src="./T-012_settings.html" class="w-full h-full border rounded"></iframe>
         </div>
       </section>
 
       <section id="view-data" class="view hidden">
-        <div class="rounded border bg-white p-3">
-          <iframe src="./T-013_data_management.html" class="w-full h-[32rem] border rounded"></iframe>
+        <div class="rounded border bg-white p-3 h-[calc(100vh-8rem)]">
+          <iframe src="./T-013_data_management.html" class="w-full h-full border rounded"></iframe>
         </div>
       </section>
 
       <section id="view-debug" class="view hidden">
-        <div class="rounded border bg-white p-3">
-          <iframe src="./T-014a_debug.html" class="w-full h-[36rem] border rounded"></iframe>
+        <div class="rounded border bg-white p-3 h-[calc(100vh-8rem)] flex flex-col">
+          <iframe src="./T-014a_debug.html" class="w-full flex-1 border rounded"></iframe>
           <p class="text-xs text-slate-600 mt-2">Debug tab is development-only and excluded from production builds.</p>
         </div>
       </section>

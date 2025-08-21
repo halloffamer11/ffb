@@ -14,19 +14,19 @@
 | T-005 | Golden Dataset Integration | CPT | PASS | tests/unit/golden.test.js; demos/ui/T-005_golden.md |
 | T-006 | Scoring System Implementation | CPT | PASS | tests/unit/scoring.test.js; demos/ui/T-006_scoring_validation.md |
 | T-006a | Workspace Implementation | CPT | PASS | src/adapters/workspace.js; tests/unit/workspace.test.js; demos/ui/T-006a_workspace.html |
-| T-007 | VBD Calculation Engine | IN-PROCESS | PENDING | tests/unit/vbd.test.js; demos/ui/T-007_vbd_validation.md |
+| T-007 | VBD Calculation Engine | CPT | PASS | src/core/vbd.js; tests/unit/vbd.test.js |
 | T-008 | Position Tier Analysis | CPT | PASS | tests/unit/tiers.test.js; demos/ui/T-008_tiers_validation.md |
 | T-009a | Basic String Search | CPT | PASS | tests/unit/search_basic.test.js; demos/ui/T-009a_search.html |
 | T-009b | Fuzzy Matching Algorithm | CPT | PASS | tests/unit/search_fuzzy.test.js; demos/ui/T-009b_fuzzy.html |
 | T-009c | Search Results UI | CPT | PASS | demos/ui/T-009c_search.html |
 | T-009d | Search Performance Optimization | CPT | PASS | tests/unit/performance.test.js; demos/ui/T-009c_search.html?hud=0 |
-| T-010 | State Management System | IN-PROCESS | PENDING | tests/unit/state.test.js; demos/ui/T-010_state.html |
+| T-010 | State Management System | CPT | PASS | src/state/store.js; demos/ui/T-010_state.html |
 | T-011 | Auto-Backup System | CPT | PASS | tests/unit/backup.test.js; demos/ui/T-014a_debug.html |
 | T-012 | League Settings UI | CPT | PASS | demos/ui/T-012_settings.html |
 | T-013 | Data Management UI | CPT | PASS | demos/ui/T-013_data_management.html |
 | T-014 | Dashboard Layout | CPT | PASS | demos/ui/T-014_dashboard.html |
-| T-014a | Debug Tab Implementation | IN-PROCESS | PENDING | demos/ui/T-014a_debug.html |
-| T-015 | Player Search Component | NOT-STARTED | PENDING | — |
+| T-014a | Debug Tab Implementation | CPT | PENDING | demos/ui/T-014a_debug.html; demos/ui/T-014a_validation.md |
+| T-015 | Player Search Component | CPT | PASS | src/ui/searchComponent.js; demos/ui/T-015_search_component.html |
 | T-016 | Player Analysis Display | CPT | PASS | src/ui/analysis.js; demos/data/T-016_analysis_players.json |
 | T-017 | Budget Tracker Component | CPT | PASS | demos/ui/T-017_budget.html |
 | T-018 | My Roster Panel | CPT | PASS | demos/ui/T-018_roster.html |
@@ -613,10 +613,10 @@ Notes: Responsive across desktop/tablet/mobile
 Result: Added `demos/ui/T-014_dashboard.html` with responsive grid panels, tabbed header (Dashboard/Settings/Data/Debug), loading overlay, and embedded existing validation pages where applicable. Desktop/tablet/mobile layouts verified visually via CSS utility classes.
 
 ### T-014a: Debug Tab Implementation ⚠️
-Status: IN-PROCESS
-HITL: PENDING (evidence: demos/ui/T-014a_debug.html)
-Updated: 2025-08-14 by role_executor
-Notes: Framework stub; metrics/report pending
+Status: CPT
+HITL: PENDING (evidence: demos/ui/T-014a_debug.html; demos/ui/T-014a_validation.md)
+Updated: 2025-08-21 by role_executor
+Notes: Complete implementation with MAE/MAPE metrics, comparison table, export
 **Complexity**: High | **Risk**: Medium
 * Core MVP feature for validation*
 - Create debug tab interface
