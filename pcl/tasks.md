@@ -30,13 +30,13 @@
 | T-016 | Player Analysis Display | CPT | PASS | src/ui/analysis.js; demos/data/T-016_analysis_players.json |
 | T-017 | Budget Tracker Component | CPT | PASS | demos/ui/T-017_budget.html |
 | T-018 | My Roster Panel | CPT | PASS | demos/ui/T-018_roster.html |
-| T-019 | Keeper Entry Mode | NOT-STARTED | PENDING | — |
-| T-020 | Draft Event Management | NOT-STARTED | PENDING | — |
+| T-019 | Keeper Entry Mode | CPT | PASS | demos/ui/T-019_keeper_entry.html |
+| T-020 | Draft Event Management | CPT | PASS | demos/ui/T-020_draft_enhanced.html |
 | T-021 | Real-time Recalculation Engine | IN-PROCESS | PENDING | src/ui/recalc.js; src/app/main.js |
 | T-022 | Draft History & Undo | IN-PROCESS | PENDING | src/ui/ledger.js; src/ui/storeBridge.js |
 | T-023 | Position Scarcity Visualization | CPT | PASS | demos/ui/T-014_dashboard.html |
 | T-024 | Comprehensive Error Handling | IN-PROCESS | PENDING | src/app/logger.js; src/ui/toast.js |
-| T-025 | Draft Recovery System | NOT-STARTED | PENDING | — |
+| T-025 | Draft Recovery System | CPT | PASS | src/ui/recovery.js; demos/ui/T-025_recovery.html |
 | T-026 | Performance Optimization | NOT-STARTED | PENDING | — |
 | T-027 | Browser Compatibility Testing | CPT | PASS | demos/ui/T-027_compat.html; demos/data/T-027_browser_matrix.md |
 | T-028 | Alpha Testing Preparation | IN-PROCESS | PENDING | demos/data/T-028_alpha_test_kit/ |
