@@ -13,7 +13,7 @@
 | T-004 | CSV Import with Validation | CPT | PASS | tests/unit/import.test.js; demos/ui/T-004_import.md |
 | T-005 | Golden Dataset Integration | CPT | PASS | tests/unit/golden.test.js; demos/ui/T-005_golden.md |
 | T-006 | Scoring System Implementation | CPT | PASS | tests/unit/scoring.test.js; demos/ui/T-006_scoring_validation.md |
-| T-006a | Workspace Implementation | NOT-STARTED | PENDING | — |
+| T-006a | Workspace Implementation | CPT | PASS | src/adapters/workspace.js; tests/unit/workspace.test.js; demos/ui/T-006a_workspace.html |
 | T-007 | VBD Calculation Engine | IN-PROCESS | PENDING | tests/unit/vbd.test.js; demos/ui/T-007_vbd_validation.md |
 | T-008 | Position Tier Analysis | CPT | PASS | tests/unit/tiers.test.js; demos/ui/T-008_tiers_validation.md |
 | T-009a | Basic String Search | CPT | PASS | tests/unit/search_basic.test.js; demos/ui/T-009a_search.html |
@@ -264,10 +264,10 @@ Notes: Presets & overrides verified
 Result: Implemented presets and custom overrides with pure calculation function; unit tests verify ordering and overrides. HITL guide added `demos/ui/T-006_scoring_validation.md`.
 
 ### ** T-006a: Workspace Implementation** ✅
-Status: NOT-STARTED
-HITL: PENDING (evidence: —)
-Updated: 2025-08-14 by role_executor
-Notes: Phase 2 item; not yet implemented
+Status: CPT
+HITL: PASS (evidence: src/adapters/workspace.js; tests/unit/workspace.test.js; demos/ui/T-006a_workspace.html)
+Updated: 2025-08-21 by role_executor
+Notes: Implemented .ffdraft save/load with SHA-256 integrity
 **Complexity**: High | **Risk**: Medium
 *Added to Phase 2 per architectural decision*
 - Implement .ffdraft file format

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>T-006a Workspace Save/Load Validation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 p-6">
+  <h1 class="text-2xl font-semibold mb-2">T-006a Workspace Save/Load Validation</h1>
+  <p class="text-sm text-slate-600 mb-4">Test complete workspace round-trip: save and load .ffdraft files with integrity checking.</p>
+
+  <div class="space-y-6">
+    <!-- Current State Display -->
+    <div class="border rounded p-4">
+      <h2 class="font-medium mb-2">Current Workspace State</h2>
+      <div class="grid grid-cols-3 gap-4 text-sm">
+        <div>
+          <span class="font-medium">League:</span>
+          <span id="leagueInfo" class="ml-1">Not loaded</span>
+        </div>
+        <div>
+          <span class="font-medium">Players:</span>
+          <span id="playerCount" class="ml-1">0</span>
+        </div>
+        <div>
+          <span class="font-medium">Picks:</span>
+          <span id="pickCount" class="ml-1">0</span>
+        </div>
+      </div>
+      <div class="mt-2">
+        <span class="font-medium text-sm">Checksum:</span>
+        <code id="checksum" class="text-xs bg-slate-100 px-1 rounded">Not calculated</code>
+      </div>
+    </div>
+
+    <!-- Save Workspace -->
+    <div class="border rounded p-4">
+      <h2 class="font-medium mb-2">Save Workspace</h2>
+      <div class="flex items-center gap-4">
+        <button id="saveBtn" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Save .ffdraft File
+        </button>
+        <span id="saveStatus" class="text-sm text-slate-600"></span>
+      </div>
+    </div>
+
+    <!-- Load Workspace -->
+    <div class="border rounded p-4">
+      <h2 class="font-medium mb-2">Load Workspace</h2>
+      <div class="space-y-2">
+        <input type="file" id="loadFile" accept=".ffdraft" class="text-sm" />
+        <div id="loadInfo" class="text-sm text-slate-600"></div>
+        <button id="loadBtn" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50" disabled>
+          Load Selected File
+        </button>
+        <div id="loadStatus" class="text-sm"></div>
+      </div>
+    </div>
+
+    <!-- Test Data Setup -->
+    <div class="border rounded p-4">
+      <h2 class="font-medium mb-2">Setup Test Data</h2>
+      <button id="setupBtn" class="px-4 py-2 bg-slate-600 text-white rounded hover:bg-slate-700">
+        Create Sample Data
+      </button>
+      <div id="setupStatus" class="mt-2 text-sm text-slate-600"></div>
+    </div>
+
+    <!-- Validation Log -->
+    <div class="border rounded p-4">
+      <h2 class="font-medium mb-2">Validation Log</h2>
+      <div id="log" class="h-32 overflow-auto bg-slate-100 rounded p-2 text-xs font-mono"></div>
+    </div>
+  </div>
+
+  <!-- Human Validation Steps -->
+  <div class="mt-8 border-t pt-4">
+    <h2 class="font-semibold mb-2">Human Validation Steps</h2>
+    <ol class="list-decimal list-inside space-y-1 text-sm text-slate-700">
+      <li>Click "Create Sample Data" to set up test league, players, and draft picks</li>
+      <li>Note the displayed checksum</li>
+      <li>Click "Save .ffdraft File" and save to your computer</li>
+      <li>Refresh the browser (F5) to clear all data</li>
+      <li>Click "Choose File" and select the saved .ffdraft file</li>
+      <li>Click "Load Selected File"</li>
+      <li>Verify:
+        <ul class="list-disc list-inside ml-4 mt-1">
+          <li>All counts match original (league teams, players, picks)</li>
+          <li>Checksum validation passes</li>
+          <li>No errors in validation log</li>
+        </ul>
+      </li>
+      <li>✅ PASS if round-trip preserves all data with valid checksum</li>
+    </ol>
+  </div>
+
+  <script type="module">
+    import { createWorkspaceAdapter } from '../../src/adapters/workspace.js';
+    import { createStorageAdapter } from '../../src/adapters/storage.js';
+
+    const workspace = createWorkspaceAdapter();
+    const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+    
+    let selectedFile = null;
+
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      const color = type === 'error' ? 'text-red-600' : type === 'success' ? 'text-green-600' : '';
+      logEl.innerHTML += `<div class="${color}">[${time}] ${message}</div>`;
+      logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    async function updateDisplay() {
+      const league = storage.get('leagueSettings') || {};
+      const players = storage.get('players') || [];
+      const state = storage.get('state') || { draft: { picks: [] } };
+      
+      document.getElementById('leagueInfo').textContent = 
+        league.teams ? `${league.teams} teams, $${league.budget || 200}` : 'Not configured';
+      document.getElementById('playerCount').textContent = players.length;
+      document.getElementById('pickCount').textContent = state.draft?.picks?.length || 0;
+      
+      // Calculate current checksum
+      try {
+        const data = workspace.gatherWorkspaceData();
+        const checksum = await workspace.calculateChecksum(data);
+        document.getElementById('checksum').textContent = checksum.substring(0, 16) + '...';
+      } catch (e) {
+        document.getElementById('checksum').textContent = 'Error calculating';
+      }
+    }
+
+    // Setup test data
+    document.getElementById('setupBtn').addEventListener('click', () => {
+      try {
+        // Clear existing data
+        localStorage.clear();
+        
+        // Set up test data
+        storage.set('leagueSettings', {
+          teams: 12,
+          budget: 200,
+          roster: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DST: 1, BENCH: 6 }
+        });
+        
+        storage.set('players', [
+          { id: 1, name: 'Patrick Mahomes', position: 'QB', team: 'KC', points: 380 },
+          { id: 2, name: 'Christian McCaffrey', position: 'RB', team: 'SF', points: 320 },
+          { id: 3, name: 'Tyreek Hill', position: 'WR', team: 'MIA', points: 280 },
+          { id: 4, name: 'Travis Kelce', position: 'TE', team: 'KC', points: 220 },
+          { id: 5, name: 'Justin Jefferson', position: 'WR', team: 'MIN', points: 300 }
+        ]);
+        
+        storage.set('state', {
+          draft: {
+            picks: [
+              { playerId: 2, playerName: 'Christian McCaffrey', teamId: 1, price: 65 },
+              { playerId: 3, playerName: 'Tyreek Hill', teamId: 2, price: 52 }
+            ]
+          }
+        });
+        
+        storage.set('starredPlayers', [1, 5]);
+        storage.set('playerNotes', { 1: 'Top QB target', 5: 'Keeper candidate' });
+        
+        document.getElementById('setupStatus').textContent = 'Sample data created successfully';
+        document.getElementById('setupStatus').className = 'mt-2 text-sm text-green-600';
+        log('Created sample data: 12 teams, 5 players, 2 picks', 'success');
+        
+        updateDisplay();
+      } catch (error) {
+        document.getElementById('setupStatus').textContent = 'Error: ' + error.message;
+        document.getElementById('setupStatus').className = 'mt-2 text-sm text-red-600';
+        log('Setup failed: ' + error.message, 'error');
+      }
+    });
+
+    // Save workspace
+    document.getElementById('saveBtn').addEventListener('click', async () => {
+      try {
+        const filename = `test_workspace_${Date.now()}.ffdraft`;
+        const result = await workspace.save(filename);
+        
+        if (result.ok) {
+          document.getElementById('saveStatus').textContent = `Saved: ${result.filename}`;
+          document.getElementById('saveStatus').className = 'text-sm text-green-600';
+          log(`Workspace saved as ${result.filename}`, 'success');
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        document.getElementById('saveStatus').textContent = 'Save failed: ' + error.message;
+        document.getElementById('saveStatus').className = 'text-sm text-red-600';
+        log('Save failed: ' + error.message, 'error');
+      }
+    });
+
+    // File selection
+    document.getElementById('loadFile').addEventListener('change', async (e) => {
+      selectedFile = e.target.files[0];
+      if (selectedFile) {
+        document.getElementById('loadBtn').disabled = false;
+        
+        // Validate file
+        const validation = await workspace.validate(selectedFile);
+        if (validation.ok) {
+          const info = validation.info;
+          document.getElementById('loadInfo').innerHTML = `
+            <div class="text-green-600">✓ Valid workspace file</div>
+            <div class="text-xs text-slate-500">
+              Version: ${info.version}, 
+              Players: ${info.playerCount}, 
+              Picks: ${info.pickCount}
+            </div>
+          `;
+          log('File validated successfully', 'success');
+        } else {
+          document.getElementById('loadInfo').innerHTML = 
+            `<div class="text-red-600">✗ Invalid file: ${validation.error}</div>`;
+          document.getElementById('loadBtn').disabled = true;
+          log('Validation failed: ' + validation.error, 'error');
+        }
+      }
+    });
+
+    // Load workspace
+    document.getElementById('loadBtn').addEventListener('click', async () => {
+      if (!selectedFile) return;
+      
+      try {
+        const result = await workspace.load(selectedFile);
+        
+        if (result.ok) {
+          document.getElementById('loadStatus').textContent = 'Workspace loaded successfully!';
+          document.getElementById('loadStatus').className = 'text-sm text-green-600';
+          log('Workspace loaded and applied', 'success');
+          
+          // Update display to show loaded data
+          updateDisplay();
+          
+          // Verify data integrity
+          const league = storage.get('leagueSettings');
+          const players = storage.get('players');
+          const state = storage.get('state');
+          
+          log(`Verified: ${league?.teams || 0} teams, ${players?.length || 0} players, ${state?.draft?.picks?.length || 0} picks`, 'success');
+        } else {
+          throw new Error(result.error);
+        }
+      } catch (error) {
+        document.getElementById('loadStatus').textContent = 'Load failed: ' + error.message;
+        document.getElementById('loadStatus').className = 'text-sm text-red-600';
+        log('Load failed: ' + error.message, 'error');
+      }
+    });
+
+    // Listen for workspace events
+    window.addEventListener('workspace:loaded', () => {
+      log('Workspace loaded event fired');
+      updateDisplay();
+    });
+
+    // Initial display update
+    updateDisplay();
+  </script>
+</body>
+</html>
