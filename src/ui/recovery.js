@@ -5,7 +5,7 @@
 
 import { createStorageAdapter } from '../adapters/storage.js';
 import { storeBridge } from './storeBridge.js';
-import { validateWorkspace } from '../adapters/workspace.js';
+import { createWorkspaceAdapter } from '../adapters/workspace.js';
 import { showToast } from './toast.js';
 
 const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
@@ -246,17 +246,22 @@ export class DraftRecoveryManager {
    */
   async recoverFromFile(file) {
     try {
-      const text = await file.text();
-      const workspace = JSON.parse(text);
+      // Validate workspace file
+      const workspaceAdapter = createWorkspaceAdapter();
+      const validation = await workspaceAdapter.validate(file);
       
-      // Validate workspace
-      const validation = await validateWorkspace(workspace);
       if (!validation.ok) {
-        throw new Error('Invalid workspace file');
+        throw new Error(validation.error || 'Invalid workspace file');
       }
       
-      // Apply workspace data
-      Object.entries(workspace.data).forEach(([key, value]) => {
+      // Load workspace data
+      const loadResult = await workspaceAdapter.load(file);
+      if (!loadResult.ok) {
+        throw new Error(loadResult.error || 'Failed to load workspace data');
+      }
+      
+      // Apply workspace data to storage
+      Object.entries(loadResult.data).forEach(([key, value]) => {
         storage.set(key, value);
       });
       
@@ -283,8 +288,9 @@ export class DraftRecoveryManager {
    */
   async exportWorkspace() {
     try {
-      const { saveWorkspace } = await import('../adapters/workspace.js');
-      await saveWorkspace();
+      const workspaceAdapter = createWorkspaceAdapter();
+      await workspaceAdapter.save();
+      showToast('Workspace exported successfully', 'success');
     } catch (err) {
       console.error('Export failed:', err);
       showToast('Export failed', 'error');

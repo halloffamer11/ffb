@@ -66,8 +66,8 @@ export async function recalcAll() {
     try {
       storage.set('players', withVbd);
       storage.set('tiers', serializeTiers(tiers));
-      // Notify listeners that players (and flags) changed
-      window.dispatchEvent(new CustomEvent('workspace:players-changed'));
+      // Don't fire workspace:players-changed here to avoid infinite loop
+      // Other UI components should listen to workspace:state-changed instead
     } catch {}
 
     const tEnd = performance.now();
@@ -81,7 +81,8 @@ export async function recalcAll() {
 export function attachRecalcListeners() {
   const handler = () => { try { queueMicrotask(recalcAll); } catch { setTimeout(recalcAll, 0); } };
   window.addEventListener('workspace:state-changed', handler);
-  window.addEventListener('workspace:players-changed', handler);
+  // Note: Don't listen to workspace:players-changed to avoid infinite loop
+  // since recalcAll updates players storage
 }
 
 function normalizeLeagueForVbd(league) {

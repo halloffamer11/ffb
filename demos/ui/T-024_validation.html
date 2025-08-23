@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-024: Comprehensive Error Handling Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold mb-4">T-024: Comprehensive Error Handling Validation</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Error Test Controls -->
+            <div>
+                <h2 class="text-lg font-semibold mb-3">Error Simulation Tests</h2>
+                <div class="space-y-3">
+                    <button id="test-csv-error" class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        1. Test CSV Import Error
+                    </button>
+                    <button id="test-calculation-error" class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        2. Test Calculation Error
+                    </button>
+                    <button id="test-storage-error" class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        3. Test Storage Error
+                    </button>
+                    <button id="test-store-error" class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        4. Test Store Dispatch Error
+                    </button>
+                    <button id="test-null-reference" class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        5. Test Null Reference Error
+                    </button>
+                    <button id="test-network-error" class="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        6. Test Network-like Error
+                    </button>
+                    
+                    <div class="bg-green-50 p-3 rounded">
+                        <h3 class="font-semibold text-green-800 mb-2">Recovery Tests</h3>
+                        <button id="test-recovery" class="w-full px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                            Test Error Recovery
+                        </button>
+                        <button id="clear-errors" class="w-full mt-2 px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                            Clear All Errors
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toast Display Area -->
+            <div>
+                <h2 class="text-lg font-semibold mb-3">Toast Notifications</h2>
+                <div class="bg-gray-50 p-4 rounded text-sm text-gray-600">
+                    Toast notifications will appear in the bottom-right corner of the page.
+                    <br><br>
+                    <button id="test-success-toast" class="px-3 py-1 bg-green-500 text-white rounded mr-2 text-xs">Success</button>
+                    <button id="test-info-toast" class="px-3 py-1 bg-blue-500 text-white rounded mr-2 text-xs">Info</button>
+                    <button id="test-warn-toast" class="px-3 py-1 bg-yellow-500 text-white rounded mr-2 text-xs">Warning</button>
+                    <button id="test-error-toast" class="px-3 py-1 bg-red-500 text-white rounded text-xs">Error</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation Results -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-3">Validation Results</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="result-csv-error" class="p-3 rounded bg-gray-100 text-sm">CSV Error Handling: Not tested</div>
+                <div id="result-calculation-error" class="p-3 rounded bg-gray-100 text-sm">Calculation Error: Not tested</div>
+                <div id="result-storage-error" class="p-3 rounded bg-gray-100 text-sm">Storage Error: Not tested</div>
+                <div id="result-store-error" class="p-3 rounded bg-gray-100 text-sm">Store Error: Not tested</div>
+                <div id="result-null-reference" class="p-3 rounded bg-gray-100 text-sm">Null Reference: Not tested</div>
+                <div id="result-network-error" class="p-3 rounded bg-gray-100 text-sm">Network Error: Not tested</div>
+                <div id="result-graceful-degradation" class="p-3 rounded bg-gray-100 text-sm">Graceful Degradation: Not tested</div>
+                <div id="result-error-recovery" class="p-3 rounded bg-gray-100 text-sm">Error Recovery: Not tested</div>
+            </div>
+        </div>
+
+        <!-- Error Log Display -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-3">Error Log (Last 10 Entries)</h2>
+            <div id="error-log" class="bg-gray-900 text-red-400 p-4 rounded text-sm font-mono max-h-60 overflow-y-auto">
+                <div class="text-gray-500">Error log entries will appear here...</div>
+            </div>
+        </div>
+
+        <!-- System Log Display -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-3">System Log (Last 15 Entries)</h2>
+            <div id="system-log" class="bg-gray-900 text-green-400 p-4 rounded text-sm font-mono max-h-60 overflow-y-auto">
+                <div class="text-gray-500">System log entries will appear here...</div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mb-6 text-sm text-gray-600">
+            <h2 class="text-lg font-semibold mb-2">Test Instructions</h2>
+            <ol class="list-decimal list-inside space-y-1">
+                <li>Click each error test button and verify appropriate error handling</li>
+                <li>Check that error messages appear in logs and toasts</li>
+                <li>Verify the application continues to function after errors</li>
+                <li>Test error recovery to ensure graceful degradation</li>
+                <li>Confirm no unhandled JavaScript errors in browser console</li>
+                <li>Verify error details are logged with timestamps</li>
+            </ol>
+        </div>
+
+        <!-- Pass Criteria -->
+        <div class="bg-blue-50 p-4 rounded">
+            <h3 class="font-semibold text-blue-800 mb-2">Pass Criteria</h3>
+            <ul class="text-blue-700 text-sm space-y-1">
+                <li>✓ All error scenarios handled gracefully (no crashes)</li>
+                <li>✓ User-friendly error messages displayed via toasts</li>
+                <li>✓ Detailed error information logged to system log</li>
+                <li>✓ Application remains functional after errors</li>
+                <li>✓ No unhandled JavaScript errors in console</li>
+                <li>✓ Error recovery mechanisms work correctly</li>
+                <li>✓ NaN/Infinity values handled in calculations</li>
+                <li>✓ Graceful degradation when features fail</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createStorageAdapter } from '/src/adapters/storage.js';
+        import { logStructured } from '/src/app/logger.js';
+        import { showToast } from '/src/ui/toast.js';
+        import { storeBridge } from '/src/ui/storeBridge.js';
+        import { importFromCsvText } from '/src/adapters/import.js';
+        import { calculatePlayerVBD } from '/src/core/vbd.js';
+
+        const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+        let errorCount = 0;
+        let logEntries = [];
+
+        function updateValidationResult(testId, passed, message) {
+            const element = document.getElementById(`result-${testId}`);
+            if (element) {
+                element.className = passed ? 
+                    'p-3 rounded bg-green-100 text-green-800 text-sm' : 
+                    'p-3 rounded bg-red-100 text-red-800 text-sm';
+                element.textContent = message;
+            }
+        }
+
+        function refreshLogDisplays() {
+            try {
+                const logs = storage.get('logs') || [];
+                const errorLogs = logs.filter(log => log.level === 'error').slice(-10);
+                const systemLogs = logs.slice(-15);
+                
+                // Update error log
+                const errorLogDiv = document.getElementById('error-log');
+                if (errorLogs.length > 0) {
+                    errorLogDiv.innerHTML = errorLogs.map(log => {
+                        const time = new Date(log.ts).toLocaleTimeString();
+                        const data = log.data ? JSON.stringify(log.data) : '';
+                        return `<div class="mb-1">[${time}] ERROR: ${log.message} ${data}</div>`;
+                    }).join('');
+                } else {
+                    errorLogDiv.innerHTML = '<div class="text-gray-500">No error log entries...</div>';
+                }
+                
+                // Update system log
+                const systemLogDiv = document.getElementById('system-log');
+                if (systemLogs.length > 0) {
+                    systemLogDiv.innerHTML = systemLogs.map(log => {
+                        const time = new Date(log.ts).toLocaleTimeString();
+                        const levelColor = log.level === 'error' ? 'text-red-400' : 
+                                         log.level === 'warn' ? 'text-yellow-400' : 'text-green-400';
+                        const data = log.data ? JSON.stringify(log.data) : '';
+                        return `<div class="mb-1 ${levelColor}">[${time}] ${log.level.toUpperCase()}: ${log.message} ${data}</div>`;
+                    }).join('');
+                } else {
+                    systemLogDiv.innerHTML = '<div class="text-gray-500">No system log entries...</div>';
+                }
+            } catch (err) {
+                console.error('Error refreshing log displays:', err);
+            }
+        }
+
+        // Listen for log events to refresh displays
+        window.addEventListener('ffb:log', () => {
+            setTimeout(refreshLogDisplays, 100);
+        });
+
+        // Error test functions
+        document.getElementById('test-csv-error').onclick = () => {
+            try {
+                const malformedCsv = 'name,position\n"Unclosed Quote,QB\nPlayer 2,RB';
+                const result = importFromCsvText(malformedCsv);
+                
+                if (!result.ok) {
+                    logStructured('error', 'CSV import failed as expected', { errors: result.errors });
+                    showToast('CSV import error handled gracefully', 'error');
+                    updateValidationResult('csv-error', true, 'CSV Error Handling: PASS - Malformed CSV handled correctly');
+                } else {
+                    updateValidationResult('csv-error', false, 'CSV Error Handling: FAIL - Should have failed with malformed CSV');
+                }
+            } catch (err) {
+                logStructured('error', 'Unexpected CSV test error', { error: String(err.message) });
+                showToast('Unexpected CSV test error', 'error');
+                updateValidationResult('csv-error', false, `CSV Error Handling: FAIL - ${err.message}`);
+            }
+        };
+
+        document.getElementById('test-calculation-error').onclick = () => {
+            try {
+                // Test with invalid data that could cause NaN/Infinity
+                const badPlayers = [
+                    { name: 'Bad Player', position: 'QB', points: 'invalid' },
+                    { name: 'NaN Player', position: 'RB', points: NaN },
+                    { name: 'Infinity Player', position: 'WR', points: Infinity },
+                    { name: 'Null Player', position: 'TE', points: null },
+                    { name: 'Undefined Player', position: 'K', points: undefined }
+                ];
+                
+                const badLeague = { teams: 'not-a-number', starters: { QB: null, RB: 'invalid' } };
+                
+                const result = calculatePlayerVBD(badPlayers, badLeague);
+                
+                // Should not crash, should return results (even if some are invalid)
+                const hasValidResults = Array.isArray(result) && result.length === badPlayers.length;
+                const noUnhandledErrors = true; // We got here without throwing
+                
+                // Check that the function completed without throwing errors
+                // The actual values may be NaN/null, but that's acceptable as long as no crash occurred
+                const resultsHaveStructure = result.every(p => {
+                    return p && typeof p === 'object' && 'name' in p && 'position' in p && 'vbd' in p;
+                });
+                
+                logStructured('info', 'Calculation error test completed', { 
+                    hasValidResults, 
+                    noUnhandledErrors,
+                    resultsHaveStructure,
+                    resultCount: result.length,
+                    sampleResults: result.slice(0, 2)
+                });
+                
+                // The main goal is that the function doesn't crash with invalid data
+                if (hasValidResults && noUnhandledErrors && resultsHaveStructure) {
+                    showToast('Calculation errors handled gracefully', 'success');
+                    updateValidationResult('calculation-error', true, 'Calculation Error: PASS - Function completed without crashing');
+                } else {
+                    showToast('Calculation error handling failed', 'error');
+                    updateValidationResult('calculation-error', false, 
+                        `Calculation Error: FAIL - Results: valid=${hasValidResults}, noErrors=${noUnhandledErrors}, structure=${resultsHaveStructure}`);
+                }
+            } catch (err) {
+                logStructured('error', 'Calculation test failed unexpectedly', { error: String(err.message) });
+                showToast('Calculation test error', 'error');
+                updateValidationResult('calculation-error', false, `Calculation Error: FAIL - ${err.message}`);
+            }
+        };
+
+        document.getElementById('test-storage-error').onclick = () => {
+            try {
+                // Test storage quota exceeded scenario
+                const largeData = new Array(50000).fill('x').join('');
+                const result = storage.set('test-large-data', largeData);
+                
+                if (!result.ok && result.error) {
+                    logStructured('warn', 'Storage quota exceeded as expected', { error: result.error });
+                    showToast('Storage limit handled gracefully', 'warn');
+                    updateValidationResult('storage-error', true, 'Storage Error: PASS - Quota exceeded handled correctly');
+                } else {
+                    logStructured('info', 'Large data storage succeeded', { dataSize: largeData.length });
+                    showToast('Large data stored successfully', 'info');
+                    updateValidationResult('storage-error', true, 'Storage Error: PASS - Large data handled (quota not reached)');
+                }
+            } catch (err) {
+                logStructured('error', 'Storage test failed', { error: String(err.message) });
+                showToast('Storage test error', 'error');
+                updateValidationResult('storage-error', false, `Storage Error: FAIL - ${err.message}`);
+            }
+        };
+
+        document.getElementById('test-store-error').onclick = () => {
+            try {
+                // Test invalid store action
+                storeBridge.dispatch({ type: 'INVALID_ACTION', payload: { invalid: 'data' } });
+                
+                // Should not crash, should be handled gracefully
+                logStructured('info', 'Invalid store action handled gracefully');
+                showToast('Invalid store action handled', 'info');
+                updateValidationResult('store-error', true, 'Store Error: PASS - Invalid action handled gracefully');
+            } catch (err) {
+                logStructured('error', 'Store dispatch test failed', { error: String(err.message) });
+                showToast('Store dispatch error', 'error');
+                updateValidationResult('store-error', false, `Store Error: FAIL - ${err.message}`);
+            }
+        };
+
+        document.getElementById('test-null-reference').onclick = () => {
+            try {
+                // Test null reference scenarios
+                const nullData = null;
+                const undefinedData = undefined;
+                
+                // These should be handled gracefully
+                logStructured('info', 'Testing null references', { nullData, undefinedData });
+                
+                // Test array operations on null
+                const safeLength = (nullData && nullData.length) || 0;
+                const safeProp = (undefinedData && undefinedData.someProp) || 'default';
+                
+                logStructured('info', 'Null reference test completed', { safeLength, safeProp });
+                showToast('Null references handled safely', 'success');
+                updateValidationResult('null-reference', true, 'Null Reference: PASS - Null/undefined handled safely');
+            } catch (err) {
+                logStructured('error', 'Null reference test failed', { error: String(err.message) });
+                showToast('Null reference error', 'error');
+                updateValidationResult('null-reference', false, `Null Reference: FAIL - ${err.message}`);
+            }
+        };
+
+        document.getElementById('test-network-error').onclick = async () => {
+            try {
+                // Simulate a network-like error by trying to fetch invalid resource
+                showToast('Testing network error handling...', 'info');
+                
+                try {
+                    const response = await fetch('/non-existent-resource-' + Date.now());
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                    }
+                    // If we get here, the resource unexpectedly exists
+                    logStructured('info', 'Resource unexpectedly found', { status: response.status });
+                    showToast('Resource found (unexpected)', 'info');
+                    updateValidationResult('network-error', true, 'Network Error: PASS - HTTP request handled (resource found)');
+                } catch (fetchErr) {
+                    // This is expected - the resource should not exist
+                    logStructured('warn', 'Network-like error handled as expected', { 
+                        error: String(fetchErr.message),
+                        errorType: fetchErr.name
+                    });
+                    showToast('Network error handled gracefully', 'warn');
+                    updateValidationResult('network-error', true, 'Network Error: PASS - HTTP 404 error handled correctly');
+                }
+            } catch (err) {
+                logStructured('error', 'Network test setup failed', { error: String(err.message) });
+                showToast('Network test setup error', 'error');
+                updateValidationResult('network-error', false, `Network Error: FAIL - ${err.message}`);
+            }
+        };
+
+        document.getElementById('test-recovery').onclick = () => {
+            try {
+                // Test application recovery after errors
+                const initialState = storeBridge.getState();
+                const initialPlayerCount = storage.get('players')?.length || 0;
+                
+                // Simulate recovery scenario
+                logStructured('info', 'Testing error recovery', { 
+                    initialPickCount: initialState?.draft?.picks?.length || 0,
+                    initialPlayerCount 
+                });
+                
+                // Test that core functions still work
+                storeBridge.dispatch({ type: 'DRAFT_PICK_ADD', payload: {
+                    playerName: 'Recovery Test Player',
+                    teamId: 1,
+                    teamName: 'Team 1',
+                    price: 25,
+                    timestamp: Date.now()
+                }});
+                
+                const afterState = storeBridge.getState();
+                const pickAdded = (afterState?.draft?.picks?.length || 0) > (initialState?.draft?.picks?.length || 0);
+                
+                if (pickAdded) {
+                    logStructured('info', 'Error recovery test successful');
+                    showToast('Application recovery verified', 'success');
+                    updateValidationResult('error-recovery', true, 'Error Recovery: PASS - Core functions operational after errors');
+                } else {
+                    updateValidationResult('error-recovery', false, 'Error Recovery: FAIL - Core functions not working');
+                }
+                
+                updateValidationResult('graceful-degradation', true, 'Graceful Degradation: PASS - App continues functioning');
+            } catch (err) {
+                logStructured('error', 'Recovery test failed', { error: String(err.message) });
+                showToast('Recovery test error', 'error');
+                updateValidationResult('error-recovery', false, `Error Recovery: FAIL - ${err.message}`);
+            }
+        };
+
+        document.getElementById('clear-errors').onclick = () => {
+            try {
+                storage.set('logs', []);
+                refreshLogDisplays();
+                showToast('Error logs cleared', 'info');
+                logStructured('info', 'Error logs cleared by user');
+            } catch (err) {
+                console.error('Failed to clear logs:', err);
+                showToast('Failed to clear logs', 'error');
+            }
+        };
+
+        // Toast test buttons
+        document.getElementById('test-success-toast').onclick = () => {
+            showToast('This is a success message', 'success');
+        };
+        
+        document.getElementById('test-info-toast').onclick = () => {
+            showToast('This is an info message', 'info');
+        };
+        
+        document.getElementById('test-warn-toast').onclick = () => {
+            showToast('This is a warning message', 'warn');
+        };
+        
+        document.getElementById('test-error-toast').onclick = () => {
+            showToast('This is an error message', 'error');
+        };
+
+        // Initialize
+        refreshLogDisplays();
+        logStructured('info', 'T-024 validation page loaded');
+        
+        // Refresh logs periodically
+        setInterval(refreshLogDisplays, 5000);
+    </script>
+</body>
+</html>

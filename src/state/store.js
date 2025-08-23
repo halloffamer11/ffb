@@ -163,6 +163,10 @@ export class DraftStore {
         this.state.draft.keepers = [];
         break;
       }
+      case 'DRAFT_CLEAR': {
+        this.state.draft.picks = [];
+        break;
+      }
       default: {
         // Unknown action: no-op for forward compatibility
         break;
