@@ -1,9 +1,17 @@
 import { createStorageAdapter } from '../adapters/storage.js';
+import { storeBridge } from './storeBridge.js';
 
 const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
 
 function loadSettings() { return storage.get('leagueSettings') || { teams: 12, owners: [] }; }
-function loadState() { return storage.get('state') || { draft: { picks: [] } }; }
+function loadState() { 
+  // Always use store bridge for consistent state
+  try {
+    return storeBridge.getState();
+  } catch {
+    return storage.get('state') || { draft: { picks: [] } };
+  }
+}
 
 function findOwnerName(owners, teamId) {
   const o = (owners || []).find(x => Number(x.id) === Number(teamId));
@@ -63,35 +71,53 @@ export function initLedgerWidget(container) {
     </div>`).join('');
   }
 
-  // Initial + live updates via storage
+  // Initial render
   render();
+  
+  // Listen to storage events for cross-tab sync
   window.addEventListener('storage', (e) => {
     try {
       if (!e) return;
       const k = String(e.key || '');
-      if (k.includes('workspace::state') || k.includes('workspace::leagueSettings') || k.includes('workspace::players')) render();
+      if (k.includes('workspace::state') || k.includes('workspace::leagueSettings') || k.includes('workspace::players')) {
+        render();
+        refreshButtons();
+      }
     } catch {}
   });
-  // Also listen to in-app custom events fired by Draft widget
-  window.addEventListener('workspace:state-changed', render);
+  
+  // Listen to in-app custom events
+  window.addEventListener('workspace:state-changed', () => {
+    render();
+    refreshButtons();
+  });
   window.addEventListener('workspace:players-changed', render);
 
-  // Undo/Redo controls: use storeBridge if available, fall back to storage snapshot (no-op)
-  try {
-    import('./storeBridge.js').then(mod => {
-      const bridge = mod.storeBridge;
-      const refreshButtons = () => {
-        try {
-          undoBtn.disabled = !bridge.canUndo();
-          redoBtn.disabled = !bridge.canRedo();
-        } catch {}
-      };
-      refreshButtons();
-      bridge.subscribe('change', () => { render(); refreshButtons(); });
-      undoBtn?.addEventListener('click', () => { bridge.undo(); });
-      redoBtn?.addEventListener('click', () => { bridge.redo(); });
-    }).catch(() => {});
-  } catch {}
+  // Undo/Redo controls using storeBridge
+  const refreshButtons = () => {
+    try {
+      undoBtn.disabled = !storeBridge.canUndo();
+      redoBtn.disabled = !storeBridge.canRedo();
+    } catch {}
+  };
+  refreshButtons();
+  
+  // Subscribe to store changes for real-time updates
+  storeBridge.subscribe('change', () => { 
+    render(); 
+    refreshButtons(); 
+  });
+  
+  undoBtn?.addEventListener('click', () => { 
+    storeBridge.undo(); 
+    render();
+    refreshButtons();
+  });
+  redoBtn?.addEventListener('click', () => { 
+    storeBridge.redo(); 
+    render();
+    refreshButtons();
+  });
 }
 
 

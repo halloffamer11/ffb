@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T-020: Enhanced Draft Event Management</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100">
+  <div class="container mx-auto p-4 max-w-6xl">
+    <h1 class="text-2xl font-bold mb-4">T-020: Enhanced Draft Event Management</h1>
+    
+    <div class="grid grid-cols-2 gap-4">
+      <!-- Enhanced Draft Widget -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-4 border-b bg-gray-50">
+          <h2 class="font-semibold">Two-Phase Draft Entry</h2>
+        </div>
+        <div id="draftWidget" class="h-[700px] overflow-auto"></div>
+      </div>
+      
+      <!-- Performance Metrics -->
+      <div class="space-y-4">
+        <!-- Draft Ledger -->
+        <div class="bg-white rounded-lg shadow">
+          <div class="p-4 border-b bg-gray-50">
+            <h2 class="font-semibold">Draft Ledger</h2>
+          </div>
+          <div id="ledgerWidget" class="h-[300px] overflow-auto"></div>
+        </div>
+        
+        <!-- Performance Stats -->
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="font-semibold mb-2">Performance Metrics</h3>
+          <div id="metrics" class="space-y-2 text-sm"></div>
+          <button id="startRapidTest" class="mt-4 px-4 py-2 bg-purple-600 text-white rounded">
+            Start 50-Pick Rapid Test
+          </button>
+        </div>
+        
+        <!-- Test Data -->
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="font-semibold mb-2">Test Controls</h3>
+          <button id="loadTestData" class="px-4 py-2 bg-blue-600 text-white rounded">
+            Load 300 Test Players
+          </button>
+          <button id="clearPicks" class="ml-2 px-4 py-2 bg-red-600 text-white rounded">
+            Clear All Picks
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initEnhancedDraftWidget } from '/src/ui/draftEnhanced.js';
+    import { initLedgerWidget } from '/src/ui/ledger.js';
+    import { createStorageAdapter } from '/src/adapters/storage.js';
+    import { storeBridge } from '/src/ui/storeBridge.js';
+    
+    const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+    
+    // Initialize widgets
+    initEnhancedDraftWidget(document.getElementById('draftWidget'));
+    initLedgerWidget(document.getElementById('ledgerWidget'));
+    
+    // Performance tracking
+    let startTime = null;
+    let pickCount = 0;
+    
+    function updateMetrics() {
+      const state = storeBridge.getState();
+      const picks = state?.draft?.picks || [];
+      const currentCount = picks.length;
+      
+      if (currentCount > pickCount && startTime) {
+        const elapsed = (Date.now() - startTime) / 1000;
+        const rate = currentCount / elapsed;
+        
+        document.getElementById('metrics').innerHTML = `
+          <div>Total Picks: ${currentCount}</div>
+          <div>Time Elapsed: ${elapsed.toFixed(1)}s</div>
+          <div>Picks/Second: ${rate.toFixed(2)}</div>
+          <div>Avg Time/Pick: ${(elapsed / currentCount).toFixed(2)}s</div>
+        `;
+      }
+      
+      pickCount = currentCount;
+    }
+    
+    // Subscribe to changes
+    storeBridge.subscribe('change', updateMetrics);
+    
+    // Test controls
+    document.getElementById('loadTestData').addEventListener('click', () => {
+      // Generate 300 test players
+      const positions = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+      const teams = ['KC', 'SF', 'BUF', 'DAL', 'GB', 'TB', 'LAR', 'CIN', 'MIA', 'PHI'];
+      const players = [];
+      
+      for (let i = 0; i < 300; i++) {
+        const pos = positions[Math.floor(Math.random() * positions.length)];
+        const team = teams[Math.floor(Math.random() * teams.length)];
+        players.push({
+          id: `player_${i}`,
+          name: `Player ${i + 1}`,
+          team,
+          position: pos,
+          points: 50 + Math.random() * 350,
+          drafted: false
+        });
+      }
+      
+      storage.set('players', players);
+      storage.set('leagueSettings', {
+        teams: 12,
+        userTeamId: 1,
+        budget: 200,
+        owners: Array.from({length: 12}, (_, i) => ({
+          id: i + 1,
+          team: `Team ${i + 1}`,
+          name: `Owner ${i + 1}`
+        }))
+      });
+      
+      location.reload();
+    });
+    
+    document.getElementById('clearPicks').addEventListener('click', () => {
+      const state = storeBridge.getState();
+      state.draft.picks = [];
+      storage.set('state', state);
+      
+      // Reset all players to undrafted
+      const players = storage.get('players') || [];
+      players.forEach(p => p.drafted = false);
+      storage.set('players', players);
+      
+      location.reload();
+    });
+    
+    document.getElementById('startRapidTest').addEventListener('click', async () => {
+      startTime = Date.now();
+      pickCount = 0;
+      
+      alert('Starting rapid test! Use the rapid entry box to quickly add 50 picks.\n\nExample format: "Player 1, 3, 25"');
+      
+      updateMetrics();
+    });
+    
+    // Initial update
+    updateMetrics();
+  </script>
+</body>
+</html>

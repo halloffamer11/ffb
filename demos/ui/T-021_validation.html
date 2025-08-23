@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-021: Real-time Recalculation Engine Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .timing-info { font-family: 'Monaco', 'Consolas', monospace; }
+        .metric-box { border: 2px solid #e5e7eb; }
+        .metric-pass { border-color: #10b981; background-color: #f0fdf4; }
+        .metric-fail { border-color: #ef4444; background-color: #fef2f2; }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold mb-4">T-021: Real-time Recalculation Engine Validation</h1>
+        
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Performance Metrics (Target: &lt;500ms total)</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div id="points-metric" class="metric-box p-3 rounded text-center">
+                    <div class="text-sm text-gray-600">Points Calc</div>
+                    <div id="points-time" class="text-lg font-bold timing-info">-</div>
+                </div>
+                <div id="vbd-metric" class="metric-box p-3 rounded text-center">
+                    <div class="text-sm text-gray-600">VBD Calc</div>
+                    <div id="vbd-time" class="text-lg font-bold timing-info">-</div>
+                </div>
+                <div id="tiers-metric" class="metric-box p-3 rounded text-center">
+                    <div class="text-sm text-gray-600">Tiers Calc</div>
+                    <div id="tiers-time" class="text-lg font-bold timing-info">-</div>
+                </div>
+                <div id="total-metric" class="metric-box p-3 rounded text-center">
+                    <div class="text-sm text-gray-600">Total Time</div>
+                    <div id="total-time" class="text-lg font-bold timing-info">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Draft Test Controls</h2>
+            <div class="space-y-2 mb-4">
+                <div class="flex gap-2">
+                    <button id="load-data" class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        1. Load Test Data
+                    </button>
+                    <span id="data-status" class="px-3 py-2 text-sm">No data loaded</span>
+                </div>
+                <div class="flex gap-2">
+                    <button id="draft-rb" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        2. Draft Top RB
+                    </button>
+                    <button id="draft-qb" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        3. Draft Top QB  
+                    </button>
+                    <button id="draft-wr" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        4. Draft Top WR
+                    </button>
+                    <button id="undo-pick" class="px-4 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600">
+                        5. Undo Last Pick
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="rapid-draft" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        6. Rapid Draft 10 Players
+                    </button>
+                    <button id="clear-draft" class="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                        Clear All Picks
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Validation Status</h2>
+            <div id="validation-results" class="space-y-2">
+                <div id="result-data-load" class="p-2 rounded bg-gray-100">Data Load: Not tested</div>
+                <div id="result-single-pick" class="p-2 rounded bg-gray-100">Single Pick Recalc: Not tested</div>
+                <div id="result-undo-recalc" class="p-2 rounded bg-gray-100">Undo Recalc: Not tested</div>
+                <div id="result-rapid-draft" class="p-2 rounded bg-gray-100">Rapid Draft Performance: Not tested</div>
+                <div id="result-ui-freeze" class="p-2 rounded bg-gray-100">UI Freeze Check: Not tested</div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Draft Status</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <div class="text-sm text-gray-600">Total Picks:</div>
+                    <div id="pick-count" class="text-lg font-bold">0</div>
+                </div>
+                <div>
+                    <div class="text-sm text-gray-600">Last Pick:</div>
+                    <div id="last-pick" class="text-lg">None</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-2">Timing Log (Last 5 Operations)</h2>
+            <div id="timing-log" class="bg-gray-50 p-3 rounded text-sm timing-info max-h-40 overflow-y-auto">
+                <div class="text-gray-500">Timing information will appear here...</div>
+            </div>
+        </div>
+
+        <div class="mb-6 text-sm text-gray-600">
+            <h2 class="text-lg font-semibold mb-2">Test Instructions</h2>
+            <ol class="list-decimal list-inside space-y-1">
+                <li>Click "Load Test Data" to load sample players and league settings</li>
+                <li>Click draft buttons to add picks and observe recalculation times</li>
+                <li>Try "Undo Last Pick" to test undo recalculation</li>
+                <li>Use "Rapid Draft" to test performance under load</li>
+                <li>Verify all operations complete within 500ms total time</li>
+                <li>Check that UI remains responsive during all operations</li>
+            </ol>
+        </div>
+
+        <div class="bg-blue-50 p-4 rounded">
+            <h3 class="font-semibold text-blue-800 mb-2">Pass Criteria</h3>
+            <ul class="text-blue-700 text-sm space-y-1">
+                <li>✓ Total recalculation time consistently &lt;500ms</li>
+                <li>✓ Points calculation &lt;50ms</li>
+                <li>✓ VBD calculation &lt;200ms</li>
+                <li>✓ Tier calculation &lt;100ms</li>
+                <li>✓ UI remains responsive during rapid drafting</li>
+                <li>✓ Undo operations trigger recalculation correctly</li>
+                <li>✓ No JavaScript errors in console</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createStorageAdapter } from '/src/adapters/storage.js';
+        import { recalcAll, attachRecalcListeners } from '/src/ui/recalc.js';
+        import { getStore } from '/src/ui/storeBridge.js';
+        import { padToTargetCount } from '/src/adapters/golden.js';
+
+        const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+        let timingLog = [];
+        let draftedPlayers = [];
+
+        // Override console.log to capture timing information
+        const originalConsoleLog = console.log;
+        console.log = function(...args) {
+            if (args[0]?.includes && args[0].includes('timing:')) {
+                const logEntry = args.join(' ');
+                timingLog.unshift(logEntry);
+                if (timingLog.length > 5) timingLog.pop();
+                updateTimingDisplay();
+                
+                // Parse timing for metrics
+                if (logEntry.includes('recalc.')) {
+                    const match = logEntry.match(/recalc\.(\w+).*?(\d+\.?\d*)/);
+                    if (match) {
+                        const [, operation, time] = match;
+                        updateMetricDisplay(operation, parseFloat(time));
+                    }
+                }
+            }
+            return originalConsoleLog.apply(console, args);
+        };
+
+        function updateTimingDisplay() {
+            const logDiv = document.getElementById('timing-log');
+            if (timingLog.length > 0) {
+                logDiv.innerHTML = timingLog.map(entry => 
+                    `<div class="mb-1">${entry}</div>`
+                ).join('');
+            }
+        }
+
+        function updateMetricDisplay(operation, timeMs) {
+            const metricElement = document.getElementById(`${operation}-metric`);
+            const timeElement = document.getElementById(`${operation}-time`);
+            
+            if (timeElement) {
+                timeElement.textContent = `${timeMs.toFixed(1)}ms`;
+                
+                // Set pass/fail styling based on targets
+                const targets = { points: 50, vbd: 200, tiers: 100, total: 500 };
+                const target = targets[operation] || 500;
+                
+                metricElement.className = timeMs <= target ? 
+                    'metric-box metric-pass p-3 rounded text-center' : 
+                    'metric-box metric-fail p-3 rounded text-center';
+            }
+        }
+
+        function updateValidationResult(testId, passed, message) {
+            const element = document.getElementById(`result-${testId}`);
+            if (element) {
+                element.className = passed ? 
+                    'p-2 rounded bg-green-100 text-green-800' : 
+                    'p-2 rounded bg-red-100 text-red-800';
+                element.textContent = message;
+            }
+        }
+
+        function updateDraftStatus() {
+            const store = getStore();
+            const picks = store.getState()?.draft?.picks || [];
+            
+            document.getElementById('pick-count').textContent = picks.length;
+            
+            if (picks.length > 0) {
+                const lastPick = picks[picks.length - 1];
+                document.getElementById('last-pick').textContent = 
+                    `${lastPick.playerName} to ${lastPick.teamName} ($${lastPick.price})`;
+            } else {
+                document.getElementById('last-pick').textContent = 'None';
+            }
+        }
+
+        // Create a simple test dataset
+        function createTestDataset(count = 300) {
+            const positions = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+            const teams = ['KC','SF','BUF','PHI','DAL','MIA','CIN','BAL','DET','GB','MIN','NYJ','LAR','SEA'];
+            const players = [];
+            
+            for (let i = 0; i < count; i++) {
+                const position = positions[i % positions.length];
+                const team = teams[i % teams.length];
+                const points = Math.max(5, 350 - i * 1.2 + (Math.random() * 20 - 10));
+                
+                players.push({
+                    id: `player_${i + 1}`,
+                    name: `${position} Player ${i + 1}`,
+                    team,
+                    position,
+                    points: Math.round(points * 10) / 10,
+                    injuryStatus: 0, // HEALTHY
+                    projections: {
+                        stats: position === 'QB' ? { pass_yds: 4000, pass_tds: 25 } :
+                               position === 'RB' ? { rush_yds: 1200, rush_tds: 8 } :
+                               position === 'WR' ? { rec: 80, rec_yds: 1000, rec_tds: 6 } :
+                               position === 'TE' ? { rec: 60, rec_yds: 800, rec_tds: 4 } : {}
+                    },
+                    drafted: false
+                });
+            }
+            
+            return players;
+        }
+
+        // Event Listeners
+        document.getElementById('load-data').onclick = async () => {
+            try {
+                const players = createTestDataset(300);
+                const league = {
+                    teams: 12,
+                    roster: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DST: 1 },
+                    scoring: { preset: 'PPR' }
+                };
+                
+                storage.set('players', players);
+                storage.set('leagueSettings', league);
+                
+                await recalcAll();
+                
+                document.getElementById('data-status').textContent = 
+                    `Loaded ${players.length} players`;
+                updateValidationResult('data-load', true, 'Data Load: PASS - 300 players loaded');
+            } catch (err) {
+                console.error('Load data error:', err);
+                updateValidationResult('data-load', false, `Data Load: FAIL - ${err.message}`);
+            }
+        };
+
+        document.getElementById('draft-rb').onclick = async () => {
+            await draftTopPlayer('RB');
+        };
+
+        document.getElementById('draft-qb').onclick = async () => {
+            await draftTopPlayer('QB');
+        };
+
+        document.getElementById('draft-wr').onclick = async () => {
+            await draftTopPlayer('WR');
+        };
+
+        async function draftTopPlayer(position) {
+            const players = storage.get('players') || [];
+            const topPlayer = players
+                .filter(p => p.position === position && !p.drafted)
+                .sort((a, b) => (b.points || 0) - (a.points || 0))[0];
+                
+            if (!topPlayer) {
+                alert(`No available ${position} players`);
+                return;
+            }
+
+            const store = getStore();
+            const startTime = performance.now();
+            
+            store.dispatch({
+                type: 'DRAFT_PICK_ADD',
+                payload: {
+                    playerName: topPlayer.name,
+                    playerId: topPlayer.id,
+                    teamId: 1,
+                    teamName: 'Team 1',
+                    price: 35,
+                    timestamp: Date.now()
+                }
+            });
+            
+            const endTime = performance.now();
+            const totalTime = endTime - startTime;
+            
+            draftedPlayers.push(topPlayer.name);
+            updateDraftStatus();
+            
+            updateValidationResult('single-pick', totalTime <= 500, 
+                `Single Pick Recalc: ${totalTime <= 500 ? 'PASS' : 'FAIL'} - ${totalTime.toFixed(1)}ms`);
+        }
+
+        document.getElementById('undo-pick').onclick = async () => {
+            const store = getStore();
+            const startTime = performance.now();
+            
+            store.undo();
+            
+            const endTime = performance.now();
+            const totalTime = endTime - startTime;
+            
+            if (draftedPlayers.length > 0) {
+                draftedPlayers.pop();
+            }
+            updateDraftStatus();
+            
+            updateValidationResult('undo-recalc', totalTime <= 500,
+                `Undo Recalc: ${totalTime <= 500 ? 'PASS' : 'FAIL'} - ${totalTime.toFixed(1)}ms`);
+        };
+
+        document.getElementById('rapid-draft').onclick = async () => {
+            const players = storage.get('players') || [];
+            const availablePlayers = players.filter(p => !p.drafted).slice(0, 10);
+            
+            if (availablePlayers.length < 10) {
+                alert('Need at least 10 available players for rapid draft test');
+                return;
+            }
+
+            const store = getStore();
+            const startTime = performance.now();
+            let maxOperationTime = 0;
+            
+            for (let i = 0; i < 10; i++) {
+                const opStart = performance.now();
+                
+                store.dispatch({
+                    type: 'DRAFT_PICK_ADD',
+                    payload: {
+                        playerName: availablePlayers[i].name,
+                        playerId: availablePlayers[i].id,
+                        teamId: (i % 12) + 1,
+                        teamName: `Team ${(i % 12) + 1}`,
+                        price: 20 - i,
+                        timestamp: Date.now()
+                    }
+                });
+                
+                const opEnd = performance.now();
+                const opTime = opEnd - opStart;
+                maxOperationTime = Math.max(maxOperationTime, opTime);
+                
+                // Small delay to prevent overwhelming
+                await new Promise(resolve => setTimeout(resolve, 10));
+            }
+            
+            const endTime = performance.now();
+            const totalTime = endTime - startTime;
+            
+            updateDraftStatus();
+            
+            updateValidationResult('rapid-draft', maxOperationTime <= 500,
+                `Rapid Draft Performance: ${maxOperationTime <= 500 ? 'PASS' : 'FAIL'} - Max: ${maxOperationTime.toFixed(1)}ms, Total: ${totalTime.toFixed(1)}ms`);
+            
+            updateValidationResult('ui-freeze', maxOperationTime <= 100,
+                `UI Freeze Check: ${maxOperationTime <= 100 ? 'PASS' : 'FAIL'} - Max operation: ${maxOperationTime.toFixed(1)}ms`);
+        };
+
+        document.getElementById('clear-draft').onclick = () => {
+            const store = getStore();
+            store.dispatch({ type: 'CLEAR_DRAFT' });
+            draftedPlayers = [];
+            updateDraftStatus();
+        };
+
+        // Initialize
+        attachRecalcListeners();
+        updateDraftStatus();
+        
+        // Listen for state changes to update display
+        window.addEventListener('workspace:state-changed', updateDraftStatus);
+    </script>
+</body>
+</html>

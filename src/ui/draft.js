@@ -1,5 +1,5 @@
 import { createStorageAdapter } from '../adapters/storage.js';
-import { storeBridge } from './storeBridge.js';
+import { storeBridge, getStore } from './storeBridge.js';
 import { parseQuickEntry, formatPickLogLine, isPlayerAlreadyDrafted } from './draftUtils.js';
 import { showToast } from './toast.js';
 // Draft widget relies on Search & Select widget for player selection
@@ -22,10 +22,16 @@ function loadPlayers() {
 }
 
 function loadState() {
-  return storage.get('state') || { draft: { picks: [] } };
+  // Always use store bridge for consistent state
+  try {
+    return storeBridge.getState();
+  } catch {
+    return storage.get('state') || { draft: { picks: [] } };
+  }
 }
 
 function saveState(st) {
+  // Deprecated - use storeBridge instead
   storage.set('state', st);
 }
 
@@ -116,9 +122,9 @@ export function initDraftWidget(container) {
   function commitDraft(teamId, pr) {
     if (!selected) { msg.textContent = 'Select a player in Search & Select.'; return; }
     if (!Number.isFinite(pr) || pr < 1) { msg.textContent = 'Enter a valid price.'; return; }
-    // Already drafted guard
+    // Already drafted guard - use store for consistency
     try {
-      const stCheck = storage.get('state') || { draft: { picks: [] } };
+      const stCheck = storeBridge.getState();
       const picksNow = Array.isArray(stCheck?.draft?.picks) ? stCheck.draft.picks : [];
       if (isPlayerAlreadyDrafted(picksNow, selected)) {
         msg.textContent = 'Player already drafted.';
@@ -128,7 +134,7 @@ export function initDraftWidget(container) {
     // Enforce roster limits with FLEX + BENCH policy
     try {
       const settings = storage.get('leagueSettings') || {}; const roster = settings.roster || {};
-      const stCheck = storage.get('state') || { draft: { picks: [] } };
+      const stCheck = storeBridge.getState();
       const picksNow = Array.isArray(stCheck?.draft?.picks) ? stCheck.draft.picks : [];
       const myPicks = picksNow.filter(p => Number(p.teamId) === teamId);
       const players = storage.get('players') || [];
@@ -148,15 +154,15 @@ export function initDraftWidget(container) {
     } catch {}
     // Normalize keys for robust joins (string id + name)
     const pick = { playerId: selected.id, playerName: selected.name, teamId: Number(teamId), price: pr };
-    let usedStore = false;
-    try { storeBridge.addPick(pick); usedStore = true; } catch {
-      const st = loadState();
-      st.draft = st.draft || { picks: [] };
-      st.draft.picks.push({ ...pick, timestamp: Date.now() });
-      saveState(st);
+    // Always use store bridge for consistency
+    try { 
+      storeBridge.addPick(pick);
+      // Store bridge emits events automatically
+    } catch (err) {
+      console.error('Failed to add pick via store bridge:', err);
+      msg.textContent = 'Error adding pick. Please try again.';
+      return;
     }
-    // Notify in-app listeners (widgets) immediately
-    try { window.dispatchEvent(new CustomEvent('workspace:state-changed')); } catch {}
     // Also mark player as drafted in workspace players to keep Search UI in sync
     try {
       const all = storage.get('players') || [];
@@ -181,7 +187,7 @@ export function initDraftWidget(container) {
     try { showToast(msg.textContent, 'success', 2000); } catch {}
     // Persistent confirmation line: "R# P# team draft player for $XX"
     try {
-      const stNow = usedStore ? storeBridge.getState() : loadState();
+      const stNow = storeBridge.getState();
       const totalPicks = Array.isArray(stNow?.draft?.picks) ? stNow.draft.picks.length : 0; // after append
       const teams = Number(settings?.teams || settings?.owners?.length || 12);
       const teamName = settings.owners.find(o => o.id === teamId)?.team || `Team ${teamId}`;
@@ -200,8 +206,14 @@ export function initDraftWidget(container) {
     const pr = Number(price?.value || 1);
     if (Number.isInteger(idx) && idx > 0) {
       const update = { playerId: selected?.id, playerName: selected?.name, teamId, price: pr };
-      try { storeBridge.editPick(idx, update); showToast(`Edited pick #${idx}`, 'success', 1500); } catch {}
-      try { window.dispatchEvent(new CustomEvent('workspace:state-changed')); } catch {}
+      try { 
+        storeBridge.editPick(idx, update); 
+        showToast(`Edited pick #${idx}`, 'success', 1500);
+        // Store bridge emits events automatically
+      } catch (err) {
+        console.error('Failed to edit pick:', err);
+        msg.textContent = 'Error editing pick. Please try again.';
+      }
       setSelected(null);
       const editIdxEl = wrapper.querySelector('#editIdx'); if (editIdxEl) editIdxEl.value = '';
       return;

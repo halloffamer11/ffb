@@ -140,6 +140,33 @@ export class DraftStore {
         }
         break;
       }
+      case 'KEEPER_ADD': {
+        if (!this.state.draft.keepers) this.state.draft.keepers = [];
+        this.state.draft.keepers.push({ ...payload });
+        break;
+      }
+      case 'KEEPER_UPDATE_COST': {
+        const { index, cost } = payload || {};
+        if (Number.isInteger(index) && index >= 0 && index < (this.state.draft.keepers?.length || 0)) {
+          this.state.draft.keepers[index].cost = cost;
+        }
+        break;
+      }
+      case 'KEEPER_REMOVE': {
+        const index = payload;
+        if (Number.isInteger(index) && index >= 0 && index < (this.state.draft.keepers?.length || 0)) {
+          this.state.draft.keepers.splice(index, 1);
+        }
+        break;
+      }
+      case 'KEEPER_CLEAR': {
+        this.state.draft.keepers = [];
+        break;
+      }
+      case 'DRAFT_CLEAR': {
+        this.state.draft.picks = [];
+        break;
+      }
       default: {
         // Unknown action: no-op for forward compatibility
         break;
@@ -183,7 +210,7 @@ function createInitialState() {
   return {
     settings: {},
     players: [],
-    draft: { picks: [] }
+    draft: { picks: [], keepers: [] }
   };
 }
 

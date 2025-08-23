@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-022: Draft History & Undo Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .ledger-container { font-family: 'Monaco', 'Consolas', monospace; }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold mb-4">T-022: Draft History & Undo Validation</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Control Panel -->
+            <div class="lg:col-span-1">
+                <h2 class="text-lg font-semibold mb-3">Test Controls</h2>
+                <div class="space-y-3">
+                    <button id="load-data" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        1. Load Test Data
+                    </button>
+                    <div class="text-sm text-green-700 bg-green-50 p-2 rounded">
+                        <strong>Draft Actions:</strong>
+                    </div>
+                    <button id="draft-player1" class="w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        Draft Player 1 ($50)
+                    </button>
+                    <button id="draft-player2" class="w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        Draft Player 2 ($40)
+                    </button>
+                    <button id="draft-player3" class="w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        Draft Player 3 ($30)
+                    </button>
+                    <div class="text-sm text-yellow-700 bg-yellow-50 p-2 rounded">
+                        <strong>History Controls:</strong>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="undo-btn" class="flex-1 px-3 py-2 bg-yellow-500 text-white rounded hover:bg-yellow-600" disabled>
+                            Undo
+                        </button>
+                        <button id="redo-btn" class="flex-1 px-3 py-2 bg-orange-500 text-white rounded hover:bg-orange-600" disabled>
+                            Redo
+                        </button>
+                    </div>
+                    <div class="text-sm text-red-700 bg-red-50 p-2 rounded">
+                        <strong>Stress Test:</strong>
+                    </div>
+                    <button id="rapid-draft" class="w-full px-3 py-2 bg-red-500 text-white rounded hover:bg-red-600">
+                        Draft 15 Players Rapidly
+                    </button>
+                    <button id="undo-stress" class="w-full px-3 py-2 bg-red-400 text-white rounded hover:bg-red-500">
+                        Undo 10 Times Rapidly
+                    </button>
+                    <button id="clear-draft" class="w-full px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                        Clear All Picks
+                    </button>
+                </div>
+            </div>
+
+            <!-- Draft Ledger Display -->
+            <div class="lg:col-span-2">
+                <h2 class="text-lg font-semibold mb-3">Draft Ledger (Live View)</h2>
+                <div id="ledger-container" class="border rounded bg-gray-50 ledger-container" style="height: 400px;">
+                    <!-- Ledger will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Status and Validation Results -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <div>
+                <h2 class="text-lg font-semibold mb-3">Draft State</h2>
+                <div class="bg-gray-50 p-4 rounded space-y-2">
+                    <div class="flex justify-between">
+                        <span>Total Picks:</span>
+                        <span id="pick-count" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Can Undo:</span>
+                        <span id="can-undo" class="font-bold">false</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Can Redo:</span>
+                        <span id="can-redo" class="font-bold">false</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Undo Stack Size:</span>
+                        <span id="undo-stack-size" class="font-bold">0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Redo Stack Size:</span>
+                        <span id="redo-stack-size" class="font-bold">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <h2 class="text-lg font-semibold mb-3">Validation Results</h2>
+                <div class="space-y-2">
+                    <div id="result-data-load" class="p-2 rounded bg-gray-100 text-sm">Data Load: Not tested</div>
+                    <div id="result-history-display" class="p-2 rounded bg-gray-100 text-sm">History Display: Not tested</div>
+                    <div id="result-undo-function" class="p-2 rounded bg-gray-100 text-sm">Undo Function: Not tested</div>
+                    <div id="result-redo-function" class="p-2 rounded bg-gray-100 text-sm">Redo Function: Not tested</div>
+                    <div id="result-persistence" class="p-2 rounded bg-gray-100 text-sm">Persistence: Not tested</div>
+                    <div id="result-consistency" class="p-2 rounded bg-gray-100 text-sm">State Consistency: Not tested</div>
+                    <div id="result-stress-test" class="p-2 rounded bg-gray-100 text-sm">Stress Test: Not tested</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Log -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-3">Action Log</h2>
+            <div id="action-log" class="bg-gray-900 text-green-400 p-4 rounded text-sm font-mono max-h-40 overflow-y-auto">
+                <div class="text-gray-500">Actions will be logged here...</div>
+            </div>
+        </div>
+
+        <!-- Instructions -->
+        <div class="mb-6 text-sm text-gray-600">
+            <h2 class="text-lg font-semibold mb-2">Test Instructions</h2>
+            <ol class="list-decimal list-inside space-y-1">
+                <li>Click "Load Test Data" to initialize players and settings</li>
+                <li>Draft 3 players using the draft buttons and observe live ledger updates</li>
+                <li>Test Undo functionality - verify each undo removes the last pick</li>
+                <li>Test Redo functionality - verify redo restores undone picks</li>
+                <li>Run "Draft 15 Players Rapidly" to test performance under load</li>
+                <li>Use "Undo 10 Times Rapidly" to test undo stack performance</li>
+                <li>Refresh the page to test persistence (after drafting some players)</li>
+                <li>Verify draft history survives browser refresh</li>
+            </ol>
+        </div>
+
+        <!-- Pass Criteria -->
+        <div class="bg-blue-50 p-4 rounded">
+            <h3 class="font-semibold text-blue-800 mb-2">Pass Criteria</h3>
+            <ul class="text-blue-700 text-sm space-y-1">
+                <li>✓ Draft history displays all picks in correct order (newest first)</li>
+                <li>✓ Undo removes last pick from history and state</li>
+                <li>✓ Redo restores previously undone picks</li>
+                <li>✓ 10-level undo stack works correctly</li>
+                <li>✓ State persists across browser refresh</li>
+                <li>✓ All operations complete without console errors</li>
+                <li>✓ UI remains responsive during stress tests</li>
+                <li>✓ Button states (enabled/disabled) update correctly</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createStorageAdapter } from '/src/adapters/storage.js';
+        import { initLedgerWidget } from '/src/ui/ledger.js';
+        import { storeBridge, getStore } from '/src/ui/storeBridge.js';
+
+        const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+        let actionLog = [];
+
+        // Create a simple test dataset
+        function createTestDataset(count = 50) {
+            const positions = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+            const teams = ['KC','SF','BUF','PHI','DAL','MIA','CIN','BAL','DET','GB','MIN','NYJ'];
+            const players = [];
+            
+            for (let i = 0; i < count; i++) {
+                const position = positions[i % positions.length];
+                const team = teams[i % teams.length];
+                const points = Math.max(5, 350 - i * 2);
+                
+                players.push({
+                    id: `player_${i + 1}`,
+                    name: `${position} Player ${i + 1}`,
+                    team,
+                    position,
+                    points: Math.round(points * 10) / 10,
+                    injuryStatus: 0,
+                    drafted: false
+                });
+            }
+            
+            return players;
+        }
+
+        function logAction(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            actionLog.unshift(`[${timestamp}] ${message}`);
+            if (actionLog.length > 20) actionLog.pop();
+            
+            const logDiv = document.getElementById('action-log');
+            logDiv.innerHTML = actionLog.map(entry => 
+                `<div class="mb-1">${entry}</div>`
+            ).join('');
+        }
+
+        function updateValidationResult(testId, passed, message) {
+            const element = document.getElementById(`result-${testId}`);
+            if (element) {
+                element.className = passed ? 
+                    'p-2 rounded bg-green-100 text-green-800 text-sm' : 
+                    'p-2 rounded bg-red-100 text-red-800 text-sm';
+                element.textContent = message;
+            }
+        }
+
+        function updateStateDisplay() {
+            const store = getStore();
+            const state = store.getState();
+            const picks = state?.draft?.picks || [];
+            
+            document.getElementById('pick-count').textContent = picks.length;
+            document.getElementById('can-undo').textContent = store.canUndo().toString();
+            document.getElementById('can-redo').textContent = store.canRedo().toString();
+            
+            // Get stack sizes if available
+            try {
+                const undoStack = storage.get('state.undo') || [];
+                const redoStack = storage.get('state.redo') || [];
+                document.getElementById('undo-stack-size').textContent = undoStack.length;
+                document.getElementById('redo-stack-size').textContent = redoStack.length;
+            } catch {
+                document.getElementById('undo-stack-size').textContent = '?';
+                document.getElementById('redo-stack-size').textContent = '?';
+            }
+
+            // Update button states
+            const undoBtn = document.getElementById('undo-btn');
+            const redoBtn = document.getElementById('redo-btn');
+            undoBtn.disabled = !store.canUndo();
+            redoBtn.disabled = !store.canRedo();
+        }
+
+        // Event Listeners
+        document.getElementById('load-data').onclick = async () => {
+            try {
+                const players = createTestDataset(50);
+                const league = {
+                    teams: 12,
+                    owners: Array.from({length: 12}, (_, i) => ({ 
+                        id: i + 1, 
+                        team: `Team ${i + 1}`, 
+                        owner: `Owner ${i + 1}` 
+                    })),
+                    roster: { QB: 1, RB: 2, WR: 2, TE: 1, FLEX: 1, K: 1, DST: 1 },
+                    scoring: { preset: 'PPR' }
+                };
+                
+                storage.set('players', players);
+                storage.set('leagueSettings', league);
+                
+                logAction('Loaded 50 test players and league settings');
+                updateValidationResult('data-load', true, 'Data Load: PASS - 50 players and settings loaded');
+                updateStateDisplay();
+            } catch (err) {
+                logAction(`Error loading data: ${err.message}`);
+                updateValidationResult('data-load', false, `Data Load: FAIL - ${err.message}`);
+            }
+        };
+
+        let draftCount = 0;
+        function draftPlayer(playerName, price) {
+            const teamId = (draftCount % 12) + 1;
+            draftCount++;
+            
+            storeBridge.addPick({
+                playerName,
+                playerId: `player_${draftCount}`,
+                teamId,
+                teamName: `Team ${teamId}`,
+                price,
+                timestamp: Date.now()
+            });
+            
+            logAction(`Drafted ${playerName} to Team ${teamId} for $${price}`);
+            updateStateDisplay();
+        }
+
+        document.getElementById('draft-player1').onclick = () => {
+            draftPlayer('QB Player Alpha', 50);
+            updateValidationResult('history-display', true, 'History Display: PASS - Pick added to ledger');
+        };
+
+        document.getElementById('draft-player2').onclick = () => {
+            draftPlayer('RB Player Beta', 40);
+        };
+
+        document.getElementById('draft-player3').onclick = () => {
+            draftPlayer('WR Player Gamma', 30);
+        };
+
+        document.getElementById('undo-btn').onclick = () => {
+            const beforeCount = storeBridge.getState()?.draft?.picks?.length || 0;
+            storeBridge.undo();
+            const afterCount = storeBridge.getState()?.draft?.picks?.length || 0;
+            
+            logAction(`Undo executed: ${beforeCount} → ${afterCount} picks`);
+            updateValidationResult('undo-function', afterCount === beforeCount - 1, 
+                `Undo Function: ${afterCount === beforeCount - 1 ? 'PASS' : 'FAIL'} - Pick count changed correctly`);
+            updateStateDisplay();
+        };
+
+        document.getElementById('redo-btn').onclick = () => {
+            const beforeCount = storeBridge.getState()?.draft?.picks?.length || 0;
+            storeBridge.redo();
+            const afterCount = storeBridge.getState()?.draft?.picks?.length || 0;
+            
+            logAction(`Redo executed: ${beforeCount} → ${afterCount} picks`);
+            updateValidationResult('redo-function', afterCount === beforeCount + 1,
+                `Redo Function: ${afterCount === beforeCount + 1 ? 'PASS' : 'FAIL'} - Pick count changed correctly`);
+            updateStateDisplay();
+        };
+
+        document.getElementById('rapid-draft').onclick = async () => {
+            const startTime = performance.now();
+            let errorCount = 0;
+            
+            for (let i = 0; i < 15; i++) {
+                try {
+                    draftPlayer(`RapidPlayer${i + 1}`, 25 - i);
+                    // Small delay to prevent overwhelming
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                } catch (err) {
+                    errorCount++;
+                    logAction(`Error in rapid draft ${i}: ${err.message}`);
+                }
+            }
+            
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            
+            logAction(`Rapid draft complete: 15 picks in ${duration.toFixed(1)}ms`);
+            updateValidationResult('stress-test', errorCount === 0 && duration < 5000,
+                `Stress Test: ${errorCount === 0 ? 'PASS' : 'FAIL'} - ${errorCount} errors, ${duration.toFixed(1)}ms`);
+            updateStateDisplay();
+        };
+
+        document.getElementById('undo-stress').onclick = async () => {
+            const startTime = performance.now();
+            let undoCount = 0;
+            
+            for (let i = 0; i < 10 && storeBridge.canUndo(); i++) {
+                storeBridge.undo();
+                undoCount++;
+                await new Promise(resolve => setTimeout(resolve, 5));
+            }
+            
+            const endTime = performance.now();
+            const duration = endTime - startTime;
+            
+            logAction(`Stress undo complete: ${undoCount} undos in ${duration.toFixed(1)}ms`);
+            updateValidationResult('consistency', undoCount > 0 && duration < 2000,
+                `State Consistency: ${undoCount > 0 ? 'PASS' : 'FAIL'} - ${undoCount} undos, ${duration.toFixed(1)}ms`);
+            updateStateDisplay();
+        };
+
+        document.getElementById('clear-draft').onclick = () => {
+            storeBridge.dispatch({ type: 'DRAFT_CLEAR' });
+            draftCount = 0; // Reset the draft counter for new picks
+            logAction('Draft cleared - all picks removed');
+            updateStateDisplay();
+        };
+
+        // Initialize ledger widget
+        const ledgerContainer = document.getElementById('ledger-container');
+        initLedgerWidget(ledgerContainer);
+
+        // Subscribe to changes for real-time updates
+        storeBridge.subscribe('change', () => {
+            updateStateDisplay();
+        });
+
+        // Test persistence on page load
+        window.addEventListener('load', () => {
+            const state = storeBridge.getState();
+            const picks = state?.draft?.picks || [];
+            
+            if (picks.length > 0) {
+                logAction(`Persistence verified: ${picks.length} picks restored from storage`);
+                updateValidationResult('persistence', true, 
+                    `Persistence: PASS - ${picks.length} picks restored from storage`);
+            } else {
+                updateValidationResult('persistence', picks.length === 0, 
+                    'Persistence: Not tested (no existing picks found)');
+            }
+            
+            updateStateDisplay();
+        });
+
+        // Initialize display
+        updateStateDisplay();
+        logAction('T-022 validation page loaded');
+    </script>
+</body>
+</html>

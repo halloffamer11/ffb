@@ -25,16 +25,25 @@
     <header class="bg-white border-b">
       <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-3 flex-wrap">
         <h1 class="text-xl font-semibold mr-auto">Draft Dashboard</h1>
-        <nav class="flex items-center gap-1">
-          <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="dashboard">Dashboard</button>
-          <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="settings">Settings</button>
-          <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="data">Data</button>
-          <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="debug">Debug</button>
-        </nav>
+        <div class="flex items-center gap-3">
+          <button id="exportWorkspace" class="px-3 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm">
+            💾 Export Workspace
+          </button>
+          <input type="file" id="importWorkspace" accept=".ffdraft" class="hidden" />
+          <button id="importWorkspaceBtn" class="px-3 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-sm">
+            📂 Import Workspace  
+          </button>
+          <nav class="flex items-center gap-1">
+            <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="dashboard">Dashboard</button>
+            <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="settings">Settings</button>
+            <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="data">Data</button>
+            <button class="tab px-3 py-2 rounded hover:bg-slate-100" data-tab="debug">Debug</button>
+          </nav>
+        </div>
       </div>
     </header>
 
-    <main class="w-full max-w-none px-4 py-4" data-dashboard-root>
+    <main class="w-full max-w-none px-4 py-3" data-dashboard-root>
       <!-- Loading state overlay -->
       <div id="loading" class="hidden fixed inset-0 bg-white/60 backdrop-blur-sm z-10 flex items-center justify-center">
         <div class="w-72 h-24 rounded border bg-white p-4 animate-pulse">
@@ -68,8 +77,8 @@
             </span>
           </div>
         </div>
-        <!-- Grid fills viewport height minus header/margins; keep a reasonable minimum -->
-        <div id="dashGrid" data-grid class="grid gap-4 min-h-[28rem] h-[calc(100vh-10rem)]">
+        <!-- Grid fills viewport height minus header and toolbar -->
+        <div id="dashGrid" data-grid class="grid gap-4 min-h-[40rem] h-[calc(100vh-9rem)]">
           <!-- Panel: Search & Select (fixed full width) -->
           <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="search" data-size="l" data-collapsed="false" data-col="1" data-row="1" data-w="3" data-h="6">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
@@ -179,20 +188,20 @@
       </section>
 
       <section id="view-settings" class="view hidden">
-        <div class="rounded border bg-white p-3 min-h-[calc(100vh-8rem)]">
-          <iframe src="./T-012_settings.html" class="w-full h-[calc(100vh-10rem)] border rounded"></iframe>
+        <div class="rounded border bg-white p-3 h-[calc(100vh-8rem)]">
+          <iframe src="./T-012_settings.html" class="w-full h-full border rounded"></iframe>
         </div>
       </section>
 
       <section id="view-data" class="view hidden">
-        <div class="rounded border bg-white p-3">
-          <iframe src="./T-013_data_management.html" class="w-full h-[32rem] border rounded"></iframe>
+        <div class="rounded border bg-white p-3 h-[calc(100vh-8rem)]">
+          <iframe src="./T-013_data_management.html" class="w-full h-full border rounded"></iframe>
         </div>
       </section>
 
       <section id="view-debug" class="view hidden">
-        <div class="rounded border bg-white p-3">
-          <iframe src="./T-014a_debug.html" class="w-full h-[36rem] border rounded"></iframe>
+        <div class="rounded border bg-white p-3 h-[calc(100vh-8rem)] flex flex-col">
+          <iframe src="./T-014a_debug.html" class="w-full flex-1 border rounded"></iframe>
           <p class="text-xs text-slate-600 mt-2">Debug tab is development-only and excluded from production builds.</p>
         </div>
       </section>
@@ -200,6 +209,68 @@
 
     <script type="module">
       import { initDashboard } from '/src/ui/dashboard.js';
+      import { createWorkspaceAdapter } from '/src/adapters/workspace.js';
+      
+      // Workspace Export/Import functionality
+      const workspaceAdapter = createWorkspaceAdapter();
+      
+      document.getElementById('exportWorkspace').addEventListener('click', async () => {
+        try {
+          await workspaceAdapter.save();
+          // Create a simple toast notification
+          const toast = document.createElement('div');
+          toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50';
+          toast.textContent = 'Workspace exported successfully!';
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        } catch (err) {
+          console.error('Export failed:', err);
+          const toast = document.createElement('div');
+          toast.className = 'fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50';
+          toast.textContent = 'Export failed: ' + err.message;
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        }
+      });
+      
+      document.getElementById('importWorkspaceBtn').addEventListener('click', () => {
+        document.getElementById('importWorkspace').click();
+      });
+      
+      document.getElementById('importWorkspace').addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        
+        try {
+          const validation = await workspaceAdapter.validate(file);
+          if (!validation.ok) {
+            throw new Error(validation.error || 'Invalid workspace file');
+          }
+          
+          const result = await workspaceAdapter.load(file);
+          if (!result.ok) {
+            throw new Error(result.error || 'Failed to load workspace');
+          }
+          
+          const toast = document.createElement('div');
+          toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg z-50';
+          toast.textContent = 'Workspace imported successfully! Refreshing...';
+          document.body.appendChild(toast);
+          
+          // Refresh page to apply loaded data
+          setTimeout(() => location.reload(), 1500);
+        } catch (err) {
+          console.error('Import failed:', err);
+          const toast = document.createElement('div');
+          toast.className = 'fixed bottom-4 right-4 bg-red-600 text-white px-4 py-2 rounded shadow-lg z-50';
+          toast.textContent = 'Import failed: ' + err.message;
+          document.body.appendChild(toast);
+          setTimeout(() => toast.remove(), 3000);
+        }
+        
+        // Clear the input
+        e.target.value = '';
+      });
       const tabs = Array.from(document.querySelectorAll('button.tab'));
       const views = {
         dashboard: document.getElementById('view-dashboard'),

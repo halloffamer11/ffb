@@ -36,6 +36,7 @@ export function getStore() {
 
 export const storeBridge = {
   getState() { return getStore().getState(); },
+  dispatch(action) { return getStore().dispatch(action); },
   addPick(pick) { getStore().dispatch({ type: 'DRAFT_PICK_ADD', payload: pick }); },
   editPick(index, update) { getStore().dispatch({ type: 'DRAFT_PICK_EDIT', payload: { index, update } }); },
   undo() { return getStore().undo(); },

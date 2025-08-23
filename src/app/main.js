@@ -22,11 +22,30 @@ export function validateEnvironment() {
 import { logStructured } from './logger.js';
 import { attachRecalcListeners, recalcAll } from '../ui/recalc.js';
 import { showToast } from '../ui/toast.js';
+import { getStore } from '../ui/storeBridge.js';
+import { recoveryManager } from '../ui/recovery.js';
 
 function bootstrap() {
   validateEnvironment();
   // Keep initial bootstrap minimal per KISS/YAGNI
   console.log('FFB app bootstrapped');
+  
+  // Initialize store bridge early for consistent state management
+  try {
+    getStore(); // Initialize singleton
+    logStructured('info', 'bootstrap:store_initialized');
+  } catch (err) {
+    logStructured('error', 'bootstrap:store_init_failed', { error: String(err && err.message || err) });
+  }
+  
+  // Initialize recovery system
+  try {
+    recoveryManager.init();
+    logStructured('info', 'bootstrap:recovery_initialized');
+  } catch (err) {
+    logStructured('error', 'bootstrap:recovery_init_failed', { error: String(err && err.message || err) });
+  }
+  
   try {
     attachRecalcListeners();
     setTimeout(() => { recalcAll(); }, 0);

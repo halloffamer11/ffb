@@ -19,7 +19,8 @@ How to run
 4) In Dashboard tab, draft 5 players using Draft Entry
 5) Use Undo twice, Redo once
 6) Observe recalculation indicators (budget, tiers)
-7) Export workspace if desired
+7) Test Export Workspace button (top of page) - should download .ffdraft file
+8) Test Import Workspace button - should be able to reload the exported file
 
 Expected outcomes
 - Draft history shows latest on top with round/pick
@@ -29,5 +30,15 @@ Expected outcomes
 - No UI freezes (<500ms updates)
 
 HITL status: PENDING (do not mark complete until maintainer approval)
+
+## Known Issues (Alpha Testing Findings)
+
+### State Synchronization Bug
+- **Issue**: Settings changes (team names, owners) don't immediately update in Dashboard tab
+- **Impact**: Draft Entry team dropdown shows old values until page refresh
+- **Workaround**: Refresh page after changing settings
+- **Severity**: Minor - functionality works but requires refresh for UI sync
+- **Location**: Settings → Dashboard communication
+- **Status**: Identified during alpha testing, needs investigation
 
 

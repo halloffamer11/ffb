@@ -25,13 +25,13 @@ export function renderBudgetTable(tableEl) {
   const thead = tableEl.querySelector('thead');
   const tbody = tableEl.querySelector('tbody');
   if (thead) thead.innerHTML = `<tr>
-    <th class="text-left p-2">Team</th>
-    <th class="text-right p-2">Remaining</th>
-    <th class="text-right p-2">Spent</th>
-    <th class="text-right p-2">Spots</th>
-    <th class="text-right p-2">Max Bid</th>
-    <th class="text-right p-2">Avg $/Spot</th>
-    <th class="text-left p-2">Alerts</th>
+    <th class="text-left p-2 bg-slate-100">Team</th>
+    <th class="text-right p-2 bg-slate-100">Remaining</th>
+    <th class="text-right p-2 bg-slate-100">Spent</th>
+    <th class="text-right p-2 bg-slate-100">Spots</th>
+    <th class="text-right p-2 bg-slate-100">Max Bid</th>
+    <th class="text-right p-2 bg-slate-100">Avg $/Spot</th>
+    <th class="text-left p-2 bg-slate-100">Alerts</th>
   </tr>`;
   if (tbody) {
     tbody.innerHTML = '';

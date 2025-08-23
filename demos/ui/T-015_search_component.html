@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>T-015 Player Search Component</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 text-slate-900 p-6">
+  <h1 class="text-2xl font-semibold mb-2">T-015 Player Search Component</h1>
+  <p class="text-sm text-slate-600 mb-4">Unified search component with fuzzy matching, hover preview, and dashboard integration.</p>
+
+  <div class="grid grid-cols-2 gap-6">
+    <!-- Search Component -->
+    <div>
+      <div class="border rounded-lg p-4 bg-white">
+        <h2 class="font-medium mb-3">Player Search</h2>
+        <div id="searchContainer"></div>
+      </div>
+    </div>
+
+    <!-- Integration Test -->
+    <div class="space-y-4">
+      <div class="border rounded-lg p-4 bg-white">
+        <h2 class="font-medium mb-3">Component API Test</h2>
+        <div class="space-y-2">
+          <button id="getSelected" class="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+            Get Selected Player
+          </button>
+          <button id="clearSelection" class="px-3 py-1 bg-slate-600 text-white rounded text-sm">
+            Clear Selection
+          </button>
+          <button id="toggleDrafted" class="px-3 py-1 bg-purple-600 text-white rounded text-sm">
+            Toggle Show Drafted
+          </button>
+          <button id="refresh" class="px-3 py-1 bg-green-600 text-white rounded text-sm">
+            Refresh Data
+          </button>
+        </div>
+      </div>
+
+      <div class="border rounded-lg p-4 bg-white">
+        <h2 class="font-medium mb-3">Event Log</h2>
+        <div id="eventLog" class="h-32 overflow-auto bg-slate-100 rounded p-2 text-xs font-mono"></div>
+      </div>
+
+      <div class="border rounded-lg p-4 bg-white">
+        <h2 class="font-medium mb-3">Selection Details</h2>
+        <pre id="selectionDetails" class="text-xs bg-slate-100 rounded p-2 overflow-auto">No player selected</pre>
+      </div>
+    </div>
+  </div>
+
+  <!-- Performance Metrics -->
+  <div class="mt-6 border rounded-lg p-4 bg-white">
+    <h2 class="font-medium mb-3">Performance Metrics</h2>
+    <div class="grid grid-cols-4 gap-4 text-sm">
+      <div>
+        <span class="font-medium">Search Time:</span>
+        <span id="searchTime" class="ml-1">-</span>
+      </div>
+      <div>
+        <span class="font-medium">Result Count:</span>
+        <span id="resultCount" class="ml-1">0</span>
+      </div>
+      <div>
+        <span class="font-medium">Player Count:</span>
+        <span id="playerCount" class="ml-1">0</span>
+      </div>
+      <div>
+        <span class="font-medium">Drafted Count:</span>
+        <span id="draftedCount" class="ml-1">0</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Human Validation -->
+  <div class="mt-6 border-t pt-4">
+    <h2 class="font-semibold mb-2">Human Validation Steps</h2>
+    <ol class="list-decimal list-inside space-y-1 text-sm">
+      <li>Type "mahomes" - verify Patrick Mahomes appears</li>
+      <li>Type "macaffrey" (misspelled) - verify McCaffrey found via fuzzy match</li>
+      <li>Type "CJ" - verify C.J. players found via initials</li>
+      <li>Use arrow keys to navigate results</li>
+      <li>Press Enter to select highlighted player</li>
+      <li>Hover over results to see preview tooltip</li>
+      <li>Filter by position (RB, WR, etc) - verify filtering works</li>
+      <li>Toggle "Show Drafted" - verify drafted players appear/disappear</li>
+      <li>Click "Get Selected" - verify API returns correct player</li>
+      <li>✅ PASS if all searches return results in <50ms with correct fuzzy matching</li>
+    </ol>
+  </div>
+
+  <script type="module">
+    import { createSearchComponent } from '../../src/ui/searchComponent.js';
+    import { createStorageAdapter } from '../../src/adapters/storage.js';
+
+    // Setup sample data if not present
+    const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+    let players = storage.get('players') || [];
+    
+    if (players.length === 0) {
+      // Create sample players for testing
+      players = [
+        { id: 1, name: 'Patrick Mahomes', position: 'QB', team: 'KC', points: 380, vbd: 120, injuryStatus: 0 },
+        { id: 2, name: 'Christian McCaffrey', position: 'RB', team: 'SF', points: 320, vbd: 110, injuryStatus: 0 },
+        { id: 3, name: 'Tyreek Hill', position: 'WR', team: 'MIA', points: 280, vbd: 85, injuryStatus: 1 }, // Q
+        { id: 4, name: 'Travis Kelce', position: 'TE', team: 'KC', points: 220, vbd: 75, injuryStatus: 0 },
+        { id: 5, name: 'Justin Jefferson', position: 'WR', team: 'MIN', points: 300, vbd: 95, injuryStatus: 0 },
+        { id: 6, name: 'C.J. Stroud', position: 'QB', team: 'HOU', points: 340, vbd: 80, injuryStatus: 0 },
+        { id: 7, name: 'C.J. Fiedorowicz', position: 'TE', team: 'FA', points: 120, vbd: -5, injuryStatus: 4 }, // IR
+        { id: 8, name: 'Austin Ekeler', position: 'RB', team: 'LAC', points: 260, vbd: 50, drafted: true },
+        { id: 9, name: 'Stefon Diggs', position: 'WR', team: 'BUF', points: 270, vbd: 75, injuryStatus: 2 }, // D
+        { id: 10, name: 'Josh Allen', position: 'QB', team: 'BUF', points: 370, vbd: 110, injuryStatus: 0 },
+      ];
+      
+      // Add more test players
+      for (let i = 11; i <= 50; i++) {
+        players.push({
+          id: i,
+          name: `Player ${i}`,
+          position: ['QB', 'RB', 'WR', 'TE', 'K', 'DST'][Math.floor(Math.random() * 6)],
+          team: 'TM' + (i % 32),
+          points: Math.floor(Math.random() * 200) + 100,
+          vbd: Math.floor(Math.random() * 100) - 20,
+          injuryStatus: Math.random() > 0.8 ? Math.floor(Math.random() * 5) : 0,
+          drafted: Math.random() > 0.7
+        });
+      }
+      
+      storage.set('players', players);
+    }
+
+    // Create search component
+    const container = document.getElementById('searchContainer');
+    const searchComponent = createSearchComponent(container, {
+      showDrafted: false,
+      hoverPreview: true,
+      onSelect: (player) => {
+        logEvent('player:selected', player);
+        updateSelectionDetails(player);
+      }
+    });
+
+    // Event logging
+    function logEvent(type, data) {
+      const log = document.getElementById('eventLog');
+      const time = new Date().toLocaleTimeString();
+      const entry = document.createElement('div');
+      entry.innerHTML = `<span class="text-slate-500">[${time}]</span> ${type}: ${JSON.stringify(data).substring(0, 60)}`;
+      log.appendChild(entry);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // Update selection details
+    function updateSelectionDetails(player) {
+      document.getElementById('selectionDetails').textContent = JSON.stringify(player, null, 2);
+    }
+
+    // Update metrics
+    function updateMetrics() {
+      const players = storage.get('players') || [];
+      document.getElementById('playerCount').textContent = players.length;
+      document.getElementById('draftedCount').textContent = players.filter(p => p.drafted).length;
+    }
+
+    // API test buttons
+    document.getElementById('getSelected').addEventListener('click', () => {
+      const selected = searchComponent.getSelected();
+      if (selected) {
+        alert(`Selected: ${selected.name} (${selected.position})`);
+        logEvent('api:getSelected', selected);
+      } else {
+        alert('No player selected');
+      }
+    });
+
+    document.getElementById('clearSelection').addEventListener('click', () => {
+      searchComponent.clearSelection();
+      document.getElementById('selectionDetails').textContent = 'No player selected';
+      logEvent('api:clearSelection', {});
+    });
+
+    let showingDrafted = false;
+    document.getElementById('toggleDrafted').addEventListener('click', () => {
+      showingDrafted = !showingDrafted;
+      searchComponent.setShowDrafted(showingDrafted);
+      logEvent('api:setShowDrafted', { value: showingDrafted });
+    });
+
+    document.getElementById('refresh').addEventListener('click', () => {
+      searchComponent.refresh();
+      updateMetrics();
+      logEvent('api:refresh', {});
+    });
+
+    // Listen for selection events
+    window.addEventListener('player:selected', (e) => {
+      logEvent('event:player:selected', e.detail);
+    });
+
+    // Track search performance
+    let searchStartTime;
+    const originalSearch = container.querySelector('#searchInput');
+    if (originalSearch) {
+      originalSearch.addEventListener('input', () => {
+        searchStartTime = performance.now();
+      });
+      
+      // Monitor DOM changes to detect when search completes
+      const observer = new MutationObserver(() => {
+        if (searchStartTime) {
+          const duration = performance.now() - searchStartTime;
+          document.getElementById('searchTime').textContent = `${duration.toFixed(1)}ms`;
+          searchStartTime = null;
+          
+          // Update result count
+          const resultCount = container.querySelector('#resultCount');
+          if (resultCount) {
+            document.getElementById('resultCount').textContent = resultCount.textContent;
+          }
+        }
+      });
+      
+      observer.observe(container.querySelector('#resultsBody'), {
+        childList: true
+      });
+    }
+
+    // Initial metrics
+    updateMetrics();
+    logEvent('initialized', { playerCount: players.length });
+  </script>
+</body>
+</html>

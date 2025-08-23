@@ -6,6 +6,10 @@ const store = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' })
 export async function loadPlayersFromFile(file) {
   const text = await file.text();
   const res = importFromCsvText(text);
+  // Map records to data for consistent API
+  if (res.ok) {
+    return { ok: true, data: res.records };
+  }
   return res;
 }
 

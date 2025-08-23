@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-028: Alpha Testing Preparation Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow p-6">
+        <h1 class="text-2xl font-bold mb-4">T-028: Alpha Testing Preparation Validation</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Test Progress -->
+            <div>
+                <h2 class="text-lg font-semibold mb-3">Alpha Test Progress</h2>
+                <div class="space-y-2" id="test-checklist">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-dashboard-load" class="rounded">
+                        <label for="test-dashboard-load" class="text-sm">Dashboard loads without console errors</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-data-import" class="rounded">
+                        <label for="test-data-import" class="text-sm">Data import functionality works</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-settings-config" class="rounded">
+                        <label for="test-settings-config" class="text-sm">Settings configuration works</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-draft-entry" class="rounded">
+                        <label for="test-draft-entry" class="text-sm">Draft entry with rapid picks works</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-ledger-display" class="rounded">
+                        <label for="test-ledger-display" class="text-sm">Draft ledger shows correct round/pick numbers</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-undo-redo" class="rounded">
+                        <label for="test-undo-redo" class="text-sm">Undo/Redo operations work correctly</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-budget-updates" class="rounded">
+                        <label for="test-budget-updates" class="text-sm">Budget tracking updates correctly</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-roster-display" class="rounded">
+                        <label for="test-roster-display" class="text-sm">Roster display groups by position</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-tiers-scarcity" class="rounded">
+                        <label for="test-tiers-scarcity" class="text-sm">Tiers/Scarcity visualization updates</label>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="test-workspace-export" class="rounded">
+                        <label for="test-workspace-export" class="text-sm">Workspace export functions correctly</label>
+                    </div>
+                </div>
+                
+                <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded">
+                    <p class="text-sm text-blue-800">
+                        <strong>Progress:</strong> <span id="progress-counter">0/10</span> tests completed
+                    </p>
+                </div>
+            </div>
+
+            <!-- Controls & Links -->
+            <div>
+                <h2 class="text-lg font-semibold mb-3">Test Controls</h2>
+                <div class="space-y-3">
+                    <button id="open-dashboard" class="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                        📊 Open Dashboard (New Tab)
+                    </button>
+                    <button id="check-console" class="w-full px-3 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                        🔍 Check Console for Errors
+                    </button>
+                    <button id="validate-logs" class="w-full px-3 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+                        📋 Validate System Logs
+                    </button>
+                    <button id="reset-checklist" class="w-full px-3 py-2 bg-gray-500 text-white rounded hover:bg-gray-600">
+                        🔄 Reset Checklist
+                    </button>
+                </div>
+                
+                <div class="mt-4 bg-yellow-50 p-3 rounded">
+                    <h3 class="font-semibold text-yellow-800 mb-2">Quick Links</h3>
+                    <div class="space-y-1 text-sm">
+                        <div><a href="/demos/ui/T-014_dashboard.html" target="_blank" class="text-blue-600 hover:underline">🔗 Main Dashboard</a></div>
+                        <div><a href="/demos/data/T-028_alpha_test_kit/README.md" target="_blank" class="text-blue-600 hover:underline">📖 Test Kit README</a></div>
+                        <div><a href="/demos/data/top300_2024.csv" target="_blank" class="text-blue-600 hover:underline">📊 Sample Data CSV</a></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Validation Results -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-3">Validation Results</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div id="result-integration" class="p-3 rounded bg-gray-100 text-sm">Integration Test: Not started</div>
+                <div id="result-performance" class="p-3 rounded bg-gray-100 text-sm">Performance Test: Not started</div>
+                <div id="result-error-handling" class="p-3 rounded bg-gray-100 text-sm">Error Handling: Not started</div>
+                <div id="result-alpha-readiness" class="p-3 rounded bg-gray-100 text-sm">Alpha Readiness: Not started</div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="mb-6">
+            <h2 class="text-lg font-semibold mb-3">System Status</h2>
+            <div id="system-status" class="bg-gray-900 text-green-400 p-4 rounded text-sm font-mono">
+                <div>Checking system status...</div>
+            </div>
+        </div>
+
+        <!-- Test Instructions -->
+        <div class="mb-6 text-sm text-gray-600">
+            <h2 class="text-lg font-semibold mb-2">Alpha Test Instructions</h2>
+            <ol class="list-decimal list-inside space-y-1">
+                <li>Click "Open Dashboard" to open the main dashboard in a new tab</li>
+                <li>Follow the alpha test checklist systematically</li>
+                <li>Import sample data if no players are loaded</li>
+                <li>Configure league settings (12 teams, $200 budget, min bid $1)</li>
+                <li>Test rapid draft entry with 5+ picks</li>
+                <li>Verify all UI components update correctly</li>
+                <li>Test undo/redo operations</li>
+                <li>Check that no console errors occur during testing</li>
+                <li>Export workspace to verify end-to-end functionality</li>
+                <li>Mark each checklist item as completed</li>
+            </ol>
+        </div>
+
+        <!-- Pass Criteria -->
+        <div class="bg-blue-50 p-4 rounded">
+            <h3 class="font-semibold text-blue-800 mb-2">Alpha Testing Pass Criteria</h3>
+            <ul class="text-blue-700 text-sm space-y-1">
+                <li>✓ All dashboard components load and function correctly</li>
+                <li>✓ Data import/export workflow complete</li>
+                <li>✓ Settings configuration persists correctly</li>
+                <li>✓ Draft operations complete without errors</li>
+                <li>✓ Real-time UI updates work smoothly (&lt;500ms)</li>
+                <li>✓ Undo/redo system functions correctly</li>
+                <li>✓ All calculations update appropriately</li>
+                <li>✓ No critical console errors during normal operation</li>
+                <li>✓ Complete checklist indicates alpha readiness</li>
+                <li>✓ System logs show healthy operation</li>
+            </ul>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createStorageAdapter } from '/src/adapters/storage.js';
+        
+        const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+        
+        function updateValidationResult(testId, passed, message) {
+            const element = document.getElementById(`result-${testId}`);
+            if (element) {
+                element.className = passed ? 
+                    'p-3 rounded bg-green-100 text-green-800 text-sm' : 
+                    'p-3 rounded bg-red-100 text-red-800 text-sm';
+                element.textContent = message;
+            }
+        }
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('#test-checklist input[type="checkbox"]');
+            const checked = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const total = checkboxes.length;
+            
+            document.getElementById('progress-counter').textContent = `${checked}/${total}`;
+            
+            if (checked === total) {
+                updateValidationResult('alpha-readiness', true, 'Alpha Readiness: PASS - All tests completed');
+            } else {
+                updateValidationResult('alpha-readiness', checked > total * 0.7, 
+                    `Alpha Readiness: ${checked > total * 0.7 ? 'PARTIAL' : 'PENDING'} - ${checked}/${total} tests passed`);
+            }
+        }
+
+        function checkSystemStatus() {
+            const statusDiv = document.getElementById('system-status');
+            const status = [];
+            
+            try {
+                // Check for players
+                const players = storage.get('players') || [];
+                status.push(`Players loaded: ${players.length}`);
+                
+                // Check for settings
+                const settings = storage.get('leagueSettings') || {};
+                status.push(`League configured: ${settings.teams ? 'Yes' : 'No'}`);
+                
+                // Check for draft state
+                const state = storage.get('state') || {};
+                const picks = state?.draft?.picks || [];
+                status.push(`Draft picks: ${picks.length}`);
+                
+                // Check for logs
+                const logs = storage.get('logs') || [];
+                const recentErrors = logs.filter(log => log.level === 'error' && 
+                    Date.now() - log.ts < 300000).length; // Last 5 minutes
+                status.push(`Recent errors: ${recentErrors}`);
+                
+                // Check localStorage usage
+                const used = JSON.stringify(localStorage).length;
+                const usedKB = Math.round(used / 1024);
+                status.push(`Storage used: ${usedKB}KB`);
+                
+                statusDiv.innerHTML = status.map(line => `<div>${line}</div>`).join('');
+                
+                // Update results based on status
+                updateValidationResult('integration', players.length > 0 && settings.teams,
+                    `Integration Test: ${players.length > 0 && settings.teams ? 'PASS' : 'PENDING'} - Basic data loaded`);
+                
+                updateValidationResult('performance', usedKB < 2048,
+                    `Performance Test: ${usedKB < 2048 ? 'PASS' : 'WARN'} - Storage usage ${usedKB}KB`);
+                
+                updateValidationResult('error-handling', recentErrors === 0,
+                    `Error Handling: ${recentErrors === 0 ? 'PASS' : 'WARN'} - ${recentErrors} recent errors`);
+                
+            } catch (err) {
+                statusDiv.innerHTML = `<div class="text-red-400">Error checking status: ${err.message}</div>`;
+                updateValidationResult('integration', false, `Integration Test: FAIL - ${err.message}`);
+            }
+        }
+
+        // Event handlers
+        document.getElementById('open-dashboard').onclick = () => {
+            window.open('/demos/ui/T-014_dashboard.html', '_blank');
+        };
+
+        document.getElementById('check-console').onclick = () => {
+            const hasErrors = console.error.toString().includes('[native code]'); // Simple heuristic
+            alert('Please manually check the browser console (F12) for any error messages during testing.');
+        };
+
+        document.getElementById('validate-logs').onclick = () => {
+            try {
+                const logs = storage.get('logs') || [];
+                const errorLogs = logs.filter(log => log.level === 'error');
+                const warnLogs = logs.filter(log => log.level === 'warn');
+                
+                alert(`System Logs Summary:\nTotal entries: ${logs.length}\nErrors: ${errorLogs.length}\nWarnings: ${warnLogs.length}\n\nCheck browser console for details.`);
+                console.log('System Logs:', logs);
+            } catch (err) {
+                alert('Failed to validate logs: ' + err.message);
+            }
+        };
+
+        document.getElementById('reset-checklist').onclick = () => {
+            document.querySelectorAll('#test-checklist input[type="checkbox"]').forEach(cb => {
+                cb.checked = false;
+            });
+            updateProgress();
+        };
+
+        // Set up checklist monitoring
+        document.querySelectorAll('#test-checklist input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', updateProgress);
+        });
+
+        // Auto-save checklist progress
+        const saveProgress = () => {
+            const progress = {};
+            document.querySelectorAll('#test-checklist input[type="checkbox"]').forEach(cb => {
+                progress[cb.id] = cb.checked;
+            });
+            localStorage.setItem('T-028_progress', JSON.stringify(progress));
+        };
+
+        const loadProgress = () => {
+            try {
+                const progress = JSON.parse(localStorage.getItem('T-028_progress') || '{}');
+                Object.entries(progress).forEach(([id, checked]) => {
+                    const checkbox = document.getElementById(id);
+                    if (checkbox) checkbox.checked = checked;
+                });
+            } catch {}
+        };
+
+        document.querySelectorAll('#test-checklist input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', saveProgress);
+        });
+
+        // Initialize
+        loadProgress();
+        updateProgress();
+        checkSystemStatus();
+        
+        // Refresh status every 10 seconds
+        setInterval(checkSystemStatus, 10000);
+    </script>
+</body>
+</html>

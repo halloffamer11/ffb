@@ -33,13 +33,26 @@
       }
       input.toggle:checked { background: #10b981; /* emerald-500 */ }
       input.toggle:checked::after { transform: translateX(1.25rem); /* 20px */ }
+      /* Sticky header for table */
+      .table-container {
+        height: calc(100vh - 250px);
+        overflow: auto;
+        position: relative;
+      }
+      .table-container thead th {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
     </style>
   </head>
   <body class="bg-slate-50 text-slate-900 p-6">
-    <h1 class="text-2xl font-semibold mb-2">T-009c Search Results UI</h1>
-    <p class="text-sm text-slate-600 mb-4">Fuzzy search results with highlight, drafted styling, and keyboard navigation (↑/↓ to move, Enter to toggle drafted).</p>
+    <div class="mb-3">
+      <h1 class="text-2xl font-semibold mb-1">T-009c Search Results UI</h1>
+      <p class="text-sm text-slate-600">Fuzzy search results with highlight, drafted styling, and keyboard navigation (↑/↓ to move, Enter to toggle drafted).</p>
+    </div>
 
-    <div class="flex items-center gap-3 flex-wrap mb-2">
+    <div class="flex items-center gap-3 flex-wrap mb-3">
       <input id="q" type="text" placeholder="Type a name... (e.g., mah, travis, cj)" class="border p-2 w-[28rem]" />
       <div class="flex items-center gap-2">
         <span class="text-xs text-slate-600">Positions:</span>
@@ -64,20 +77,22 @@
       <a href="./T-013_data_management.html" class="px-3 py-2 rounded bg-amber-600 text-white" target="_blank">Open T-013</a>
     </div>
 
-    <div id="notice" class="text-amber-700 text-sm mb-3"></div>
+    <div id="notice" class="text-amber-700 text-sm mb-2"></div>
 
-      <table class="min-w-full bg-white rounded border text-sm">
-      <thead class="bg-slate-100">
-        <tr>
-          <th class="text-left p-2">name</th>
-          <th class="text-left p-2">team</th>
-          <th class="text-left p-2">pos</th>
-          <th class="text-left p-2">ADP</th>
-          <th class="text-left p-2">injury</th>
-        </tr>
-      </thead>
-      <tbody id="rows"></tbody>
-    </table>
+    <div class="table-container border rounded bg-white">
+      <table class="min-w-full text-sm">
+        <thead>
+          <tr class="bg-slate-100 border-b">
+            <th class="text-left p-2 bg-slate-100">Name</th>
+            <th class="text-left p-2 bg-slate-100">Team</th>
+            <th class="text-left p-2 bg-slate-100">Pos</th>
+            <th class="text-left p-2 bg-slate-100">ADP</th>
+            <th class="text-left p-2 bg-slate-100">Injury</th>
+          </tr>
+        </thead>
+        <tbody id="rows" class="divide-y divide-slate-100"></tbody>
+      </table>
+    </div>
 
     <script type="module">
       import { FuzzySearch } from '../../src/core/search.js';
