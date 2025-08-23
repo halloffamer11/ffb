@@ -11,7 +11,7 @@ const INTERACT_CLASS = 'dash-interacting';
 export const WidgetRegistry = {
   search: { name: 'Search & Select', minW: 2, minH: 1, maxW: 8, maxH: 12, defaultW: 8, defaultH: 2 },
   draft: { name: 'Draft Entry', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
-  tiers: { name: 'Position Tiers', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
+  vbdScatter: { name: 'VBD Charts', minW: 4, minH: 3, maxW: 12, maxH: 6, defaultW: 8, defaultH: 4 },
   roster: { name: 'My Roster', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
   budget: { name: 'Budget Tracker', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
   ledger: { name: 'Draft Ledger', minW: 2, minH: 1, maxW: 8, maxH: 4, defaultW: 4, defaultH: 2 },
@@ -28,10 +28,9 @@ function loadDashboard() {
     activeLayout: 'default',
     widgets: [
       { id: 'w_search', type: 'search', row: 1, col: 1, w: 8, h: 2, config: {} },
-      { id: 'w_tiers', type: 'tiers', row: 3, col: 1, w: 4, h: 2, config: {} },
-      { id: 'w_roster', type: 'roster', row: 3, col: 5, w: 4, h: 2, config: {} },
-      { id: 'w_ledger', type: 'ledger', row: 5, col: 1, w: 4, h: 2, config: {} },
-      { id: 'w_budget', type: 'budget', row: 5, col: 5, w: 4, h: 2, config: {} }
+      { id: 'w_vbdScatter', type: 'vbdScatter', row: 3, col: 1, w: 8, h: 4, config: {} },
+      { id: 'w_roster', type: 'roster', row: 3, col: 9, w: 4, h: 2, config: {} },
+      { id: 'w_budget', type: 'budget', row: 5, col: 9, w: 4, h: 2, config: {} }
     ],
     layouts: { presets: {}, custom: {} }
   };
@@ -738,15 +737,15 @@ function renderWidgetContents(type, widgetId, expanded = false) {
     }, 0);
     return `<div class="w-full h-full"><div id="draft-${widgetId}" class="w-full h-full"></div></div>`;
   }
-  if (type === 'tiers') {
+  if (type === 'vbdScatter') {
     setTimeout(async () => {
       try {
-        const mod = await import('./tiersViz.js');
-        const container = document.getElementById(`tiers-${widgetId}`);
-        if (container && mod.initTiersWidget) mod.initTiersWidget(container);
+        const mod = await import('./vbdScatter.js');
+        const container = document.getElementById(`vbdScatter-${widgetId}`);
+        if (container && mod.initVBDScatterWidget) mod.initVBDScatterWidget(container);
       } catch {}
     }, 0);
-    return `<div class="w-full h-full"><div id="tiers-${widgetId}" class="w-full h-full p-2 overflow-auto"></div></div>`;
+    return `<div class="w-full h-full"><div id="vbdScatter-${widgetId}" class="w-full h-full"></div></div>`;
   }
   if (type === 'roster') {
     setTimeout(async () => {

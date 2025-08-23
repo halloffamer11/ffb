@@ -270,8 +270,16 @@
       }
 
       function selectRow(p) {
+        // Legacy iframe communication
         const msg = { type: 'player.selected', payload: { id: p?.id ?? '', name: p?.name ?? '' } };
         try { window.parent?.postMessage(msg, '*'); } catch {}
+        
+        // Modern cross-widget synchronization
+        try { 
+          window.dispatchEvent(new CustomEvent('player:selected', {
+            detail: { player: p, source: 'search' }
+          }));
+        } catch {}
       }
 
       // Lightweight hover preview HUD (name, team, position, points)
@@ -415,6 +423,30 @@
           if (String(e.key || '').includes('workspace::players')) reload();
           if (String(e.key || '').includes('workspace::state')) reload();
         } catch {}
+      });
+
+      // Listen for external player selections (from other widgets)
+      window.addEventListener('message', (e) => {
+        const data = e?.data;
+        if (!data || data.type !== 'player.selected.external') return;
+        
+        const externalPlayerId = data.payload?.id;
+        const externalPlayerName = data.payload?.name;
+        
+        // Find and highlight the player in current results
+        if (lastResults) {
+          let targetIndex = -1;
+          if (externalPlayerId) {
+            targetIndex = lastResults.findIndex(p => String(p.id) === String(externalPlayerId));
+          } else if (externalPlayerName) {
+            targetIndex = lastResults.findIndex(p => String(p.name).toLowerCase() === String(externalPlayerName).toLowerCase());
+          }
+          
+          if (targetIndex >= 0) {
+            selectedIdx = targetIndex;
+            render(lastResults, qEl.value || '');
+          }
+        }
       });
 
       // Initial

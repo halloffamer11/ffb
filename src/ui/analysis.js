@@ -120,9 +120,23 @@ export function initAnalysisWidget(container) {
     render(container, vm);
   }
   update();
+  // Legacy iframe message listener
   window.addEventListener('message', (e) => {
     const data = e?.data; if (!data || data.type !== 'player.selected') return;
     const pid = data.payload?.id; const pname = data.payload?.name;
+    handlePlayerSelection(pid, pname);
+  });
+  
+  // Modern cross-widget event listener
+  window.addEventListener('player:selected', (e) => {
+    if (e.detail.source === 'analysis') return; // Ignore our own events
+    const player = e.detail.player;
+    if (player) {
+      handlePlayerSelection(player.id, player.name);
+    }
+  });
+  
+  function handlePlayerSelection(pid, pname) {
     // Reload players to avoid stale snapshots
     const players = loadPlayers();
     selected = null;
@@ -134,7 +148,7 @@ export function initAnalysisWidget(container) {
     }
     try { console.debug('[analysis] selection', { pid, pname, resolved: selected ? { id: selected.id, name: selected.name } : null }); } catch {}
     update();
-  });
+  }
   window.addEventListener('workspace:players-changed', () => { update(); });
   window.addEventListener('workspace:state-changed', () => { update(); });
 }

@@ -60,7 +60,7 @@
         <div class="flex items-center gap-2 mb-3" data-action="toolbar">
           <button data-btn="edit" class="px-3 py-1 border rounded">Toggle Edit</button>
           <select data-select="widget" class="border p-1 text-sm">
-            <option value="tiers">Position Tiers</option>
+            <option value="vbdScatter">VBD Charts</option>
             <option value="roster">My Roster</option>
             <option value="budget">Budget Tracker</option>
           </select>
@@ -119,10 +119,10 @@
             
           </div>
 
-          <!-- Panel: Position Tiers (placeholder) -->
-          <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="tiers" data-size="m" data-collapsed="false" data-col="3" data-row="7" data-w="1" data-h="3">
+          <!-- Panel: VBD Charts -->
+          <div class="panel active rounded border bg-white overflow-hidden flex flex-col" data-panel="vbdScatter" data-size="m" data-collapsed="false" data-col="3" data-row="7" data-w="2" data-h="4">
             <div class="panel-header px-3 py-2 border-b font-medium flex items-center gap-2 cursor-pointer">
-              <span class="mr-auto">Position Tiers</span>
+              <span class="mr-auto">VBD Charts</span>
               <div class="flex items-center gap-1 text-xs">
                 <span class="text-slate-500 ml-2">W</span>
                 <button class="btn-h-minus px-2 py-1 border rounded">−</button>
@@ -134,7 +134,7 @@
               <button class="btn-expand text-xs px-2 py-1 border rounded">Expand</button>
             </div>
             <div class="panel-body p-3 grow">
-              <div id="tiersMount" class="w-full h-[14rem] border rounded"></div>
+              <div id="tiersMount" class="w-full h-full"></div>
             </div>
             
           </div>
@@ -546,11 +546,46 @@
         try {
           const t = document.getElementById('tiersMount');
           if (t) {
-            const mod = await import('/src/ui/tiersViz.js');
-            mod.initTiersWidget(t);
+            const mod = await import('/src/ui/vbdScatter.js');
+            mod.initVBDScatterWidget(t);
           }
         } catch {}
       })();
+
+      // Bridge iframe messages to CustomEvents for modern widgets
+      window.addEventListener('message', (e) => {
+        const data = e?.data;
+        if (!data || data.type !== 'player.selected') return;
+        
+        // Convert legacy iframe message to modern CustomEvent
+        const player = {
+          id: data.payload?.id || '',
+          name: data.payload?.name || ''
+        };
+        
+        if (player.id || player.name) {
+          window.dispatchEvent(new CustomEvent('player:selected', {
+            detail: { player, source: 'search-iframe' }
+          }));
+        }
+      });
+
+      // Bridge CustomEvents to iframe messages for reverse communication
+      window.addEventListener('player:selected', (e) => {
+        if (e.detail.source === 'search-iframe') return; // Avoid loops
+        
+        const player = e.detail.player;
+        if (player) {
+          // Send message to search iframe
+          const searchIframe = document.querySelector('iframe[src*="T-009c_search.html"]');
+          if (searchIframe && searchIframe.contentWindow) {
+            searchIframe.contentWindow.postMessage({
+              type: 'player.selected.external',
+              payload: { id: player.id, name: player.name }
+            }, '*');
+          }
+        }
+      });
     </script>
   </body>
   </html>

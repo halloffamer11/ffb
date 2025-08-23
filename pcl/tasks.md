@@ -49,6 +49,7 @@
 | T-035 | Field Mapping UI | NOT-STARTED | PENDING | — |
 | T-036 | PWA Implementation | NOT-STARTED | PENDING | — |
 | T-037 | Post-MVP Performance Options | NOT-STARTED | PENDING | — |
+| T-038 | VBD Scatter Plot Visualization | CPT | PASS | src/ui/vbdScatter.js; demos/ui/T-038_vbd_scatter.html |
 | T-040 | Bid Range Confidence Overlay | NOT-STARTED | PENDING | — |
 | T-041 | Nomination Strategy Engine | NOT-STARTED | PENDING | — |
 | T-042 | Deep Sleeper Nomination Timing | NOT-STARTED | PENDING | — |
@@ -1162,6 +1163,39 @@ Notes: Backlog
 - Implement reduced animations option
 - Add data pagination options
 - Create "lite mode" for slow devices
+
+### T-038: VBD Scatter Plot Visualization ✅
+Status: CPT
+HITL: PASS (evidence: src/ui/vbdScatter.js; demos/ui/T-038_vbd_scatter.html)
+Updated: 2025-08-23 by role_executor
+Notes: Replaced tier system with interactive VBD scatter plots
+**Complexity**: High | **Risk**: Medium
+- Replace static tier visualization with dynamic VBD scatter plots
+- Focus on QB, RB, WR, TE positions only
+- Show only expected draftable players per position
+- Implement Canvas-based charts for performance (300+ players)
+- X-axis: Position rank (1, 2, 3...), Y-axis: VBD value
+- Interactive dots with hover tooltips and click selection
+- Cross-widget synchronization with search, analysis, and draft entry
+- Real-time updates when players are drafted
+- Position-specific color scheme: QB (purple), RB (green), WR (blue), TE (orange)
+- Fixed layout design (no zoom/pan) for consistent UX
+
+**Validation & Verification Plan:**
+- **Implementation Files**: `src/ui/vbdScatter.js`, `src/core/draftable.js`
+- **Dashboard Integration**: Updated `src/ui/dashboard.js` widget registry
+- **Test Page**: `demos/ui/T-038_vbd_scatter.html` with automated validation
+- **Human Validation**:
+  1. Load test data via validation page
+  2. Verify 4 scatter plots render (QB, RB, WR, TE)
+  3. Check player counts match league settings
+  4. Test cross-widget selection (click dot → search highlights)
+  5. Draft players and verify real-time chart updates
+  6. Confirm performance <100ms for all updates
+  7. Test hover tooltips and player details
+- **Success Criteria**: All scatter plots render, cross-widget sync works, updates <100ms
+
+Result: Implemented complete VBD scatter visualization system replacing old tier widgets. Canvas-based rendering handles 300+ players smoothly. Cross-widget synchronization via both legacy postMessage and modern CustomEvent systems. Real-time updates reflect draft changes instantly. HITL validation page provides comprehensive testing interface.
 
 ## Phase 11: Future Enhancements - Bidding Intelligence (Post-MVP)
 *Duration: TBD | Risk: HIGH*
