@@ -103,12 +103,25 @@ export function initDraftWidget(container) {
 
   clearSel?.addEventListener('click', () => setSelected(null));
 
-  // Listen to selection events from Search & Select widget (home base)
+  // Legacy iframe message listener
   window.addEventListener('message', (e) => {
     const data = e?.data;
     if (!data || data.type !== 'player.selected') return;
     const pid = data.payload?.id;
     const pname = data.payload?.name;
+    handlePlayerSelection(pid, pname);
+  });
+  
+  // Modern cross-widget event listener
+  window.addEventListener('player:selected', (e) => {
+    if (e.detail.source === 'draft') return; // Ignore our own events
+    const player = e.detail.player;
+    if (player) {
+      handlePlayerSelection(player.id, player.name);
+    }
+  });
+  
+  function handlePlayerSelection(pid, pname) {
     let p = null;
     if (pid != null && pid !== '') {
       p = players.find(pp => String(pp.id) === String(pid));
@@ -117,7 +130,7 @@ export function initDraftWidget(container) {
       p = players.find(pp => String(pp.name).toLowerCase() === String(pname).toLowerCase());
     }
     if (p) setSelected(p);
-  });
+  }
 
   function commitDraft(teamId, pr) {
     if (!selected) { msg.textContent = 'Select a player in Search & Select.'; return; }

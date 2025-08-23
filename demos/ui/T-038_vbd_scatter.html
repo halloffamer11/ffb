@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>T-038 VBD Scatter Plot Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      .grid-demo {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 300px 400px;
+        gap: 1rem;
+        height: 700px;
+      }
+      .widget {
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        padding: 1rem;
+        background: white;
+      }
+      .selected-player-info {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #1f2937;
+        color: white;
+        padding: 1rem;
+        border-radius: 8px;
+        min-width: 200px;
+        z-index: 1000;
+      }
+    </style>
+  </head>
+  <body class="bg-slate-50 text-slate-900 p-6">
+    <!-- Header -->
+    <div class="mb-6">
+      <h1 class="text-3xl font-bold mb-2">T-038 VBD Scatter Plot Validation</h1>
+      <p class="text-slate-600 mb-4">Testing VBD scatter plots with cross-widget synchronization and real-time updates</p>
+      
+      <!-- Controls -->
+      <div class="flex gap-4 flex-wrap">
+        <button id="loadData" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+          Load Test Data
+        </button>
+        <button id="draftPlayer" class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+          Draft Selected Player
+        </button>
+        <button id="resetDraft" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+          Reset Draft
+        </button>
+        <select id="leagueSize" class="px-3 py-2 border rounded">
+          <option value="10">10-team League</option>
+          <option value="12" selected>12-team League</option>
+          <option value="14">14-team League</option>
+        </select>
+        <div class="text-sm text-slate-600 flex items-center">
+          Performance: <span id="updateTime" class="ml-2 font-mono">0ms</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Selected Player Info (floating) -->
+    <div id="selectedInfo" class="selected-player-info hidden">
+      <div class="text-sm font-semibold mb-2">Selected Player</div>
+      <div id="selectedDetails">No player selected</div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid-demo">
+      <!-- VBD Scatter Plot (spans full width) -->
+      <div class="widget" style="grid-column: 1 / 3;">
+        <h3 class="text-lg font-semibold mb-3">VBD Scatter Plots</h3>
+        <div id="vbdScatter" class="w-full h-full"></div>
+      </div>
+      
+      <!-- Search Widget -->
+      <div class="widget">
+        <h3 class="text-lg font-semibold mb-3">Player Search</h3>
+        <div id="searchContainer" class="w-full h-full">
+          <input 
+            id="searchInput" 
+            type="text" 
+            placeholder="Search players..." 
+            class="w-full px-3 py-2 border rounded mb-3"
+          />
+          <div id="searchResults" class="overflow-auto" style="height: calc(100% - 60px);">
+            <div class="text-slate-500 text-sm">Type to search players...</div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Player Analysis Widget -->
+      <div class="widget">
+        <h3 class="text-lg font-semibold mb-3">Player Analysis</h3>
+        <div id="analysisContainer" class="w-full h-full">
+          <div class="text-slate-500 text-sm">Select a player to see analysis</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Validation Status -->
+    <div class="mt-6 p-4 border rounded bg-white">
+      <h3 class="font-semibold mb-2">Validation Status</h3>
+      <div id="validationResults" class="space-y-2 text-sm">
+        <div class="text-slate-600">Run tests to see validation results...</div>
+      </div>
+    </div>
+
+    <!-- Test Log -->
+    <div class="mt-4 p-4 border rounded bg-gray-50">
+      <h3 class="font-semibold mb-2">Test Log</h3>
+      <div id="testLog" class="text-sm font-mono text-slate-700 max-h-32 overflow-auto">
+        Ready for testing...
+      </div>
+    </div>
+
+    <script type="module">
+      import { initVBDScatterWidget } from '../../src/ui/vbdScatter.js';
+      import { createSearchComponent } from '../../src/ui/searchComponent.js';
+      import { initAnalysisWidget } from '../../src/ui/analysis.js';
+      import { createStorageAdapter } from '../../src/adapters/storage.js';
+      import { calculatePlayerVBD } from '../../src/core/vbd.js';
+
+      const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
+      
+      // Test state
+      let selectedPlayer = null;
+      let testStartTime = 0;
+      let widgets = {};
+
+      // UI Elements
+      const selectedInfo = document.getElementById('selectedInfo');
+      const selectedDetails = document.getElementById('selectedDetails');
+      const updateTime = document.getElementById('updateTime');
+      const validationResults = document.getElementById('validationResults');
+      const testLog = document.getElementById('testLog');
+
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        testLog.innerHTML += `[${timestamp}] ${message}\n`;
+        testLog.scrollTop = testLog.scrollHeight;
+        console.log(`[T-038] ${message}`);
+      }
+
+      function updateSelectedInfo(player) {
+        selectedPlayer = player;
+        if (!player) {
+          selectedInfo.classList.add('hidden');
+          selectedDetails.innerHTML = 'No player selected';
+          return;
+        }
+        
+        selectedInfo.classList.remove('hidden');
+        const vbd = (player.vbd || 0).toFixed(1);
+        const points = (player.points || 0).toFixed(1);
+        selectedDetails.innerHTML = `
+          <div class="font-semibold">${player.name}</div>
+          <div class="text-sm text-gray-300">${player.team} ${player.position}</div>
+          <div class="text-sm mt-2">
+            <div>VBD: ${vbd}</div>
+            <div>Points: ${points}</div>
+            <div>Rank: #${player.positionRank || '?'}</div>
+          </div>
+        `;
+        log(`Selected: ${player.name} (${player.position}, VBD: ${vbd})`);
+      }
+
+      // Generate test data
+      function generateTestData() {
+        const positions = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+        const teams = ['KC', 'BUF', 'CIN', 'MIA', 'NYJ', 'NE', 'PIT', 'BAL', 'CLE', 'HOU', 'IND', 'JAX', 'TEN', 'DEN', 'LV', 'LAC', 'DAL', 'NYG', 'PHI', 'WAS', 'GB', 'MIN', 'CHI', 'DET', 'TB', 'NO', 'ATL', 'CAR', 'SF', 'SEA', 'LAR', 'ARI'];
+        const firstNames = ['Patrick', 'Josh', 'Joe', 'Tua', 'Aaron', 'Lamar', 'Russell', 'Dak', 'Kirk', 'Matt'];
+        const lastNames = ['Mahomes', 'Allen', 'Burrow', 'Tagovailoa', 'Rodgers', 'Jackson', 'Wilson', 'Prescott', 'Cousins', 'Stafford'];
+        
+        const players = [];
+        let playerId = 1;
+        
+        // Generate players for each position
+        positions.forEach(pos => {
+          const count = pos === 'QB' ? 50 : pos === 'K' || pos === 'DST' ? 32 : 80;
+          const basePoints = pos === 'QB' ? 300 : pos === 'RB' || pos === 'WR' ? 200 : pos === 'TE' ? 150 : 100;
+          
+          for (let i = 0; i < count; i++) {
+            // Create realistic point distribution
+            const tier = i < 5 ? 'elite' : i < 15 ? 'good' : i < 35 ? 'average' : 'depth';
+            const multiplier = tier === 'elite' ? 1.0 : tier === 'good' ? 0.85 : tier === 'average' ? 0.7 : 0.5;
+            const variance = Math.random() * 0.3 - 0.15; // ±15% variance
+            const points = basePoints * multiplier * (1 + variance);
+            
+            players.push({
+              id: playerId++,
+              name: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}${i}`,
+              team: teams[Math.floor(Math.random() * teams.length)],
+              position: pos,
+              points: Math.max(50, Math.round(points * 10) / 10),
+              adp: i + 1 + Math.floor(Math.random() * 20),
+              injuryStatus: Math.random() < 0.85 ? 0 : Math.random() < 0.7 ? 1 : Math.random() < 0.5 ? 2 : 4,
+              drafted: false
+            });
+          }
+        });
+        
+        return players;
+      }
+
+      // Load test data into workspace
+      function loadTestData() {
+        log('Loading test data...');
+        const players = generateTestData();
+        
+        // Set up league settings
+        const leagueSize = parseInt(document.getElementById('leagueSize').value);
+        const settings = {
+          teams: leagueSize,
+          roster: {
+            QB: 1,
+            RB: 2, 
+            WR: 2,
+            TE: 1,
+            FLEX: 1,
+            K: 1,
+            DST: 1,
+            BENCH: 6
+          },
+          scoring: { type: 'PPR' },
+          budget: 200,
+          minBid: 1,
+          owners: []
+        };
+        
+        // Generate owners
+        for (let i = 1; i <= leagueSize; i++) {
+          settings.owners.push({
+            id: i,
+            team: `Team ${i}`,
+            name: `Owner ${i}`,
+            order: i
+          });
+        }
+        
+        // Calculate VBD
+        const league = { teams: leagueSize, starters: settings.roster };
+        const playersWithVBD = calculatePlayerVBD(players, league);
+        
+        // Save to storage
+        storage.set('leagueSettings', settings);
+        storage.set('players', playersWithVBD);
+        storage.set('state', { draft: { picks: [] } });
+        
+        log(`Loaded ${playersWithVBD.length} players for ${leagueSize}-team league`);
+        
+        // Trigger updates
+        window.dispatchEvent(new CustomEvent('workspace:players-changed'));
+        window.dispatchEvent(new CustomEvent('workspace:state-changed'));
+        
+        runValidationTests();
+      }
+
+      // Draft selected player
+      function draftSelectedPlayer() {
+        if (!selectedPlayer) {
+          log('ERROR: No player selected for drafting');
+          return;
+        }
+        
+        log(`Drafting ${selectedPlayer.name}...`);
+        testStartTime = performance.now();
+        
+        // Mark player as drafted
+        const players = storage.get('players') || [];
+        const playerIndex = players.findIndex(p => p.id === selectedPlayer.id);
+        if (playerIndex >= 0) {
+          players[playerIndex].drafted = true;
+          storage.set('players', players);
+          
+          // Add to picks
+          const state = storage.get('state') || { draft: { picks: [] } };
+          state.draft.picks.push({
+            playerId: selectedPlayer.id,
+            playerName: selectedPlayer.name,
+            teamId: 1,
+            price: Math.floor(Math.random() * 50) + 1
+          });
+          storage.set('state', state);
+          
+          // Trigger updates
+          window.dispatchEvent(new CustomEvent('workspace:players-changed'));
+          window.dispatchEvent(new CustomEvent('workspace:state-changed'));
+          
+          const updateDuration = performance.now() - testStartTime;
+          updateTime.textContent = `${updateDuration.toFixed(1)}ms`;
+          log(`Drafted ${selectedPlayer.name} (update took ${updateDuration.toFixed(1)}ms)`);
+          
+          // Clear selection
+          selectedPlayer = null;
+          updateSelectedInfo(null);
+        }
+      }
+
+      // Reset draft
+      function resetDraft() {
+        log('Resetting draft...');
+        const players = storage.get('players') || [];
+        players.forEach(p => p.drafted = false);
+        storage.set('players', players);
+        storage.set('state', { draft: { picks: [] } });
+        
+        // Trigger updates
+        window.dispatchEvent(new CustomEvent('workspace:players-changed'));
+        window.dispatchEvent(new CustomEvent('workspace:state-changed'));
+        
+        log('Draft reset complete');
+      }
+
+      // Validation tests
+      function runValidationTests() {
+        const results = [];
+        
+        // Test 1: VBD scatter widget renders
+        const vbdContainer = document.getElementById('vbdScatter');
+        if (vbdContainer.children.length > 0) {
+          results.push('✅ VBD scatter widget rendered');
+        } else {
+          results.push('❌ VBD scatter widget failed to render');
+        }
+        
+        // Test 2: Player data loaded
+        const players = storage.get('players') || [];
+        const qbs = players.filter(p => p.position === 'QB');
+        const rbs = players.filter(p => p.position === 'RB');
+        const wrs = players.filter(p => p.position === 'WR');
+        const tes = players.filter(p => p.position === 'TE');
+        
+        if (qbs.length > 0 && rbs.length > 0 && wrs.length > 0 && tes.length > 0) {
+          results.push(`✅ Player data loaded (QB: ${qbs.length}, RB: ${rbs.length}, WR: ${wrs.length}, TE: ${tes.length})`);
+        } else {
+          results.push('❌ Player data incomplete');
+        }
+        
+        // Test 3: VBD calculations present
+        const playersWithVBD = players.filter(p => p.vbd != null);
+        if (playersWithVBD.length === players.length) {
+          results.push('✅ VBD calculations complete for all players');
+        } else {
+          results.push(`❌ VBD calculations missing (${playersWithVBD.length}/${players.length})`);
+        }
+        
+        // Test 4: Draftable thresholds reasonable
+        const settings = storage.get('leagueSettings');
+        const teams = settings?.teams || 12;
+        const expectedQBs = teams + Math.floor(teams * 0.6); // Starters + 60% backup
+        const availableQBs = qbs.filter(q => !q.drafted).length;
+        
+        if (availableQBs >= expectedQBs * 0.8) { // Allow some tolerance
+          results.push(`✅ Draftable QB count reasonable (${availableQBs} available, ~${expectedQBs} expected)`);
+        } else {
+          results.push(`⚠️ QB count may be low (${availableQBs} available, ~${expectedQBs} expected)`);
+        }
+        
+        validationResults.innerHTML = results.map(result => `<div>${result}</div>`).join('');
+      }
+
+      // Event listeners
+      window.addEventListener('player:selected', (e) => {
+        const player = e.detail.player;
+        const source = e.detail.source;
+        log(`Player selected from ${source}: ${player.name}`);
+        updateSelectedInfo(player);
+      });
+
+      // Button handlers
+      document.getElementById('loadData').addEventListener('click', loadTestData);
+      document.getElementById('draftPlayer').addEventListener('click', draftSelectedPlayer);
+      document.getElementById('resetDraft').addEventListener('click', resetDraft);
+      document.getElementById('leagueSize').addEventListener('change', loadTestData);
+
+      // Initialize widgets
+      async function initWidgets() {
+        log('Initializing widgets...');
+        
+        // Initialize VBD scatter plot
+        const vbdContainer = document.getElementById('vbdScatter');
+        widgets.vbdScatter = initVBDScatterWidget(vbdContainer);
+        
+        // Initialize search component
+        const searchContainer = document.getElementById('searchContainer');
+        widgets.search = createSearchComponent(searchContainer, {
+          hoverPreview: true,
+          onSelect: (player) => {
+            log(`Search component selected: ${player.name}`);
+          }
+        });
+        
+        // Initialize analysis widget
+        const analysisContainer = document.getElementById('analysisContainer');
+        widgets.analysis = initAnalysisWidget(analysisContainer);
+        
+        log('All widgets initialized');
+      }
+
+      // Start the application
+      initWidgets().then(() => {
+        log('Application ready - click "Load Test Data" to begin');
+      });
+    </script>
+  </body>
+</html>
