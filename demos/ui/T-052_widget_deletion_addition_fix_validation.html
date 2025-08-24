@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-052 Widget Deletion & Addition Fix Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            background: #0f1419;
+            color: #e6e6e6;
+        }
+        
+        .validation-container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1f2e;
+            border-radius: 8px;
+            border: 1px solid #2d3748;
+        }
+        
+        h1, h2 {
+            color: #00d2d3;
+            border-bottom: 2px solid #2d3748;
+            padding-bottom: 10px;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #252d3a;
+            border-radius: 6px;
+            border-left: 4px solid #00d2d3;
+        }
+        
+        .step {
+            margin: 15px 0;
+            padding: 12px;
+            background: #1a1f2e;
+            border-radius: 4px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #00d2d3;
+            color: #000;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .expected {
+            color: #68d391;
+            font-style: italic;
+            margin-top: 5px;
+        }
+        
+        .warning {
+            color: #f56565;
+            background: #2d1b1b;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #f56565;
+            margin: 10px 0;
+        }
+        
+        .success-criteria {
+            background: #1a2f1a;
+            border: 1px solid #48bb78;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .success-criteria h3 {
+            color: #48bb78;
+            margin-top: 0;
+        }
+        
+        .code {
+            background: #2d3748;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            border: 1px solid #4a5568;
+        }
+        
+        .highlight {
+            background: #4a5568;
+            padding: 2px 4px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        ul {
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .app-link {
+            display: inline-block;
+            background: #00d2d3;
+            color: #000;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: background-color 0.2s;
+        }
+        
+        .app-link:hover {
+            background: #00b8b9;
+        }
+        
+        .problem-section {
+            background: #2d1b1b;
+            border: 1px solid #f56565;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .problem-section h3 {
+            color: #f56565;
+            margin-top: 0;
+        }
+        
+        .fix-section {
+            background: #1b2d1b;
+            border: 1px solid #68d391;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .fix-section h3 {
+            color: #68d391;
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <h1>🗑️ T-052: Widget Deletion & Addition Fix Validation</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Prerequisites:</strong>
+            <ul>
+                <li>Start dev server: <span class="code">npm run dev</span></li>
+                <li>React app running on <span class="code">http://localhost:5175</span> (check console output for actual port)</li>
+                <li>Clear localStorage before testing (F12 → Application → Storage → Clear All)</li>
+                <li>Open browser developer console to monitor widget management logs</li>
+            </ul>
+        </div>
+
+        <div class="problem-section">
+            <h3>🐛 Problems Fixed</h3>
+            <p>This validation addresses the reported issues with widget deletion and addition functionality:</p>
+            <ul>
+                <li><strong>Widget Deletion Issue:</strong> Delete button (×) only flashed green but widgets remained visible</li>
+                <li><strong>Missing Add Widget Functionality:</strong> No way to add widgets back once removed</li>
+                <li><strong>State Persistence Issues:</strong> Removed widgets would reappear after page refresh</li>
+                <li><strong>Layout Re-rendering Problems:</strong> React Grid Layout not properly updating when widgets removed</li>
+            </ul>
+        </div>
+
+        <div class="fix-section">
+            <h3>🔧 Solutions Implemented</h3>
+            <ul>
+                <li><strong>Enhanced Widget Removal:</strong> Improved state management with immediate localStorage sync</li>
+                <li><strong>Grid Re-rendering Fix:</strong> Added key prop to force React Grid Layout re-render when widgets change</li>
+                <li><strong>Improved Add Widget Menu:</strong> Enhanced styling, better positioning, and professional UX</li>
+                <li><strong>Smart Widget Positioning:</strong> Added widgets are placed intelligently at bottom of existing widgets</li>
+                <li><strong>Visual Feedback:</strong> Better button styling and animations for user feedback</li>
+                <li><strong>Comprehensive Logging:</strong> Added extensive console logging for debugging widget management</li>
+            </ul>
+        </div>
+
+        <a href="http://localhost:5175" target="_blank" class="app-link">🚀 Open React Application</a>
+
+        <h2>📋 Validation Test Sequence</h2>
+
+        <div class="test-section">
+            <h3>Test 1: Widget Deletion Functionality</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Open the application and click <span class="highlight">"Edit Layout"</span> button
+                <div class="expected">✓ Expected: Edit mode enabled, × (remove) buttons appear on all widgets</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Click the × button on the <span class="highlight">"Budget Tracker"</span> widget
+                <div class="expected">✓ Expected: Widget disappears immediately (no green flash, no delay)</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Check browser console for widget removal logs
+                <div class="expected">✓ Expected: Console shows removal logs with proper state updates</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                Remove 2-3 more widgets by clicking their × buttons
+                <div class="expected">✓ Expected: Each widget disappears instantly, layout reflows properly</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">5</span>
+                Exit edit mode, then re-enter edit mode
+                <div class="expected">✓ Expected: Removed widgets stay hidden (persistence working)</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Add Widget Menu Appearance</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                With some widgets removed and in edit mode, look for the <span class="highlight">"Add Widgets"</span> menu
+                <div class="expected">✓ Expected: Menu appears at top with professional styling and + icon</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Verify menu contains buttons for all hidden widgets
+                <div class="expected">✓ Expected: Each removed widget has a button with proper display name</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Hover over add widget buttons
+                <div class="expected">✓ Expected: Buttons have smooth hover animations with color changes</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                Remove all widgets except one
+                <div class="expected">✓ Expected: Add Widgets menu shows 6 buttons for the hidden widgets</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Widget Addition Functionality</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Click the <span class="highlight">"Budget Tracker"</span> button in the Add Widgets menu
+                <div class="expected">✓ Expected: Budget widget appears at the bottom of the current layout</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Add another widget by clicking its button
+                <div class="expected">✓ Expected: Widget appears below the first added widget with proper spacing</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Add all remaining widgets one by one
+                <div class="expected">✓ Expected: Each widget appears in sequence, grid height expands as needed</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                When all widgets are visible, check the Add Widgets menu
+                <div class="expected">✓ Expected: Add Widgets menu disappears (no hidden widgets left to add)</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: State Persistence & Page Refresh</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Remove 3-4 widgets and note which ones are hidden
+                <div class="expected">✓ Expected: Widgets disappear and Add Widgets menu shows the hidden ones</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Refresh the page (F5 or Ctrl+R)
+                <div class="expected">✓ Expected: Page loads with the same widgets hidden as before refresh</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Enter edit mode after refresh
+                <div class="expected">✓ Expected: Add Widgets menu appears with same hidden widgets from before refresh</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                Add back a removed widget
+                <div class="expected">✓ Expected: Widget appears and persists after page refresh</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 5: Layout Preset Integration</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Remove several widgets in custom layout
+                <div class="expected">✓ Expected: Widgets removed from current layout</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Switch to Layout Preset 1 (keyboard shortcut "1")
+                <div class="expected">✓ Expected: All widgets become visible again with preset positions</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Remove widgets again and switch to Layout Preset 2 ("2")
+                <div class="expected">✓ Expected: All widgets visible with different preset layout</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                Make custom modifications and check persistence
+                <div class="expected">✓ Expected: Custom widget visibility persists until preset is switched</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 6: Smart Positioning & Grid Height</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Remove all widgets except the top two
+                <div class="expected">✓ Expected: Grid height shrinks to fit remaining widgets</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Add back widgets one at a time
+                <div class="expected">✓ Expected: Each widget appears below existing ones, grid height expands smoothly</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Exit edit mode and observe layout
+                <div class="expected">✓ Expected: Grid height fits exactly with all visible widgets</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                Re-enter edit mode and verify grid expansion
+                <div class="expected">✓ Expected: Grid expands for editing, maintains widget positions</div>
+            </div>
+        </div>
+
+        <div class="success-criteria">
+            <h3>✅ Success Criteria Summary</h3>
+            <ul>
+                <li><strong>Immediate Widget Removal:</strong> × button instantly removes widgets without green flash</li>
+                <li><strong>Proper State Management:</strong> Widget visibility syncs immediately to localStorage</li>
+                <li><strong>Add Widget Menu:</strong> Professional menu appears with all hidden widgets</li>
+                <li><strong>Smart Widget Addition:</strong> Added widgets placed at bottom with proper spacing</li>
+                <li><strong>Complete Persistence:</strong> Widget visibility persists across page refreshes</li>
+                <li><strong>Layout Integration:</strong> Presets restore all widgets, custom changes persist until preset switch</li>
+                <li><strong>Dynamic Grid Height:</strong> Grid height adjusts properly when widgets added/removed</li>
+                <li><strong>Visual Polish:</strong> Smooth animations, hover effects, professional styling</li>
+                <li><strong>Console Logging:</strong> Clear debug logs for widget management operations</li>
+                <li><strong>Accessibility:</strong> Proper ARIA labels, keyboard navigation, focus management</li>
+            </ul>
+        </div>
+
+        <h2>🔧 Implementation Summary</h2>
+        <div class="test-section">
+            <h3>Key Changes Made</h3>
+            <ul>
+                <li><strong>Widget Removal Fix:</strong> Enhanced removeWidget function with immediate localStorage sync</li>
+                <li><strong>Grid Re-render Fix:</strong> Added key prop to ResponsiveGridLayout to force re-renders</li>
+                <li><strong>Null Widget Check:</strong> Added renderWidget null check to prevent rendering invisible widgets</li>
+                <li><strong>Smart Addition Logic:</strong> Improved addWidget positioning based on visible widgets</li>
+                <li><strong>Enhanced Styling:</strong> Professional Add Widgets menu with hover animations</li>
+                <li><strong>Better Logging:</strong> Comprehensive console logging for debugging widget operations</li>
+            </ul>
+            
+            <h3>Files Modified</h3>
+            <ul>
+                <li><code>/src/components/widgets/WidgetGrid.tsx</code> - Core widget management system improvements</li>
+                <li>Enhanced removeWidget, addWidget, and renderWidget functions</li>
+                <li>Added responsive grid key for proper re-rendering</li>
+                <li>Improved Add Widgets menu styling and UX</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>📝 Validation Notes:</strong>
+            <ul>
+                <li>Monitor browser console for detailed widget management logs</li>
+                <li>Test with different screen sizes to verify responsive behavior</li>
+                <li>Clear localStorage between test runs if needed for consistent results</li>
+                <li>Verify no React errors or warnings in console during widget operations</li>
+                <li>Test keyboard navigation and accessibility features</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

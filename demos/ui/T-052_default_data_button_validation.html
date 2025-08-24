@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-052: Default Data Button - HITL Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+            color: #334155;
+        }
+        
+        .validation-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        
+        .validation-section {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .step-list {
+            counter-reset: step-counter;
+        }
+        
+        .step-list li {
+            counter-increment: step-counter;
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+        
+        .step-list li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .expected {
+            background: #f0f9ff;
+            border-left: 4px solid #0ea5e9;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }
+        
+        .pass-criteria {
+            background: #f0fdf4;
+            border: 1px solid #22c55e;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .fail-criteria {
+            background: #fef2f2;
+            border: 1px solid #ef4444;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+        
+        .file-list {
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 1rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+        }
+        
+        .button-demo {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .button-demo:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-header">
+        <h1>🚀 T-052: Default Data Button</h1>
+        <p>HITL Validation for Load Default Data functionality in Data Management page</p>
+    </div>
+
+    <div class="validation-section">
+        <h2>📋 Implementation Summary</h2>
+        <p><strong>Purpose:</strong> Add a convenient "Load Default Data" button to the Data Management page that allows users to quickly import demo data (top300_2024.csv) without needing to manually upload a file.</p>
+        
+        <p><strong>Code Added:</strong></p>
+        <div class="file-list">
+- Modified: /src/pages/DataManagementPage.tsx
+  - Added handleLoadDefaultData() function
+  - Added prominent "Load Default Data" button with gradient styling
+  - Added visual separator ("OR") between default data and file upload options
+  - Integrated with existing CSV parsing and import workflow
+        </div>
+        
+        <p><strong>Integration:</strong> Uses the existing CSV import pipeline, data validation, and VBD recalculation system. Fetches demo data from the public assets directory.</p>
+        
+        <p><strong>Button Preview:</strong></p>
+        <button class="button-demo">🚀 Load Default Data (Top 300 2024)</button>
+    </div>
+
+    <div class="validation-section">
+        <h2>🧪 Validation Instructions</h2>
+        
+        <div class="warning">
+            <strong>⚠️ Prerequisites:</strong> Ensure the dev server is running and the React app is accessible.
+        </div>
+        
+        <h3>Setup:</h3>
+        <ol class="step-list">
+            <li>Start dev server: <code>npm run dev</code></li>
+            <li>Navigate to <code>http://localhost:5173</code></li>
+            <li>Access Data Management from the navigation or go directly to <code>http://localhost:5173/data-management</code></li>
+        </ol>
+
+        <h3>Test Steps:</h3>
+        <ol class="step-list">
+            <li>
+                <strong>Access Data Management Page</strong>
+                <div class="expected">
+                    <strong>Expected:</strong> Data Management page loads with three-step process visible
+                </div>
+            </li>
+            
+            <li>
+                <strong>Select Any Data Source (Step 1)</strong>
+                <div class="expected">
+                    <strong>Expected:</strong> Click any data source card (e.g., "Custom CSV"). Step 2 should become visible.
+                </div>
+            </li>
+            
+            <li>
+                <strong>Locate Default Data Button</strong>
+                <div class="expected">
+                    <strong>Expected:</strong> In Step 2, see prominent "🚀 Load Default Data (Top 300 2024)" button with gradient styling above the file upload area, separated by "OR" divider
+                </div>
+            </li>
+            
+            <li>
+                <strong>Click Load Default Data Button</strong>
+                <div class="expected">
+                    <strong>Expected:</strong> Button shows "Loading..." state briefly, then success message appears and Step 3 becomes visible automatically
+                </div>
+            </li>
+            
+            <li>
+                <strong>Verify Data Preview (Step 3)</strong>
+                <div class="expected">
+                    <strong>Expected:</strong> Preview table shows 10 rows of player data with columns: id, name, team, position, byeWeek, injuryStatus, points, adp. Status message shows "Successfully loaded default data with 300 players!"
+                </div>
+            </li>
+            
+            <li>
+                <strong>Import Default Data</strong>
+                <div class="expected">
+                    <strong>Expected:</strong> Click "Import Data" button. Should show "Importing..." state, then success message. After 2 seconds, automatically navigate back to dashboard.
+                </div>
+            </li>
+            
+            <li>
+                <strong>Verify Data Import Success</strong>
+                <div class="expected">
+                    <strong>Expected:</strong> Back on dashboard, widgets should show the imported player data (300 players). Search widget should find players like "Lamar Jackson", "Ja'Marr Chase", etc.
+                </div>
+            </li>
+            
+            <li>
+                <strong>Test Error Handling (Optional)</strong>
+                <div class="expected">
+                    <strong>Expected:</strong> If demo file is missing, should show clear error message without breaking the page
+                </div>
+            </li>
+        </ol>
+    </div>
+
+    <div class="validation-section">
+        <h2>✅ Pass Criteria</h2>
+        <div class="pass-criteria">
+            <h4>Must Meet ALL of These:</h4>
+            <ul>
+                <li>✓ "Load Default Data" button is visible and prominently styled on Step 2</li>
+                <li>✓ Button has rocket emoji and clear descriptive text</li>
+                <li>✓ Clicking button loads demo data and advances to Step 3 automatically</li>
+                <li>✓ Preview shows correct player data from top300_2024.csv (300 rows)</li>
+                <li>✓ Import process works identically to file upload (success message, navigation)</li>
+                <li>✓ Imported data appears correctly in dashboard widgets</li>
+                <li>✓ No console errors during the entire process</li>
+                <li>✓ UI remains responsive throughout loading and import</li>
+                <li>✓ Button styling matches design (gradient background, hover effects)</li>
+                <li>✓ "OR" separator provides clear visual distinction from file upload</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="validation-section">
+        <h2>❌ Fail Criteria</h2>
+        <div class="fail-criteria">
+            <h4>Any of These Indicate Failure:</h4>
+            <ul>
+                <li>✗ Button not visible or incorrectly positioned</li>
+                <li>✗ Button click does not load default data</li>
+                <li>✗ Data preview shows incorrect or malformed data</li>
+                <li>✗ Import fails or does not navigate back to dashboard</li>
+                <li>✗ Console errors during any part of the process</li>
+                <li>✗ Dashboard widgets don't reflect imported data</li>
+                <li>✗ Button styling is inconsistent or broken</li>
+                <li>✗ Loading states don't work properly</li>
+                <li>✗ Error messages are unclear or unhelpful</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="validation-section">
+        <h2>📁 Files Modified</h2>
+        <div class="file-list">
+/Users/dreiss/Documents/Cursor/FFB/src/pages/DataManagementPage.tsx
+- Added handleLoadDefaultData() async function
+- Added default data button with gradient styling and rocket emoji
+- Added visual "OR" separator between default and upload options
+- Integrated with existing CSV parsing and import workflow
+- Added proper loading states and error handling
+
+/Users/dreiss/Documents/Cursor/FFB/demos/ui/T-052_default_data_button_validation.html
+- Created this HITL validation page with comprehensive test scenarios
+        </div>
+    </div>
+
+    <div class="validation-section">
+        <h2>🎯 Key Features Implemented</h2>
+        <ul>
+            <li><strong>Prominent Button:</strong> Styled with gradient background and rocket emoji for visibility</li>
+            <li><strong>Seamless Integration:</strong> Uses existing CSV parsing and import logic</li>
+            <li><strong>Clear UX:</strong> Visual separator distinguishes from file upload option</li>
+            <li><strong>Proper States:</strong> Loading indicators and success/error feedback</li>
+            <li><strong>Auto-Navigation:</strong> Advances workflow automatically after loading</li>
+            <li><strong>Error Handling:</strong> Graceful degradation if demo file is unavailable</li>
+            <li><strong>Consistent Styling:</strong> Matches existing page design patterns</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 2rem; padding: 1rem; background: #f1f5f9; border-radius: 8px;">
+        <p><strong>🏁 Please confirm validation results before I proceed to mark this task as complete.</strong></p>
+        <p><em>Expected response: "HITL validation passed" or specific issues found</em></p>
+    </div>
+</body>
+</html>

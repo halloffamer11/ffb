@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Presets System - HITL Validation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #e5e7eb;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .validation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+            border: 1px solid #4b5563;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            color: #9ca3af;
+            margin-bottom: 20px;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+            border: 1px solid #059669;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .test-section {
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #f3f4f6;
+        }
+        
+        .preset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .preset-card {
+            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s ease;
+        }
+        
+        .preset-card:hover {
+            border-color: #60a5fa;
+            box-shadow: 0 4px 12px rgba(96,165,250,0.1);
+        }
+        
+        .preset-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .preset-icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .preset-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f3f4f6;
+        }
+        
+        .preset-shortcut {
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 4px;
+            padding: 2px 8px;
+            font-size: 12px;
+            font-family: monospace;
+            color: #9ca3af;
+            margin-left: auto;
+        }
+        
+        .preset-description {
+            color: #9ca3af;
+            margin-bottom: 16px;
+            line-height: 1.5;
+        }
+        
+        .workflow-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        
+        .workflow-tag {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #60a5fa;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        
+        .test-steps {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        
+        .step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #374151;
+        }
+        
+        .step:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        
+        .step-number {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #3b82f6;
+            color: white;
+            border-radius: 50%;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        
+        .step-content {
+            flex: 1;
+        }
+        
+        .step-action {
+            font-weight: 600;
+            color: #f3f4f6;
+            margin-bottom: 4px;
+        }
+        
+        .step-expected {
+            color: #9ca3af;
+            font-size: 14px;
+        }
+        
+        .criteria-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .criteria-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: #1f2937;
+            border-radius: 6px;
+        }
+        
+        .criteria-check {
+            color: #10b981;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+        
+        .launch-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .launch-button:hover {
+            background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+        
+        .implementation-summary {
+            background: linear-gradient(135deg, #065f46 0%, #047857 100%);
+            border: 1px solid #059669;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .files-list {
+            list-style: none;
+            padding: 0;
+            margin: 16px 0 0 0;
+        }
+        
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 0;
+            color: #d1fae5;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        
+        .file-icon {
+            color: #34d399;
+        }
+        
+        .keyboard-demo {
+            background: #1f2937;
+            border: 1px solid #374151;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .key {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 32px;
+            height: 32px;
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 6px;
+            font-family: monospace;
+            font-weight: 600;
+            margin: 0 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <div class="header">
+            <h1>Layout Presets System - HITL Validation</h1>
+            <p class="subtitle">Professional dashboard layout presets for fantasy football workflow optimization</p>
+            <div class="status-badge">
+                <span>✅</span>
+                <span>Ready for Validation</span>
+            </div>
+        </div>
+
+        <div class="implementation-summary">
+            <h2 class="section-title">Implementation Summary</h2>
+            <p><strong>Purpose:</strong> Three professional dashboard layout presets optimized for different fantasy football workflow stages: Pre-draft Research, Active Nomination, and Player Analytics.</p>
+            
+            <p><strong>Code Added:</strong></p>
+            <ul class="files-list">
+                <li class="file-item">
+                    <span class="file-icon">📄</span>
+                    <span>src/utils/layoutPresets.ts - Preset definitions with professional layouts</span>
+                </li>
+                <li class="file-item">
+                    <span class="file-icon">🎯</span>
+                    <span>src/hooks/useLayoutPresets.ts - Preset state management with keyboard shortcuts</span>
+                </li>
+                <li class="file-item">
+                    <span class="file-icon">🎨</span>
+                    <span>src/components/ui/PresetSelector.tsx - Professional preset selection UI</span>
+                </li>
+                <li class="file-item">
+                    <span class="file-icon">🔧</span>
+                    <span>Modified src/components/widgets/WidgetGrid.tsx - Integrated preset system</span>
+                </li>
+            </ul>
+            
+            <p><strong>Integration:</strong> Seamlessly integrates with existing widget grid system while preserving user customizations. Uses focus guarding to prevent accidental keyboard shortcuts during text input.</p>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">Available Layout Presets</h2>
+            <div class="preset-grid">
+                <div class="preset-card">
+                    <div class="preset-header">
+                        <div class="preset-icon">🔍</div>
+                        <div class="preset-name">Pre-Draft Research</div>
+                        <div class="preset-shortcut">1</div>
+                    </div>
+                    <div class="preset-description">
+                        Optimized for player research and value-based analysis before draft begins
+                    </div>
+                    <div class="workflow-tags">
+                        <span class="workflow-tag">Player Research</span>
+                        <span class="workflow-tag">Value Analysis</span>
+                        <span class="workflow-tag">Tier Identification</span>
+                    </div>
+                </div>
+                
+                <div class="preset-card">
+                    <div class="preset-header">
+                        <div class="preset-icon">⚡</div>
+                        <div class="preset-name">Active Nomination</div>
+                        <div class="preset-shortcut">2</div>
+                    </div>
+                    <div class="preset-description">
+                        Optimized for real-time drafting decisions and bid management
+                    </div>
+                    <div class="workflow-tags">
+                        <span class="workflow-tag">Real-time Bidding</span>
+                        <span class="workflow-tag">Budget Management</span>
+                        <span class="workflow-tag">Roster Building</span>
+                    </div>
+                </div>
+                
+                <div class="preset-card">
+                    <div class="preset-header">
+                        <div class="preset-icon">📊</div>
+                        <div class="preset-name">Player Analytics</div>
+                        <div class="preset-shortcut">3</div>
+                    </div>
+                    <div class="preset-description">
+                        Deep analysis workflow with data visualization and player insights
+                    </div>
+                    <div class="workflow-tags">
+                        <span class="workflow-tag">Deep Analysis</span>
+                        <span class="workflow-tag">Data Visualization</span>
+                        <span class="workflow-tag">Player Insights</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="keyboard-demo">
+                <strong>Keyboard Shortcuts:</strong> Press <span class="key">1</span>, <span class="key">2</span>, or <span class="key">3</span> to switch layouts. 
+                Focus guard prevents activation during text input.
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">Validation Instructions</h2>
+            
+            <div style="margin-bottom: 20px;">
+                <strong>Setup:</strong> Start the development server and navigate to the main dashboard.
+                <br>
+                <a href="http://localhost:5173" class="launch-button" target="_blank">
+                    🚀 Launch Application
+                </a>
+            </div>
+            
+            <div class="test-steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <div class="step-action">Load Application Dashboard</div>
+                        <div class="step-expected">Expected: Dashboard loads with default preset (Pre-Draft Research) active. Preset selector visible in top toolbar.</div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <div class="step-action">Test Preset Selector UI</div>
+                        <div class="step-expected">Expected: Click preset selector to see dropdown with all three presets. Professional styling with icons, descriptions, and workflow tags.</div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <div class="step-action">Switch to Nomination Layout (Press '2' or click selector)</div>
+                        <div class="step-expected">Expected: Widgets rearrange to nomination layout - DraftEntry prominent, BudgetTracker large, RosterPanel visible, analysis tools secondary.</div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <div class="step-content">
+                        <div class="step-action">Switch to Player Analytics Layout (Press '3')</div>
+                        <div class="step-expected">Expected: VBDScatter dominates screen, PlayerAnalysis large, draft tools minimized. Analytics-focused layout.</div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">5</div>
+                    <div class="step-content">
+                        <div class="step-action">Test Keyboard Shortcuts with Focus Guard</div>
+                        <div class="step-expected">Expected: Click in search widget input field, then press '1'. Layout should NOT change (focus guard active). Click outside, press '1' - layout changes.</div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">6</div>
+                    <div class="step-content">
+                        <div class="step-action">Test Layout Persistence</div>
+                        <div class="step-expected">Expected: Switch to different preset, refresh page. Should maintain selected preset on reload.</div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">7</div>
+                    <div class="step-content">
+                        <div class="step-action">Test Custom Layout Modifications</div>
+                        <div class="step-expected">Expected: Enable edit mode, move widgets, switch presets. Custom changes preserved per preset or reset when switching.</div>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <div class="step-number">8</div>
+                    <div class="step-content">
+                        <div class="step-action">Test Responsive Behavior</div>
+                        <div class="step-expected">Expected: Resize browser window. Each preset maintains professional layout across breakpoints (lg/md/sm).</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2 class="section-title">Pass Criteria</h2>
+            <ul class="criteria-list">
+                <li class="criteria-item">
+                    <span class="criteria-check">✓</span>
+                    <span>All three presets load with correct widget arrangements for their intended workflows</span>
+                </li>
+                <li class="criteria-item">
+                    <span class="criteria-check">✓</span>
+                    <span>Keyboard shortcuts (1, 2, 3) switch layouts without errors</span>
+                </li>
+                <li class="criteria-item">
+                    <span class="criteria-check">✓</span>
+                    <span>Focus guard prevents layout switches during text input (search fields, form inputs)</span>
+                </li>
+                <li class="criteria-item">
+                    <span class="criteria-check">✓</span>
+                    <span>Preset selector UI displays professional styling with trading platform aesthetic</span>
+                </li>
+                <li class="criteria-item">
+                    <span class="criteria-check">✓</span>
+                    <span>Layout preferences persist across browser sessions</span>
+                </li>
+                <li class="criteria-item">
+                    <span class="criteria-check">✓</span>
+                    <span>Each preset optimizes screen real estate for its intended workflow</span>
+                </li>
+                <li class="criteria-item">
+                    <span class="criteria-check">✓</span>
+                    <span>Responsive behavior maintains usability across all screen sizes</span>
+                </li>
+                <li class="criteria-item">
+                    <span class="criteria-check">✓</span>
+                    <span>No console errors or layout breaking during preset switches</span>
+                </li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 32px; padding: 24px; background: #1f2937; border: 1px solid #374151; border-radius: 12px;">
+            <h3 style="color: #f59e0b; margin-bottom: 12px;">⚠️ HITL Validation Required</h3>
+            <p style="color: #9ca3af;">Please test all functionality above and confirm validation results before proceeding.</p>
+        </div>
+    </div>
+</body>
+</html>

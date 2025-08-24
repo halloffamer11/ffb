@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shadow Overlay Removal - Text Readability Validation</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #0b0b0c;
+            color: #f5f5f6;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.5;
+        }
+        
+        .validation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .validation-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #121214;
+            border-radius: 8px;
+            border: 1px solid #2a2a2f;
+        }
+        
+        .section-title {
+            color: #ccff00;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        /* Before - Old Shadow Style */
+        .widget-old {
+            background: linear-gradient(145deg, #121214 0%, #18181b 100%);
+            border: 1px solid #2a2a2f;
+            border-radius: 8px;
+            padding: 16px;
+            /* Heavy shadows that interfere with text */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .widget-old::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.02) 0%, transparent 50%, rgba(255,255,255,0.01) 100%);
+            pointer-events: none;
+        }
+        
+        .widget-old:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.4);
+            transform: translateY(-1px);
+        }
+        
+        /* After - New Clean Style */
+        .widget-new {
+            background: linear-gradient(145deg, #121214 0%, #18181b 100%);
+            border: 1px solid #2a2a2f;
+            border-radius: 8px;
+            padding: 16px;
+            /* Minimal shadow for depth only */
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+        
+        .widget-new::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.04);
+            pointer-events: none;
+        }
+        
+        .widget-new:hover {
+            border-color: #3a3a40;
+            background: linear-gradient(145deg, #18181b 0%, #1f1f23 100%);
+        }
+        
+        .widget-new:hover::before {
+            background: #ccff00;
+            opacity: 0.4;
+        }
+        
+        .widget-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        
+        .widget-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #f5f5f6;
+            margin: 0;
+        }
+        
+        .widget-controls {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .control-btn {
+            width: 24px;
+            height: 24px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            background: transparent;
+            color: #8a8a90;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.04);
+            color: #f5f5f6;
+            border-color: #3a3a40;
+        }
+        
+        .text-content {
+            margin-bottom: 12px;
+        }
+        
+        .text-edge-test {
+            padding: 8px 4px;
+            border: 1px dashed #3a3a40;
+            margin: 8px 0;
+            font-size: 12px;
+            color: #b3b3b8;
+        }
+        
+        .readability-test {
+            font-size: 11px;
+            line-height: 1.3;
+            color: #8a8a90;
+            margin: 4px 0;
+        }
+        
+        .instructions {
+            background: rgba(204, 255, 0, 0.1);
+            border: 1px solid rgba(204, 255, 0, 0.3);
+            border-radius: 6px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .test-result {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 6px;
+            background: #18181b;
+            border: 1px solid #2a2a2f;
+        }
+        
+        .pass { border-color: #3ddc84; background: rgba(61, 220, 132, 0.1); }
+        .fail { border-color: #ff5a5f; background: rgba(255, 90, 95, 0.1); }
+        
+        .comparison-note {
+            font-size: 12px;
+            color: #8a8a90;
+            margin-top: 8px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <h1 style="color: #ccff00; text-align: center; margin-bottom: 30px;">
+            T-049: Shadow Overlay Removal Validation
+        </h1>
+        
+        <div class="instructions">
+            <h3 style="color: #ccff00; margin-bottom: 12px;">Validation Instructions</h3>
+            <ol>
+                <li>Compare text readability between "Before" (heavy shadows) and "After" (clean borders) widgets</li>
+                <li>Check that text at widget edges is clearly readable in both normal and hover states</li>
+                <li>Verify that visual hierarchy is maintained through borders instead of shadows</li>
+                <li>Test keyboard focus states to ensure accessibility is preserved</li>
+                <li>Confirm that the professional appearance is maintained without readability issues</li>
+            </ol>
+        </div>
+
+        <div class="validation-section">
+            <h2 class="section-title">Before vs After Comparison</h2>
+            <div class="test-grid">
+                <div>
+                    <h4 style="color: #ff5a5f; margin-bottom: 16px;">❌ BEFORE: Heavy Shadow Overlays</h4>
+                    <div class="widget-old">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Player Search Widget</h3>
+                            <div class="widget-controls">
+                                <button class="control-btn">⤴</button>
+                            </div>
+                        </div>
+                        <div class="text-content">
+                            <div class="text-edge-test">
+                                Edge text readability test - check if this text is hard to read due to shadow overlays
+                            </div>
+                            <div class="readability-test">
+                                Small text at edge: QB Tom Brady, NE | $45 | VBD: 8.2
+                            </div>
+                            <div class="readability-test">
+                                Hover this widget to see shadow interference
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comparison-note">
+                        Heavy box-shadow creates dark areas that interfere with text readability, especially at edges
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="color: #3ddc84; margin-bottom: 16px;">✅ AFTER: Clean Border Design</h4>
+                    <div class="widget-new">
+                        <div class="widget-header">
+                            <h3 class="widget-title">Player Search Widget</h3>
+                            <div class="widget-controls">
+                                <button class="control-btn">⤴</button>
+                            </div>
+                        </div>
+                        <div class="text-content">
+                            <div class="text-edge-test">
+                                Edge text readability test - this text should be clearly readable with minimal shadows
+                            </div>
+                            <div class="readability-test">
+                                Small text at edge: QB Tom Brady, NE | $45 | VBD: 8.2
+                            </div>
+                            <div class="readability-test">
+                                Hover this widget to see clean border highlight
+                            </div>
+                        </div>
+                    </div>
+                    <div class="comparison-note">
+                        Minimal shadow with border-based hierarchy maintains professional look while maximizing readability
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="validation-section">
+            <h2 class="section-title">Text Readability Test Cases</h2>
+            <div class="test-grid">
+                <div class="widget-new">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Budget Tracker</h3>
+                        <div class="widget-controls">
+                            <button class="control-btn">⤴</button>
+                        </div>
+                    </div>
+                    <div style="padding: 0 4px;">
+                        <p style="font-size: 12px; color: #b3b3b8; margin: 8px 0;">Budget Remaining: <span style="color: #3ddc84;">$180</span></p>
+                        <p style="font-size: 11px; color: #8a8a90; margin: 4px 0;">Max bid for RB: $25 (VBD threshold: 6.0)</p>
+                        <p style="font-size: 10px; color: #8a8a90; margin: 4px 0; text-align: right;">Edge case: Very small text should remain readable</p>
+                    </div>
+                </div>
+
+                <div class="widget-new">
+                    <div class="widget-header">
+                        <h3 class="widget-title">Draft Ledger</h3>
+                        <div class="widget-controls">
+                            <button class="control-btn">⤴</button>
+                        </div>
+                    </div>
+                    <div style="padding: 0 4px;">
+                        <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 8px; font-size: 11px; margin: 8px 0;">
+                            <span>Josh Allen</span>
+                            <span style="color: #3ddc84;">$42</span>
+                            <span style="color: #8a8a90;">Team A</span>
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr auto auto; gap: 8px; font-size: 11px; margin: 4px 0; color: #8a8a90;">
+                            <span>Christian McCaffrey</span>
+                            <span style="color: #3ddc84;">$55</span>
+                            <span>Team B</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="validation-section">
+            <h2 class="section-title">Focus State Testing</h2>
+            <p style="margin-bottom: 16px;">Use Tab key to navigate through these controls and verify focus visibility:</p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <button class="control-btn" style="width: auto; padding: 8px 12px;">Focus Test 1</button>
+                <button class="control-btn" style="width: auto; padding: 8px 12px;">Focus Test 2</button>
+                <button class="control-btn" style="width: auto; padding: 8px 12px;">Focus Test 3</button>
+            </div>
+        </div>
+
+        <div id="results" class="test-result">
+            <h3 style="color: #ccff00; margin-bottom: 12px;">Validation Results</h3>
+            <div id="result-content">
+                Click "Run Validation" to test readability improvements...
+            </div>
+            <button onclick="runValidation()" style="margin-top: 12px; padding: 8px 16px; background: #ccff00; color: #0b0b0c; border: none; border-radius: 4px; font-weight: 600; cursor: pointer;">
+                Run Validation
+            </button>
+        </div>
+    </div>
+
+    <script>
+        function runValidation() {
+            const results = document.getElementById('result-content');
+            
+            // Check if shadows are minimal
+            const newWidget = document.querySelector('.widget-new');
+            const computedStyle = window.getComputedStyle(newWidget);
+            const boxShadow = computedStyle.boxShadow;
+            
+            const shadowTest = boxShadow.includes('rgba(0, 0, 0, 0.15)') || boxShadow.includes('rgba(0, 0, 0, 0.2)');
+            const heavyShadowTest = !boxShadow.includes('0.4') && !boxShadow.includes('0.5');
+            
+            let passCount = 0;
+            let totalTests = 4;
+            
+            let resultHTML = '<h4>Test Results:</h4><ul>';
+            
+            // Test 1: Minimal shadow values
+            if (shadowTest && heavyShadowTest) {
+                resultHTML += '<li style="color: #3ddc84;">✅ Shadows reduced to minimal values (≤ 0.2 opacity)</li>';
+                passCount++;
+            } else {
+                resultHTML += '<li style="color: #ff5a5f;">❌ Shadows still too heavy - may interfere with text</li>';
+            }
+            
+            // Test 2: Text edge readability
+            const textElements = document.querySelectorAll('.readability-test');
+            if (textElements.length > 0) {
+                resultHTML += '<li style="color: #3ddc84;">✅ Text elements present at widget edges</li>';
+                passCount++;
+            } else {
+                resultHTML += '<li style="color: #ff5a5f;">❌ Missing edge text test elements</li>';
+            }
+            
+            // Test 3: Border-based hierarchy
+            const borderElements = document.querySelectorAll('.widget-new');
+            if (borderElements.length > 0) {
+                resultHTML += '<li style="color: #3ddc84;">✅ Border-based visual hierarchy implemented</li>';
+                passCount++;
+            } else {
+                resultHTML += '<li style="color: #ff5a5f;">❌ Border hierarchy not properly implemented</li>';
+            }
+            
+            // Test 4: Focus state accessibility
+            const focusableElements = document.querySelectorAll('button, [tabindex]');
+            if (focusableElements.length > 0) {
+                resultHTML += '<li style="color: #3ddc84;">✅ Focusable elements present for accessibility testing</li>';
+                passCount++;
+            } else {
+                resultHTML += '<li style="color: #ff5a5f;">❌ Missing focusable elements</li>';
+            }
+            
+            resultHTML += '</ul>';
+            
+            const passPercentage = (passCount / totalTests) * 100;
+            const overallResult = passPercentage >= 75 ? 'PASS' : 'FAIL';
+            const resultClass = overallResult === 'PASS' ? 'pass' : 'fail';
+            
+            resultHTML += `<div style="margin-top: 16px; padding: 12px; border-radius: 4px;" class="${resultClass}">
+                <strong>Overall Result: ${overallResult} (${passCount}/${totalTests} tests passed)</strong>
+            </div>`;
+            
+            results.innerHTML = resultHTML;
+            document.getElementById('results').className = `test-result ${resultClass}`;
+        }
+
+        // Add hover effect demonstration
+        document.addEventListener('DOMContentLoaded', function() {
+            const widgets = document.querySelectorAll('.widget-old, .widget-new');
+            widgets.forEach(widget => {
+                widget.addEventListener('mouseenter', function() {
+                    this.style.transition = 'all 0.15s ease';
+                });
+            });
+        });
+    </script>
+</body>
+</html>

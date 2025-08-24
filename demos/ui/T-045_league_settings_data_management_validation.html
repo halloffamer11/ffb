@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T-045: League Settings & Data Management Validation</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f5f5f5;
+      color: #333;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      color: #2d3748;
+      border-bottom: 3px solid #4f46e5;
+      padding-bottom: 10px;
+      margin-bottom: 30px;
+    }
+    
+    h2 {
+      color: #4f46e5;
+      margin-top: 40px;
+      margin-bottom: 20px;
+    }
+    
+    .status {
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+      font-weight: 600;
+    }
+    
+    .status.pending {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fbbf24;
+    }
+    
+    .status.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #10b981;
+    }
+    
+    .status.error {
+      background: #fee2e2;
+      color: #991b1b;
+      border: 1px solid #ef4444;
+    }
+    
+    .test-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin: 30px 0;
+    }
+    
+    .test-card {
+      background: #f8fafc;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 25px;
+      transition: all 0.3s ease;
+    }
+    
+    .test-card:hover {
+      border-color: #4f46e5;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+    }
+    
+    .test-card h3 {
+      margin-top: 0;
+      color: #1a202c;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .emoji {
+      font-size: 24px;
+    }
+    
+    .test-step {
+      background: white;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    
+    .test-step strong {
+      color: #4f46e5;
+    }
+    
+    .expected {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 12px;
+      margin: 10px 0;
+      font-style: italic;
+    }
+    
+    .link-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 12px 24px;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
+      margin: 10px 10px 10px 0;
+      transition: transform 0.2s ease;
+    }
+    
+    .link-button:hover {
+      transform: translateY(-2px);
+    }
+    
+    .secondary-button {
+      background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+    }
+    
+    .warning {
+      background: #fffbeb;
+      border: 1px solid #fbbf24;
+      border-left: 4px solid #f59e0b;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    
+    .info {
+      background: #eff6ff;
+      border: 1px solid #3b82f6;
+      border-left: 4px solid #2563eb;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 20px 0;
+    }
+    
+    .validation-checklist {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .validation-checklist h3 {
+      color: #495057;
+      margin-top: 0;
+    }
+    
+    .validation-checklist ul {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .validation-checklist li {
+      padding: 8px 0;
+      border-bottom: 1px solid #dee2e6;
+    }
+    
+    .validation-checklist li:last-child {
+      border-bottom: none;
+    }
+    
+    .validation-checklist li::before {
+      content: '☐ ';
+      font-size: 16px;
+      color: #6c757d;
+      margin-right: 8px;
+    }
+    
+    .files-changed {
+      background: #f1f5f9;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    
+    .files-changed h3 {
+      color: #334155;
+      margin-top: 0;
+    }
+    
+    .file-list {
+      list-style: none;
+      padding: 0;
+    }
+    
+    .file-list li {
+      background: white;
+      padding: 10px 15px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border-left: 3px solid #4f46e5;
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 14px;
+    }
+    
+    @media (max-width: 768px) {
+      .test-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+      
+      .container {
+        padding: 20px;
+        margin: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 T-045: League Settings & Data Management Pages - HITL Validation</h1>
+    
+    <div class="status pending">
+      <strong>⏳ VALIDATION PENDING</strong> - Awaiting human validation of league settings and data management functionality
+    </div>
+
+    <div class="info">
+      <strong>🎯 Implementation Summary:</strong><br>
+      <strong>Purpose:</strong> Add React Router navigation and create comprehensive league settings and data management pages<br>
+      <strong>Code Added:</strong> React Router configuration, LeagueSettingsPage.tsx, DataManagementPage.tsx, DashboardPage.tsx, and navigation updates<br>
+      <strong>Integration:</strong> Seamless integration with existing storage adapters and component patterns
+    </div>
+
+    <h2>🔗 Quick Access Links</h2>
+    <div style="margin: 20px 0;">
+      <a href="http://localhost:5173/" class="link-button">🏠 Main Dashboard</a>
+      <a href="http://localhost:5173/settings" class="link-button">⚙️ League Settings</a>
+      <a href="http://localhost:5173/data-management" class="link-button">📊 Data Management</a>
+    </div>
+
+    <div class="warning">
+      <strong>⚠️ Prerequisites:</strong> Ensure dev server is running: <code>npm run dev</code>
+    </div>
+
+    <h2>📋 Validation Test Plan</h2>
+
+    <div class="test-grid">
+      <div class="test-card">
+        <h3><span class="emoji">🏠</span> Dashboard Navigation</h3>
+        
+        <div class="test-step">
+          <strong>Step 1:</strong> Load main dashboard
+          <div class="expected">
+            <strong>Expected:</strong> Dashboard loads with all widgets visible, header shows FFB logo, layout selector, search bar, and action buttons (📊 Import Data, 🔔 Notifications, ⚙️ Settings, 👤 User Account)
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 2:</strong> Test header navigation buttons
+          <div class="expected">
+            <strong>Expected:</strong> Import Data button (📊) and Settings button (⚙️) are clickable and show hover effects
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 3:</strong> Test layout selector functionality
+          <div class="expected">
+            <strong>Expected:</strong> Layout selector still works and changes dashboard layout options
+          </div>
+        </div>
+      </div>
+
+      <div class="test-card">
+        <h3><span class="emoji">⚙️</span> League Settings Page</h3>
+        
+        <div class="test-step">
+          <strong>Step 1:</strong> Click Settings gear icon (⚙️) in header
+          <div class="expected">
+            <strong>Expected:</strong> Navigation to /settings page with comprehensive league configuration form
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 2:</strong> Test Basic League Configuration
+          <div class="expected">
+            <strong>Expected:</strong> Form shows League Size (8-16 teams), Auction Budget ($), and Scoring Format (Standard, Half PPR, PPR, Custom) controls
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 3:</strong> Test Roster Configuration
+          <div class="expected">
+            <strong>Expected:</strong> Grid of position inputs (QB, RB, WR, TE, K, DST, FLEX, Bench) with total roster count displayed
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 4:</strong> Test Custom Scoring (select Custom format)
+          <div class="expected">
+            <strong>Expected:</strong> Additional section appears with passing/rushing/receiving scoring inputs
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 5:</strong> Test Save/Reset functionality
+          <div class="expected">
+            <strong>Expected:</strong> Save button shows success message, Reset button restores defaults
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 6:</strong> Test Back navigation
+          <div class="expected">
+            <strong>Expected:</strong> Back button returns to main dashboard
+          </div>
+        </div>
+      </div>
+
+      <div class="test-card">
+        <h3><span class="emoji">📊</span> Data Management Page</h3>
+        
+        <div class="test-step">
+          <strong>Step 1:</strong> Click Import Data icon (📊) in header
+          <div class="expected">
+            <strong>Expected:</strong> Navigation to /data-management page with 3-step import wizard
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 2:</strong> Test data source selection
+          <div class="expected">
+            <strong>Expected:</strong> Grid of data source options (FantasyPros, ESPN, Yahoo, Sleeper, Custom CSV) with selection highlighting
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 3:</strong> Test file upload (select any source)
+          <div class="expected">
+            <strong>Expected:</strong> Step 2 appears with drag-and-drop zone and file browse functionality
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 4:</strong> Test drag-and-drop interaction
+          <div class="expected">
+            <strong>Expected:</strong> Drag area changes color on hover, shows proper feedback states
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 5:</strong> Test CSV file upload (use any .csv file)
+          <div class="expected">
+            <strong>Expected:</strong> File info displayed, Step 3 preview appears with data table showing first 10 rows
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 6:</strong> Test import simulation
+          <div class="expected">
+            <strong>Expected:</strong> Import button shows loading state, success message, then auto-redirects to dashboard
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 7:</strong> Test Back navigation
+          <div class="expected">
+            <strong>Expected:</strong> Back button returns to main dashboard
+          </div>
+        </div>
+      </div>
+
+      <div class="test-card">
+        <h3><span class="emoji">💾</span> Storage & Persistence</h3>
+        
+        <div class="test-step">
+          <strong>Step 1:</strong> Configure league settings and save
+          <div class="expected">
+            <strong>Expected:</strong> Settings saved to localStorage in ffb_league_settings namespace
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 2:</strong> Navigate away and back to settings
+          <div class="expected">
+            <strong>Expected:</strong> Previously saved settings are restored and displayed in form
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 3:</strong> Test browser storage (DevTools > Application > localStorage)
+          <div class="expected">
+            <strong>Expected:</strong> ffb_league_settings::settings key contains saved configuration data
+          </div>
+        </div>
+      </div>
+
+      <div class="test-card">
+        <h3><span class="emoji">📱</span> Responsive Design</h3>
+        
+        <div class="test-step">
+          <strong>Step 1:</strong> Test mobile viewport (< 768px)
+          <div class="expected">
+            <strong>Expected:</strong> Settings form switches to single column layout, touch-friendly controls
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 2:</strong> Test tablet viewport (768px - 1024px)
+          <div class="expected">
+            <strong>Expected:</strong> Layouts adapt gracefully, all functionality remains accessible
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 3:</strong> Test data management on mobile
+          <div class="expected">
+            <strong>Expected:</strong> File upload interface remains usable, table scrolls horizontally if needed
+          </div>
+        </div>
+      </div>
+
+      <div class="test-card">
+        <h3><span class="emoji">♿</span> Accessibility</h3>
+        
+        <div class="test-step">
+          <strong>Step 1:</strong> Test keyboard navigation
+          <div class="expected">
+            <strong>Expected:</strong> All interactive elements accessible via Tab key, proper focus indicators
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 2:</strong> Test screen reader labels
+          <div class="expected">
+            <strong>Expected:</strong> Form inputs have proper labels, buttons have aria-label attributes
+          </div>
+        </div>
+
+        <div class="test-step">
+          <strong>Step 3:</strong> Test color contrast and visual indicators
+          <div class="expected">
+            <strong>Expected:</strong> Good contrast ratios, state changes visible without relying only on color
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="validation-checklist">
+      <h3>✅ Validation Checklist - Mark Complete When Verified</h3>
+      <ul>
+        <li>Dashboard loads correctly with new navigation buttons</li>
+        <li>Settings gear icon navigates to /settings page</li>
+        <li>League settings form displays all configuration options</li>
+        <li>Roster configuration updates total count dynamically</li>
+        <li>Custom scoring section appears when Custom format selected</li>
+        <li>Settings save/load functionality works with localStorage</li>
+        <li>Import Data icon navigates to /data-management page</li>
+        <li>Data source selection step works correctly</li>
+        <li>File upload drag-and-drop interface functions</li>
+        <li>CSV preview displays correctly with data table</li>
+        <li>Import simulation completes and redirects</li>
+        <li>Back navigation works from both new pages</li>
+        <li>All pages are mobile responsive</li>
+        <li>Keyboard navigation and accessibility work</li>
+        <li>No console errors in browser DevTools</li>
+      </ul>
+    </div>
+
+    <div class="files-changed">
+      <h3>📁 Files Modified/Created</h3>
+      <ul class="file-list">
+        <li>/src/App.tsx - Added React Router configuration</li>
+        <li>/src/pages/LeagueSettingsPage.tsx - New comprehensive league settings</li>
+        <li>/src/pages/DataManagementPage.tsx - New CSV import and data management</li>
+        <li>/src/pages/DashboardPage.tsx - New dashboard wrapper component</li>
+        <li>/src/components/layout/TopAppBar.tsx - Added navigation functionality</li>
+        <li>package.json - Added react-router-dom dependency</li>
+      </ul>
+    </div>
+
+    <h2>🎯 Success Criteria</h2>
+    <div class="info">
+      <strong>PASS Criteria:</strong>
+      <ul>
+        <li><strong>Navigation:</strong> All navigation buttons work and route correctly</li>
+        <li><strong>League Settings:</strong> Complete form with save/load, all input types functional</li>
+        <li><strong>Data Management:</strong> 3-step wizard with file upload and preview</li>
+        <li><strong>Storage:</strong> Settings persist in localStorage correctly</li>
+        <li><strong>Responsive:</strong> All pages work on mobile and tablet</li>
+        <li><strong>Accessibility:</strong> Keyboard navigation and proper labels</li>
+        <li><strong>Performance:</strong> No significant slowdowns or console errors</li>
+      </ul>
+    </div>
+
+    <div class="warning">
+      <strong>🚨 Common Issues to Watch For:</strong>
+      <ul>
+        <li>Router navigation errors or 404s</li>
+        <li>Form validation not working</li>
+        <li>localStorage quota exceeded errors</li>
+        <li>File upload not handling edge cases</li>
+        <li>Mobile layout breaking</li>
+        <li>Missing focus indicators</li>
+      </ul>
+    </div>
+
+    <h2>📝 Validation Results</h2>
+    <div class="status pending">
+      <strong>📋 AWAITING HUMAN VALIDATION</strong><br>
+      Please test all functionality above and confirm: <strong>"HITL validation passed"</strong>
+    </div>
+  </div>
+
+  <script>
+    // Add some interactive validation helpers
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add click handlers to checklist items
+      const checklistItems = document.querySelectorAll('.validation-checklist li');
+      checklistItems.forEach(item => {
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', function() {
+          if (this.style.textDecoration === 'line-through') {
+            this.style.textDecoration = 'none';
+            this.style.color = 'inherit';
+            this.querySelector('::before') ? this.style.setProperty('--check', '☐') : null;
+          } else {
+            this.style.textDecoration = 'line-through';
+            this.style.color = '#28a745';
+          }
+        });
+      });
+      
+      // Check if dev server is running
+      fetch('http://localhost:5173/')
+        .then(response => {
+          if (response.ok) {
+            console.log('✅ Dev server is running');
+          }
+        })
+        .catch(() => {
+          console.warn('⚠️ Dev server may not be running on localhost:5173');
+          const warning = document.createElement('div');
+          warning.className = 'status error';
+          warning.innerHTML = '<strong>❌ Dev Server Not Detected</strong><br>Please ensure <code>npm run dev</code> is running on port 5173';
+          document.querySelector('.container').insertBefore(warning, document.querySelector('h2'));
+        });
+    });
+  </script>
+</body>
+</html>

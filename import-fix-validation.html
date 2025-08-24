@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Import Fix Validation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #3b82f6;
+        }
+        .success {
+            border-left-color: #22c55e;
+            background: #f0fdf4;
+        }
+        .error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .link-button {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+        }
+        .link-button:hover {
+            background: #2563eb;
+        }
+        .console-check {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: monospace;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Import Fix Validation</h1>
+    
+    <div class="test-section">
+        <h2>Issue Fixed</h2>
+        <p><strong>Problem:</strong> Button component import errors causing React app to fail</p>
+        <p><strong>Solution:</strong> Fixed import statements to use named exports instead of default exports</p>
+        <ul>
+            <li>✅ Fixed LeagueSettingsPage.tsx: <code>import { Button } from '../components/ui/Button';</code></li>
+            <li>✅ Fixed DataManagementPage.tsx: <code>import { Button } from '../components/ui/Button';</code></li>
+            <li>✅ Added default export to Button.tsx for backward compatibility</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Validation Steps</h2>
+        
+        <h3>Step 1: Test Main React App</h3>
+        <a href="http://localhost:5173/" class="link-button" target="_blank">🚀 Open React App</a>
+        <p>Expected: App should load without console errors</p>
+        
+        <h3>Step 2: Test Settings Page Navigation</h3>
+        <p>1. Click the ⚙️ gear icon in the header</p>
+        <p>Expected: Should navigate to League Settings page without errors</p>
+        
+        <h3>Step 3: Test Data Management Page</h3>
+        <p>1. Click the 📊 "Import Data" button in the header</p>
+        <p>Expected: Should navigate to Data Management page without errors</p>
+        
+        <h3>Step 4: Check Browser Console</h3>
+        <p>Press F12 → Console tab and look for:</p>
+        <div class="console-check">✅ No "SyntaxError" messages about missing exports
+❌ Should not see: "doesn't provide an export named 'default'"</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Quick Checklist</h2>
+        <div>
+            <input type="checkbox" id="app-loads"> <label for="app-loads">React app loads at localhost:5173</label><br>
+            <input type="checkbox" id="settings-nav"> <label for="settings-nav">Settings gear icon navigates correctly</label><br>
+            <input type="checkbox" id="data-nav"> <label for="data-nav">Import Data button navigates correctly</label><br>
+            <input type="checkbox" id="no-errors"> <label for="no-errors">No console errors about missing exports</label><br>
+            <input type="checkbox" id="buttons-work"> <label for="buttons-work">Buttons display and function correctly</label><br>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0fdf4; border-radius: 8px;">
+        <h3>✅ Expected Result</h3>
+        <p>All React routes should load correctly with functional settings and data management pages.</p>
+        <p>No import errors should appear in the browser console.</p>
+    </div>
+
+    <script>
+        // Auto-update checklist based on window events
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we're on localhost:5173
+            if (window.location.port === '5173') {
+                document.getElementById('app-loads').checked = true;
+            }
+            
+            // Add click handlers
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const completed = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).length;
+                    const total = document.querySelectorAll('input[type="checkbox"]').length;
+                    
+                    if (completed === total) {
+                        console.log('🎉 All import fixes validated successfully!');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

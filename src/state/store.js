@@ -9,6 +9,12 @@
  * Pure core: no DOM usage, storage adapter injected.
  */
 
+import { 
+  calculateRemainingBudget, 
+  countSpotsRemaining, 
+  calculateMaxBid 
+} from '../core/budget.js';
+
 /**
  * @typedef {Object} StoreOptions
  * @property {object} [initialState]
@@ -128,6 +134,32 @@ export class DraftStore {
       }
       case 'DRAFT_PICK_ADD': {
         const pick = { ...payload, timestamp: Date.now() };
+        
+        // Budget validation before adding pick
+        if (pick.teamId && pick.price) {
+          const teamId = Number(pick.teamId);
+          const price = Number(pick.price);
+          const minBid = Number(this.state.settings?.minBid || 1);
+          
+          // Calculate current budget situation
+          const remainingBudget = calculateRemainingBudget(teamId, this.state.settings, this.state.draft.picks);
+          const spotsRemaining = countSpotsRemaining(teamId, this.state.settings, this.state.draft.picks);
+          const maxBid = calculateMaxBid(remainingBudget, spotsRemaining, minBid);
+          
+          // Validate the bid
+          if (price > remainingBudget) {
+            throw new Error(`Budget exceeded: ${pick.player?.name || 'Player'} costs $${price} but only $${remainingBudget} remaining`);
+          }
+          
+          if (price > maxBid) {
+            throw new Error(`Max bid exceeded: ${pick.player?.name || 'Player'} costs $${price} but max bid is $${maxBid} (need $${minBid} minimum for ${spotsRemaining - 1} remaining spots)`);
+          }
+          
+          if (price < minBid) {
+            throw new Error(`Below minimum bid: ${pick.player?.name || 'Player'} costs $${price} but minimum bid is $${minBid}`);
+          }
+        }
+        
         this.state.draft.picks.push(pick);
         break;
       }

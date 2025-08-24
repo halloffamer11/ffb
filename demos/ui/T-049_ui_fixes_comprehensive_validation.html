@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>T-049: Comprehensive UI Fixes Validation</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: #0b0b0c;
+      color: #f5f5f6;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+      padding: 32px 0;
+      border-bottom: 2px solid #ccff00;
+    }
+    
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #ccff00;
+      margin-bottom: 8px;
+    }
+    
+    .header p {
+      font-size: 18px;
+      color: #b3b3b8;
+    }
+    
+    .section {
+      background: #121214;
+      border: 1px solid #2a2a2f;
+      border-radius: 8px;
+      padding: 24px;
+      margin-bottom: 32px;
+    }
+    
+    .section h2 {
+      color: #ccff00;
+      font-size: 24px;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .section h3 {
+      color: #f5f5f6;
+      font-size: 18px;
+      margin-bottom: 12px;
+      margin-top: 20px;
+    }
+    
+    .status-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #3ddc84;
+    }
+    
+    .test-item {
+      background: #18181b;
+      border: 1px solid #3a3a40;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .test-item h4 {
+      color: #f5f5f6;
+      margin-bottom: 8px;
+      font-size: 16px;
+    }
+    
+    .test-description {
+      color: #b3b3b8;
+      margin-bottom: 12px;
+    }
+    
+    .test-steps {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .test-steps li {
+      padding: 8px 0;
+      border-bottom: 1px solid #2a2a2f;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+    
+    .test-steps li:last-child {
+      border-bottom: none;
+    }
+    
+    .step-number {
+      background: #ccff00;
+      color: #0b0b0c;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 12px;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+    
+    .expected-result {
+      background: #1f1f23;
+      border: 1px solid #3a3a40;
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+    
+    .expected-result strong {
+      color: #3ddc84;
+    }
+    
+    .pass-criteria {
+      background: #1a4d3a;
+      border: 1px solid #3ddc84;
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    
+    .pass-criteria h4 {
+      color: #3ddc84;
+      margin-bottom: 12px;
+    }
+    
+    .pass-criteria ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .pass-criteria li {
+      padding: 4px 0;
+      color: #b3b3b8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .pass-criteria li::before {
+      content: "✓";
+      color: #3ddc84;
+      font-weight: bold;
+    }
+    
+    .iframe-container {
+      border: 2px solid #3a3a40;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 16px 0;
+      background: #0b0b0c;
+    }
+    
+    .iframe-header {
+      background: #2a2a2f;
+      padding: 8px 16px;
+      font-size: 14px;
+      color: #b3b3b8;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .iframe-header::before {
+      content: "🖥️";
+    }
+    
+    iframe {
+      width: 100%;
+      height: 800px;
+      border: none;
+      display: block;
+    }
+    
+    .important-note {
+      background: #4a3d1a;
+      border: 1px solid #fbbf24;
+      border-radius: 6px;
+      padding: 16px;
+      margin: 24px 0;
+    }
+    
+    .important-note h4 {
+      color: #fbbf24;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .important-note h4::before {
+      content: "⚠️";
+    }
+    
+    .implementation-summary {
+      background: #1a1a4d;
+      border: 1px solid #60a5fa;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .implementation-summary h3 {
+      color: #60a5fa;
+      margin-top: 0;
+      margin-bottom: 12px;
+    }
+    
+    .file-list {
+      list-style: none;
+      padding-left: 0;
+    }
+    
+    .file-list li {
+      padding: 8px 12px;
+      margin: 4px 0;
+      background: #18181b;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 14px;
+      color: #b3b3b8;
+    }
+    
+    .file-list li::before {
+      content: "📄";
+      margin-right: 8px;
+    }
+    
+    .button {
+      background: #ccff00;
+      color: #0b0b0c;
+      padding: 12px 24px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      display: inline-block;
+      margin-top: 16px;
+    }
+    
+    .button:hover {
+      background: #d9ff33;
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>T-049: Comprehensive UI Fixes Validation</h1>
+      <p>Grid Layout Truncation, Shadow Removal, and Widget Popout Functionality</p>
+    </header>
+
+    <section class="implementation-summary">
+      <h3>Implementation Summary</h3>
+      <p><strong>Purpose:</strong> Fix three critical UI issues affecting the React dashboard layout and functionality</p>
+      
+      <h4>Issues Fixed:</h4>
+      <ul style="list-style: decimal; padding-left: 24px; margin-top: 12px;">
+        <li><strong>Grid Layout Truncation:</strong> Removed height constraints in MainCanvas, improved grid height calculation with generous padding</li>
+        <li><strong>Top-Left Corner Shadow:</strong> Eliminated problematic gradient overlays and shadows causing dark corners</li>
+        <li><strong>Widget Popout:</strong> Added debugging and fixed modal state management for fullscreen widget view</li>
+      </ul>
+      
+      <h4>Files Modified:</h4>
+      <ul class="file-list">
+        <li>src/components/layout/MainCanvas.tsx - Removed height constraint, clean background</li>
+        <li>src/components/widgets/WidgetGrid.tsx - Improved height calculation, added debugging</li>
+        <li>src/components/widgets/WidgetPopOutModal.tsx - Enhanced modal debugging</li>
+        <li>src/theme/tokens.ts - Removed problematic gradient overlays</li>
+      </ul>
+    </section>
+
+    <div class="important-note">
+      <h4>Setup Instructions</h4>
+      <p>1. Start the development server: <code>npm run dev</code></p>
+      <p>2. Open the main application at http://localhost:5173</p>
+      <p>3. Load sample data if needed for widgets</p>
+      <p>4. Follow the test procedures below</p>
+    </div>
+
+    <div class="iframe-container">
+      <div class="iframe-header">
+        Live Application Preview - Main Dashboard
+      </div>
+      <iframe src="http://localhost:5173" title="FFB Dashboard"></iframe>
+    </div>
+
+    <section class="section">
+      <h2><span class="status-indicator"></span>Issue #1: Grid Layout Truncation Fix</h2>
+      
+      <div class="test-item">
+        <h4>Test 1.1: Grid Expansion Verification</h4>
+        <div class="test-description">
+          Verify that the widget grid expands to accommodate all widgets without truncation.
+        </div>
+        
+        <ol class="test-steps">
+          <li>
+            <span class="step-number">1</span>
+            <div>
+              <strong>Navigate to main dashboard</strong>
+              <div class="expected-result">
+                <strong>Expected:</strong> All widgets are fully visible, no truncation at bottom
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">2</span>
+            <div>
+              <strong>Enable Edit Mode</strong> - Click "Edit Layout" button
+              <div class="expected-result">
+                <strong>Expected:</strong> Grid height increases to 1500px+ allowing dragging space
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">3</span>
+            <div>
+              <strong>Drag widgets to bottom area</strong> - Move widgets towards bottom of layout
+              <div class="expected-result">
+                <strong>Expected:</strong> Ample space available, no truncation, can place widgets at bottom
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">4</span>
+            <div>
+              <strong>Exit Edit Mode</strong> - Click "Exit Edit Mode"
+              <div class="expected-result">
+                <strong>Expected:</strong> Grid contracts to fit content + 6 grid units of padding
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">5</span>
+            <div>
+              <strong>Scroll to bottom</strong> - Verify all widgets are accessible
+              <div class="expected-result">
+                <strong>Expected:</strong> Bottom padding visible, no widgets cut off
+              </div>
+            </div>
+          </li>
+        </ol>
+        
+        <div class="pass-criteria">
+          <h4>Pass Criteria</h4>
+          <ul>
+            <li>No widgets are truncated or cut off</li>
+            <li>Generous bottom padding (72px minimum) is visible</li>
+            <li>Edit mode provides ample dragging space (1500px minimum)</li>
+            <li>Grid height adapts dynamically to widget positions</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="test-item">
+        <h4>Test 1.2: Responsive Grid Behavior</h4>
+        <div class="test-description">
+          Test grid height calculation across different breakpoints and widget configurations.
+        </div>
+        
+        <ol class="test-steps">
+          <li>
+            <span class="step-number">1</span>
+            <div>
+              <strong>Test different viewport sizes</strong> - Resize browser window
+              <div class="expected-result">
+                <strong>Expected:</strong> Grid adapts to sm/md/lg breakpoints, maintains proper height
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">2</span>
+            <div>
+              <strong>Add/remove widgets</strong> - Use edit mode to show/hide widgets
+              <div class="expected-result">
+                <strong>Expected:</strong> Grid height recalculates automatically
+              </div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2><span class="status-indicator"></span>Issue #2: Top-Left Corner Shadow Removal</h2>
+      
+      <div class="test-item">
+        <h4>Test 2.1: Shadow Elimination Verification</h4>
+        <div class="test-description">
+          Confirm that dark shadows/gradients in top-left corner have been eliminated.
+        </div>
+        
+        <ol class="test-steps">
+          <li>
+            <span class="step-number">1</span>
+            <div>
+              <strong>Inspect top-left corner</strong> - Look at dashboard background
+              <div class="expected-result">
+                <strong>Expected:</strong> Clean, uniform background with no dark shadowing
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">2</span>
+            <div>
+              <strong>Check widget add menu</strong> - In edit mode, verify menu appearance
+              <div class="expected-result">
+                <strong>Expected:</strong> No shadows on sticky widget add menu
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">3</span>
+            <div>
+              <strong>Examine gradient overlays</strong> - Check MainCanvas background
+              <div class="expected-result">
+                <strong>Expected:</strong> Background ::before element is transparent
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">4</span>
+            <div>
+              <strong>Developer tools inspection</strong> - Check computed styles
+              <div class="expected-result">
+                <strong>Expected:</strong> gradients.subtle = transparent in theme tokens
+              </div>
+            </div>
+          </li>
+        </ol>
+        
+        <div class="pass-criteria">
+          <h4>Pass Criteria</h4>
+          <ul>
+            <li>No visible dark shadows in any corner of the interface</li>
+            <li>Clean, uniform background throughout dashboard</li>
+            <li>Widget add menu has no shadow (box-shadow: none)</li>
+            <li>MainCanvas ::before element is transparent</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2><span class="status-indicator"></span>Issue #3: Widget Popout Functionality</h2>
+      
+      <div class="test-item">
+        <h4>Test 3.1: Popout Modal Rendering</h4>
+        <div class="test-description">
+          Verify that widget popout functionality works correctly with fullscreen modal.
+        </div>
+        
+        <ol class="test-steps">
+          <li>
+            <span class="step-number">1</span>
+            <div>
+              <strong>Locate popout button</strong> - Look for ⤴ icon on any widget (not in edit mode)
+              <div class="expected-result">
+                <strong>Expected:</strong> Popout buttons visible on all widgets when not in edit mode
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">2</span>
+            <div>
+              <strong>Click popout button</strong> - Click ⤴ on Player Search widget
+              <div class="expected-result">
+                <strong>Expected:</strong> Debug indicator appears (red box top-right), modal opens fullscreen
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">3</span>
+            <div>
+              <strong>Check modal content</strong> - Verify widget renders inside modal
+              <div class="expected-result">
+                <strong>Expected:</strong> Widget content displayed, proper title, close button visible
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">4</span>
+            <div>
+              <strong>Test close functionality</strong> - Press ESC key or click X button
+              <div class="expected-result">
+                <strong>Expected:</strong> Modal closes, returns to normal dashboard view
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">5</span>
+            <div>
+              <strong>Test different widgets</strong> - Try popout on VBD Scatter, Budget Tracker
+              <div class="expected-result">
+                <strong>Expected:</strong> All widgets can be popped out successfully
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">6</span>
+            <div>
+              <strong>Check console logs</strong> - Open browser DevTools console
+              <div class="expected-result">
+                <strong>Expected:</strong> Debug messages show state changes and modal rendering
+              </div>
+            </div>
+          </li>
+        </ol>
+        
+        <div class="pass-criteria">
+          <h4>Pass Criteria</h4>
+          <ul>
+            <li>Popout buttons are visible on widgets (not in edit mode)</li>
+            <li>Clicking popout opens fullscreen modal successfully</li>
+            <li>Modal renders widget content correctly</li>
+            <li>ESC key and close button both work</li>
+            <li>All widget types can be popped out</li>
+            <li>Debug logging confirms proper state management</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="test-item">
+        <h4>Test 3.2: Modal Z-Index and Portal</h4>
+        <div class="test-description">
+          Verify modal renders correctly in DOM and has proper layering.
+        </div>
+        
+        <ol class="test-steps">
+          <li>
+            <span class="step-number">1</span>
+            <div>
+              <strong>Inspect DOM structure</strong> - Check if modal renders in document.body
+              <div class="expected-result">
+                <strong>Expected:</strong> Modal portal creates element directly under body
+              </div>
+            </div>
+          </li>
+          <li>
+            <span class="step-number">2</span>
+            <div>
+              <strong>Check z-index layering</strong> - Modal should be above all other content
+              <div class="expected-result">
+                <strong>Expected:</strong> Backdrop z-index: 1000, no other elements on top
+              </div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <div class="important-note">
+      <h4>Debug Features Included</h4>
+      <p><strong>Red Debug Box:</strong> When a widget is popped out, a red indicator appears in the top-right showing which widget should be rendering in the modal. This will be removed after validation.</p>
+      <p><strong>Console Logging:</strong> Extensive debug logging shows modal state changes, portal creation, and rendering status. Check browser DevTools console during testing.</p>
+    </div>
+
+    <section class="section">
+      <h2><span class="status-indicator"></span>Overall Validation</h2>
+      
+      <div class="pass-criteria">
+        <h4>Complete Success Criteria</h4>
+        <ul>
+          <li><strong>Grid Layout:</strong> No truncation, adaptive height, generous padding</li>
+          <li><strong>Shadow Removal:</strong> Clean interface with no dark corners or shadows</li>
+          <li><strong>Popout Functionality:</strong> All widgets can be opened in fullscreen modal</li>
+          <li><strong>Performance:</strong> Smooth interactions, no layout jumps or glitches</li>
+          <li><strong>Responsive:</strong> All fixes work across different screen sizes</li>
+        </ul>
+      </div>
+      
+      <a href="http://localhost:5173" class="button" target="_blank">
+        Open Live Application
+      </a>
+    </section>
+
+    <footer style="text-align: center; margin-top: 48px; padding-top: 24px; border-top: 1px solid #2a2a2f; color: #8a8a90;">
+      <p>FFB React UI Fixes Validation • T-049</p>
+      <p>Test all three issues systematically for complete validation</p>
+    </footer>
+  </div>
+</body>
+</html>

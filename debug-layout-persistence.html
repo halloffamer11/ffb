@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Widget Layout Persistence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .debug-section {
+            background: #f5f5f5;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            border-left: 4px solid #007acc;
+        }
+        .debug-result {
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #005a9e;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔧 Widget Layout Persistence Debug</h1>
+    
+    <div class="debug-section">
+        <h3>Test localStorage Directly</h3>
+        <button onclick="testLocalStorage()">Test Basic localStorage</button>
+        <div id="localStorage-result" class="debug-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Test Storage Adapter</h3>
+        <button onclick="testStorageAdapter()">Test Storage Adapter</button>
+        <div id="adapter-result" class="debug-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>Test Widget Layout Storage</h3>
+        <button onclick="testWidgetLayoutStorage()">Test Widget Layout Storage</button>
+        <button onclick="clearWidgetLayouts()">Clear Widget Layouts</button>
+        <div id="layout-result" class="debug-result"></div>
+    </div>
+
+    <div class="debug-section">
+        <h3>View Current localStorage Contents</h3>
+        <button onclick="viewAllStorage()">View All localStorage</button>
+        <div id="all-storage-result" class="debug-result"></div>
+    </div>
+
+    <script type="module">
+        // Import the storage adapter
+        import { createStorageAdapter } from './src/adapters/storage.js';
+
+        window.testLocalStorage = function() {
+            const result = document.getElementById('localStorage-result');
+            try {
+                localStorage.setItem('test-key', 'test-value');
+                const value = localStorage.getItem('test-key');
+                localStorage.removeItem('test-key');
+                
+                result.textContent = `✅ localStorage working: ${value === 'test-value' ? 'PASS' : 'FAIL'}`;
+                result.parentElement.className = 'debug-section success';
+            } catch (error) {
+                result.textContent = `❌ localStorage error: ${error.message}`;
+                result.parentElement.className = 'debug-section error';
+            }
+        };
+
+        window.testStorageAdapter = function() {
+            const result = document.getElementById('adapter-result');
+            try {
+                const adapter = createStorageAdapter({ namespace: 'test', version: '1.0.0' });
+                
+                const testData = { x: 1, y: 2, w: 3, h: 4 };
+                const setResult = adapter.set('test-layout', testData);
+                const getValue = adapter.get('test-layout');
+                adapter.remove('test-layout');
+                
+                result.textContent = `Storage Adapter Test:
+Available: ${adapter.isAvailable()}
+Set Result: ${JSON.stringify(setResult)}
+Retrieved: ${JSON.stringify(getValue)}
+Match: ${JSON.stringify(getValue) === JSON.stringify(testData) ? 'PASS' : 'FAIL'}`;
+                result.parentElement.className = 'debug-section success';
+            } catch (error) {
+                result.textContent = `❌ Storage adapter error: ${error.message}`;
+                result.parentElement.className = 'debug-section error';
+            }
+        };
+
+        window.testWidgetLayoutStorage = function() {
+            const result = document.getElementById('layout-result');
+            try {
+                const layoutStorage = createStorageAdapter({
+                    namespace: 'widget-layouts',
+                    version: '1.0.0'
+                });
+
+                const testLayouts = {
+                    lg: [
+                        { i: 'search', x: 5, y: 5, w: 10, h: 4 }
+                    ],
+                    md: [
+                        { i: 'search', x: 3, y: 3, w: 8, h: 4 }
+                    ],
+                    sm: [
+                        { i: 'search', x: 1, y: 1, w: 6, h: 3 }
+                    ]
+                };
+
+                const setResult = layoutStorage.set('layouts', testLayouts);
+                const getValue = layoutStorage.get('layouts');
+                
+                result.textContent = `Widget Layout Storage Test:
+Available: ${layoutStorage.isAvailable()}
+Set Result: ${JSON.stringify(setResult)}
+Saved Layouts: ${JSON.stringify(getValue, null, 2)}
+Test Layouts: ${JSON.stringify(testLayouts, null, 2)}
+Match: ${JSON.stringify(getValue) === JSON.stringify(testLayouts) ? 'PASS' : 'FAIL'}`;
+                
+                if (setResult.ok && JSON.stringify(getValue) === JSON.stringify(testLayouts)) {
+                    result.parentElement.className = 'debug-section success';
+                } else {
+                    result.parentElement.className = 'debug-section error';
+                }
+            } catch (error) {
+                result.textContent = `❌ Widget layout storage error: ${error.message}`;
+                result.parentElement.className = 'debug-section error';
+            }
+        };
+
+        window.clearWidgetLayouts = function() {
+            const result = document.getElementById('layout-result');
+            try {
+                const layoutStorage = createStorageAdapter({
+                    namespace: 'widget-layouts',
+                    version: '1.0.0'
+                });
+                
+                layoutStorage.remove('layouts');
+                const getValue = layoutStorage.get('layouts');
+                
+                result.textContent = `Widget Layouts Cleared:
+Remaining value: ${getValue === null ? 'null (cleared)' : JSON.stringify(getValue)}`;
+                result.parentElement.className = 'debug-section success';
+            } catch (error) {
+                result.textContent = `❌ Clear error: ${error.message}`;
+                result.parentElement.className = 'debug-section error';
+            }
+        };
+
+        window.viewAllStorage = function() {
+            const result = document.getElementById('all-storage-result');
+            try {
+                const allKeys = Object.keys(localStorage).sort();
+                let output = `Total localStorage keys: ${allKeys.length}\n\n`;
+                
+                const widgetKeys = allKeys.filter(key => key.includes('widget'));
+                if (widgetKeys.length > 0) {
+                    output += `Widget-related keys:\n`;
+                    widgetKeys.forEach(key => {
+                        const value = localStorage.getItem(key);
+                        output += `${key}: ${value ? value.substring(0, 100) + (value.length > 100 ? '...' : '') : 'null'}\n`;
+                    });
+                } else {
+                    output += `No widget-related keys found\n`;
+                }
+                
+                output += `\nAll keys:\n${allKeys.join('\n')}`;
+                
+                result.textContent = output;
+                result.parentElement.className = 'debug-section';
+            } catch (error) {
+                result.textContent = `❌ View storage error: ${error.message}`;
+                result.parentElement.className = 'debug-section error';
+            }
+        };
+
+        // Auto-run tests on load
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                testLocalStorage();
+                testStorageAdapter();
+                viewAllStorage();
+            }, 500);
+        });
+    </script>
+</body>
+</html>

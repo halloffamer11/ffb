@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-046: Data Import Fix Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+        .step-number {
+            background: #059669;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-content h4 {
+            margin: 0 0 8px 0;
+            color: #1e293b;
+        }
+        .step-content p {
+            margin: 0 0 8px 0;
+            color: #64748b;
+        }
+        .success {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+        .error {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .warning {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+        }
+        .info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+        }
+        .link-button {
+            display: inline-block;
+            background: #059669;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.2s;
+        }
+        .link-button:hover {
+            background: #047857;
+        }
+        .console-expected {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 8px 0;
+            white-space: pre-wrap;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        .checklist input[type="checkbox"] {
+            margin-right: 12px;
+        }
+        .fix-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .fix-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #059669;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✅ T-046: Data Import Fix Validation</h1>
+        <p>Comprehensive validation for CSV data import functionality and Player Search widget improvements</p>
+    </div>
+
+    <div class="test-section success">
+        <h2>🔧 Fixes Implemented</h2>
+        <div class="fix-summary">
+            <div class="fix-card">
+                <h3>Data Import Fixed</h3>
+                <p>✅ handleImport function now properly saves CSV data to localStorage</p>
+                <p>✅ CSV data transformation to player format</p>
+                <p>✅ Storage adapter integration</p>
+                <p>✅ Widget refresh events triggered</p>
+            </div>
+            <div class="fix-card">
+                <h3>Player Search Enlarged</h3>
+                <p>✅ Default height increased from 4 to 8 grid units</p>
+                <p>✅ Minimum height raised to 6 units</p>
+                <p>✅ Updated all responsive breakpoints</p>
+                <p>✅ Other widgets repositioned accordingly</p>
+            </div>
+            <div class="fix-card">
+                <h3>Data Format Support</h3>
+                <p>✅ Supports top300_2024.csv format</p>
+                <p>✅ Maps CSV columns to player properties</p>
+                <p>✅ Handles "NA" injury status properly</p>
+                <p>✅ Sets default values for missing fields</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Validation Steps</h2>
+
+        <div class="test-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Open React Application</h4>
+                <p>Start by accessing the main React dashboard</p>
+                <a href="http://localhost:5173/" class="link-button" target="_blank">🚀 Open React App</a>
+                <p><strong>Expected:</strong> Player Search widget should now be larger by default (8 grid units high)</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Navigate to Data Management</h4>
+                <p>Click the 📊 "Import Data" button in the header</p>
+                <p><strong>Expected:</strong> Should navigate to /data-management page</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Select Custom CSV Source</h4>
+                <p>1. Choose "Custom CSV" from the data source options</p>
+                <p>2. Click to proceed to file upload step</p>
+                <p><strong>Expected:</strong> Should advance to Step 2 with file upload interface</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h4>Upload top300_2024.csv</h4>
+                <p>1. Use the file picker or drag-and-drop to upload <code>demos/data/top300_2024.csv</code></p>
+                <p>2. Wait for file processing</p>
+                <div class="console-expected">Expected status: "Successfully loaded top300_2024.csv with 300 rows"</div>
+                <p><strong>Expected:</strong> Should advance to Step 3 showing data preview table</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <h4>Review Data Preview</h4>
+                <p>Check the preview table shows correct data:</p>
+                <ul>
+                    <li>Headers: id, name, team, position, byeWeek, injuryStatus, points, adp</li>
+                    <li>Sample data: Lamar Jackson, Ja'Marr Chase, Josh Allen, etc.</li>
+                    <li>Shows first 10 rows with proper formatting</li>
+                </ul>
+                <p><strong>Expected:</strong> Preview table displays correctly formatted player data</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+                <h4>Import Data (Critical Test)</h4>
+                <p>1. Click "Import Data" button</p>
+                <p>2. Monitor browser console (F12 → Console)</p>
+                <div class="console-expected">Expected console messages:
+✅ Data Import: Saved 300 players to localStorage</div>
+                <div class="console-expected">Expected status: "Successfully imported 300 players! Data is now available in your draft."</div>
+                <p><strong>Expected:</strong> Success message appears, then auto-navigates back to dashboard</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">7</div>
+            <div class="step-content">
+                <h4>Verify Data in Player Search Widget</h4>
+                <p>1. Check that Player Search widget is now larger and visible</p>
+                <p>2. Try searching for players: "mahomes", "allen", "jefferson"</p>
+                <p>3. Verify search results appear with imported data</p>
+                <p><strong>Expected:</strong> Player search returns results from imported CSV data</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">8</div>
+            <div class="step-content">
+                <h4>Verify Data Persistence</h4>
+                <p>1. Refresh the page (F5)</p>
+                <p>2. Check that imported player data is still available</p>
+                <p>3. Try searching again to confirm data persistence</p>
+                <p><strong>Expected:</strong> Imported data persists across page refreshes</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h2>🔍 Technical Validation</h2>
+        
+        <h3>localStorage Verification</h3>
+        <p>Open browser console and run:</p>
+        <div class="code-block">// Check if player data was saved
+const storage = JSON.parse(localStorage.getItem('workspace::players') || 'null');
+console.log('Player count:', storage ? storage.length : 'No data');
+console.log('Sample players:', storage ? storage.slice(0, 3) : 'No data');</div>
+
+        <h3>Expected localStorage Data Format</h3>
+        <div class="code-block">{
+  "id": 1,
+  "name": "Lamar Jackson", 
+  "team": "BAL",
+  "position": "QB",
+  "points": 430.4,
+  "adp": 1,
+  "injuryStatus": 0,
+  "drafted": false,
+  "vbd": 0,
+  "byeWeek": 14
+}</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Validation Checklist</h2>
+        <ul class="checklist">
+            <li><input type="checkbox" id="widget-size"> <label for="widget-size">Player Search widget is larger by default (8 grid units)</label></li>
+            <li><input type="checkbox" id="import-nav"> <label for="import-nav">Can navigate to Data Management page</label></li>
+            <li><input type="checkbox" id="file-upload"> <label for="file-upload">CSV file uploads and shows correct row count</label></li>
+            <li><input type="checkbox" id="data-preview"> <label for="data-preview">Data preview table displays first 10 rows correctly</label></li>
+            <li><input type="checkbox" id="import-success"> <label for="import-success">Import button saves data successfully</label></li>
+            <li><input type="checkbox" id="console-log"> <label for="console-log">Console shows "Data Import: Saved 300 players" message</label></li>
+            <li><input type="checkbox" id="search-works"> <label for="search-works">Player Search widget shows imported players</label></li>
+            <li><input type="checkbox" id="persistence"> <label for="persistence">Data persists across page refreshes</label></li>
+            <li><input type="checkbox" id="no-reset"> <label for="no-reset">App doesn't reset unexpectedly after import</label></li>
+        </ul>
+    </div>
+
+    <div class="test-section warning">
+        <h2>⚠️ Known Issues (Deferred)</h2>
+        <ul>
+            <li><strong>Widget Layout Persistence:</strong> Widget positions still reset on page navigation (will be addressed later)</li>
+            <li><strong>Source Map Error:</strong> Browser dev tools JSON parse error (cosmetic, doesn't affect functionality)</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0fdf4; border-radius: 8px;">
+        <h3>🎉 Expected Outcome</h3>
+        <p>CSV import should successfully save 300 players to localStorage, and the Player Search widget should immediately display the imported data.</p>
+        <p><strong>Success Criteria:</strong> All checklist items should be completed without errors.</p>
+    </div>
+
+    <script>
+        // Auto-update progress tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check localStorage for existing player data
+            try {
+                const players = JSON.parse(localStorage.getItem('workspace::players') || 'null');
+                if (players && players.length > 0) {
+                    document.getElementById('persistence').checked = true;
+                    console.log('✅ Found existing player data:', players.length, 'players');
+                }
+            } catch (e) {
+                console.log('No existing player data found');
+            }
+            
+            // Add click handlers for manual validation tracking
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const completed = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).length;
+                    const total = document.querySelectorAll('input[type="checkbox"]').length;
+                    
+                    console.log(`Validation progress: ${completed}/${total} steps completed`);
+                    
+                    if (completed === total) {
+                        console.log('🎉 All data import fixes validated successfully!');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

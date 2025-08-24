@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-047: Data Import Connection Fix Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+        .step-number {
+            background: #dc2626;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-content h4 {
+            margin: 0 0 8px 0;
+            color: #1e293b;
+        }
+        .step-content p {
+            margin: 0 0 8px 0;
+            color: #64748b;
+        }
+        .success {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+        .error {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .warning {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+        }
+        .info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+        }
+        .link-button {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.2s;
+        }
+        .link-button:hover {
+            background: #b91c1c;
+        }
+        .console-expected {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 8px 0;
+            white-space: pre-wrap;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        .checklist input[type="checkbox"] {
+            margin-right: 12px;
+        }
+        .fix-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before-after {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .before {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .after {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 T-047: Data Import Connection Fix</h1>
+        <p>Critical fix for connecting imported CSV data to React widgets</p>
+    </div>
+
+    <div class="test-section error">
+        <h2>🐛 Root Cause Identified</h2>
+        <p><strong>Issue:</strong> Data was being saved to localStorage but React widgets weren't displaying it</p>
+        <p><strong>Problem:</strong> Import bypassed the legacy store → React store bridge, breaking the data flow</p>
+        <p><strong>Evidence:</strong> Console showed "✅ Data Import: Saved 300 players to localStorage" but widgets remained empty</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Technical Fix Details</h2>
+        <div class="fix-details">
+            <div class="before-after before">
+                <h3>❌ Before (Broken Flow)</h3>
+                <ol>
+                    <li>CSV Import → localStorage directly</li>
+                    <li>React Store ← Legacy Store (empty)</li>
+                    <li>Widgets ← React Store (empty)</li>
+                    <li>Result: No data in widgets</li>
+                </ol>
+            </div>
+            <div class="before-after after">
+                <h3>✅ After (Fixed Flow)</h3>
+                <ol>
+                    <li>CSV Import → Draft Store.dispatch()</li>
+                    <li>Legacy Store ← IMPORT_PLAYERS action</li>
+                    <li>React Store ← Legacy Store sync</li>
+                    <li>Widgets ← React Store (with data)</li>
+                </ol>
+            </div>
+        </div>
+
+        <h3>Code Changes Made:</h3>
+        <div class="code-block">// OLD: Direct localStorage save (broken)
+storage.set('players', players);
+window.dispatchEvent(new CustomEvent('workspace:players-changed'));
+
+// NEW: Use draft store dispatch (working)
+draftStore.dispatch({
+  type: 'IMPORT_PLAYERS',
+  payload: players
+});</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Critical Validation Test</h2>
+        
+        <div class="test-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Access React Application</h4>
+                <p>Open the React app and verify the Player Search widget is larger now</p>
+                <a href="http://localhost:5174/" class="link-button" target="_blank">🚀 Open React App (Port 5174)</a>
+                <p><strong>Expected:</strong> Player Search widget should be noticeably larger (8 grid units)</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Clear Existing Data (Important)</h4>
+                <p>To ensure we're testing the new flow, clear localStorage first:</p>
+                <div class="code-block">// Open browser console (F12) and run:
+localStorage.removeItem('workspace::players');
+localStorage.removeItem('workspace::state');
+location.reload();</div>
+                <p><strong>Expected:</strong> Page refreshes with no existing player data</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Navigate to Data Import</h4>
+                <p>Click the 📊 "Import Data" button in the header</p>
+                <p><strong>Expected:</strong> Should navigate to data management page</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h4>Import CSV Data</h4>
+                <p>1. Select "Custom CSV" data source</p>
+                <p>2. Upload <code>demos/data/top300_2024.csv</code></p>
+                <p>3. Click "Import Data" button</p>
+                <div class="console-expected">Expected console message:
+✅ Data Import: Imported 300 players via draft store</div>
+                <p><strong>Expected:</strong> Success message, then auto-navigation back to dashboard</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <h4>🎯 Critical Test: Verify Widget Data</h4>
+                <p>1. Check that Player Search widget now shows data</p>
+                <p>2. Try searching for: "jackson", "allen", "chase"</p>
+                <p>3. Verify results appear from imported CSV</p>
+                <div class="console-expected">Expected search results:
+- "jackson" → Lamar Jackson (BAL, QB)
+- "allen" → Josh Allen (BUF, QB) 
+- "chase" → Ja'Marr Chase (CIN, WR)</div>
+                <p><strong>🚨 Critical:</strong> This is where the previous version failed - widgets should now show imported data immediately!</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+                <h4>Verify All Widgets Updated</h4>
+                <p>Check that other widgets also show imported data:</p>
+                <ul>
+                    <li><strong>VBD Scatter:</strong> Should show player points plotted</li>
+                    <li><strong>Player Analysis:</strong> Should show player details when selected</li>
+                    <li><strong>Draft Entry:</strong> Should be able to draft imported players</li>
+                </ul>
+                <p><strong>Expected:</strong> All widgets reflect the imported player data</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h2>🔍 Technical Verification</h2>
+        
+        <h3>React Store State Check</h3>
+        <p>Open browser console and verify the React store has data:</p>
+        <div class="code-block">// Check React store directly
+const reactStore = window.__REACT_DEVTOOLS_GLOBAL_HOOK__?.stores || {};
+console.log('React stores:', reactStore);
+
+// Or check via component prop (if visible in React DevTools)
+// Look for useDraftStore → players array should have 300 items</div>
+
+        <h3>Store Sync Verification</h3>
+        <p>Verify that both localStorage and React store have the same data:</p>
+        <div class="code-block">// Check localStorage
+const localStoragePlayers = JSON.parse(localStorage.getItem('workspace::players') || '[]');
+console.log('localStorage players:', localStoragePlayers.length);
+
+// They should match</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Fix Validation Checklist</h2>
+        <ul class="checklist">
+            <li><input type="checkbox" id="app-loads"> <label for="app-loads">React app loads on port 5174 with larger search widget</label></li>
+            <li><input type="checkbox" id="data-cleared"> <label for="data-cleared">Cleared existing localStorage data successfully</label></li>
+            <li><input type="checkbox" id="import-process"> <label for="import-process">CSV import process completes without errors</label></li>
+            <li><input type="checkbox" id="console-message"> <label for="console-message">Console shows "Imported 300 players via draft store"</label></li>
+            <li><input type="checkbox" id="widgets-show-data"> <label for="widgets-show-data">🎯 CRITICAL: Player Search widget shows imported data</label></li>
+            <li><input type="checkbox" id="search-works"> <label for="search-works">Search functionality returns results from imported players</label></li>
+            <li><input type="checkbox" id="all-widgets"> <label for="all-widgets">Other widgets (VBD, Analysis) also show imported data</label></li>
+            <li><input type="checkbox" id="data-persistence"> <label for="data-persistence">Data persists after page refresh</label></li>
+        </ul>
+    </div>
+
+    <div class="test-section warning">
+        <h2>⚠️ Success Criteria</h2>
+        <p><strong>The fix is successful if:</strong></p>
+        <ul>
+            <li>✅ Console shows "Imported 300 players via draft store" (not localStorage)</li>
+            <li>✅ Player Search widget immediately shows imported data</li>
+            <li>✅ Search returns results for "jackson", "allen", "chase"</li>
+            <li>✅ No need to refresh page or reset widgets</li>
+        </ul>
+        
+        <p><strong>The fix failed if:</strong></p>
+        <ul>
+            <li>❌ Widgets remain empty after import</li>
+            <li>❌ Only localStorage has data but widgets don't</li>
+            <li>❌ Need to refresh page to see data</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0fdf4; border-radius: 8px;">
+        <h3>🎯 Expected Outcome</h3>
+        <p>After CSV import, the Player Search widget should <strong>immediately</strong> display the imported players with working search functionality.</p>
+        <p><strong>This fixes the critical data flow issue where localStorage had data but widgets remained empty.</strong></p>
+    </div>
+
+    <script>
+        // Validation helper functions
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-check basic app loading
+            setTimeout(() => {
+                if (window.location.port === '5174' || window.location.hostname === 'localhost') {
+                    document.getElementById('app-loads').checked = true;
+                }
+            }, 1000);
+            
+            // Add progress tracking
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const completed = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).length;
+                    const total = document.querySelectorAll('input[type="checkbox"]').length;
+                    const critical = document.getElementById('widgets-show-data').checked;
+                    
+                    console.log(`Fix validation progress: ${completed}/${total} steps completed`);
+                    
+                    if (critical) {
+                        console.log('🎉 CRITICAL TEST PASSED: Widgets show imported data!');
+                    }
+                    
+                    if (completed === total && critical) {
+                        console.log('🎉 Data import connection fix validated successfully!');
+                        document.body.style.backgroundColor = '#f0fdf4';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

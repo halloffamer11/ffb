@@ -1,0 +1,282 @@
+/* Professional Trading Platform Design System */
+@import './theme/animations.css';
+
+:root {
+  --accent: #ccff00;
+  --bg: #0b0b0c;
+  --surface-1: #121214;
+  --surface-2: #18181b;
+  --text-1: #f5f5f6;
+  --text-2: #b3b3b8;
+  --text-muted: #8a8a90;
+  --border-1: #2a2a2f;
+  --border-2: #3a3a40;
+  --positive: #3ddc84;
+  --negative: #ff5a5f;
+  --focus: 0 0 0 2px var(--accent);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1, "kern" 1, "liga" 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg);
+  color: var(--text-1);
+  line-height: 1.5;
+}
+
+#app {
+  height: 100%;
+}
+
+/* Scrollbar styling for dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--surface-1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Professional Focus Management */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Remove focus for mouse interactions */
+*:focus:not(:focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Professional Button Base Styles */
+button {
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-variant-numeric: tabular-nums;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.4;
+    filter: grayscale(0.5);
+  }
+}
+
+/* Clean Interactive States - No heavy shadows */
+.hover\:elevate:hover {
+  border-color: var(--border-2);
+  background-color: rgba(255, 255, 255, 0.04);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive {
+  transition: background-color 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.interactive:hover {
+  background-color: rgba(255, 255, 255, 0.04);
+}
+
+.interactive:active {
+  background-color: rgba(255, 255, 255, 0.02);
+  transform: translateY(1px);
+  transition: all 0.1s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* Grid utilities */
+.grid-24 {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  grid-auto-rows: 12px;
+  gap: 8px;
+}
+
+/* Professional Typography Classes */
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+.font-proportional {
+  font-variant-numeric: proportional-nums;
+  font-feature-settings: "pnum" 1;
+}
+
+.text-data {
+  font-variant-numeric: tabular-nums;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Screen Reader Only Content */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Focus-visible only screen reader content */
+.sr-only-focusable:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  padding: inherit !important;
+  margin: inherit !important;
+  overflow: visible !important;
+  clip: auto !important;
+  white-space: inherit !important;
+}
+
+/* Professional Selection Styling */
+::selection {
+  background-color: rgba(204, 255, 0, 0.2);
+  color: var(--accent);
+}
+
+::-moz-selection {
+  background-color: rgba(204, 255, 0, 0.2);
+  color: var(--accent);
+}
+
+/* Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* React Grid Layout CSS */
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+  transition-property: left, top;
+  cursor: default;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform;
+}
+
+.react-grid-item.static {
+  cursor: default;
+}
+
+.react-grid-item.resizing {
+  cursor: se-resize;
+}
+
+.react-grid-item.react-draggable-dragging {
+  transition: none;
+  z-index: 3;
+}
+
+.react-grid-item.dropping {
+  visibility: hidden;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: var(--accent);
+  opacity: 0.2;
+  transition-duration: 100ms;
+  z-index: 2;
+  user-select: none;
+  border-radius: 8px;
+}
+.react-grid-item > .react-resizable-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  bottom: 0;
+  right: 0;
+  cursor: se-resize;
+}
+.react-grid-item > .react-resizable-handle {
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.react-grid-item:hover > .react-resizable-handle {
+  opacity: 0.6;
+}
+
+.react-grid-item > .react-resizable-handle:hover {
+  opacity: 1 !important;
+}
+
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 8px;
+  height: 8px;
+  background-image: 
+    linear-gradient(-45deg, transparent 2px, var(--text-muted) 2px, var(--text-muted) 4px, transparent 4px),
+    linear-gradient(-45deg, transparent 6px, var(--text-muted) 6px, var(--text-muted) 8px, transparent 8px);
+  background-size: 6px 6px;
+  background-position: 0 0, 3px 3px;
+  opacity: 0.8;
+}
+
+/* Tailwind overrides for dark theme */
+@media (prefers-color-scheme: dark) {
+  .dark\:bg-surface-1 {
+    background-color: var(--surface-1);
+  }
+  
+  .dark\:bg-surface-2 {
+    background-color: var(--surface-2);
+  }
+  
+  .dark\:text-text-1 {
+    color: var(--text-1);
+  }
+  
+  .dark\:text-text-2 {
+    color: var(--text-2);
+  }
+  
+  .dark\:border-border-1 {
+    border-color: var(--border-1);
+  }
+}

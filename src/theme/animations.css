@@ -1,0 +1,167 @@
+/* Professional Trading Platform Keyframe Animations */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes data-entry {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes value-flash {
+  0% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: var(--accent-alpha);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+@keyframes glow {
+  0%, 100% {
+    border-color: rgba(204, 255, 0, 0.3);
+  }
+  50% {
+    border-color: rgba(204, 255, 0, 0.6);
+  }
+}
+
+@keyframes widget-hover-lift {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-2px);
+  }
+}
+
+/* Loading skeleton animation for data tables */
+@keyframes skeleton-loading {
+  0% {
+    background-color: var(--surface-2);
+  }
+  50% {
+    background-color: var(--surface-3);
+  }
+  100% {
+    background-color: var(--surface-2);
+  }
+}
+
+/* Chart data point animation */
+@keyframes chart-point-enter {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Tooltip fade in/out */
+@keyframes tooltip-enter {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Focus ring animation */
+@keyframes focus-ring {
+  0% {
+    box-shadow: 0 0 0 2px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+}
+
+/* Button press feedback */
+@keyframes button-press {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Data update highlight */
+@keyframes data-update-highlight {
+  0% {
+    background-color: transparent;
+    color: inherit;
+  }
+  50% {
+    background-color: var(--accent-alpha);
+    color: var(--accent);
+  }
+  100% {
+    background-color: transparent;
+    color: inherit;
+  }
+}

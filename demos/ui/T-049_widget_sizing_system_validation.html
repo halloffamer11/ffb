@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-049: Widget Sizing System - HITL Validation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .validation-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #4a5568;
+            font-size: 1.1rem;
+        }
+
+        .section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .section h2 {
+            color: #2d3748;
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+
+        .test-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .test-card {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .test-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            border-color: #a0aec0;
+        }
+
+        .test-card h3 {
+            color: #2d3748;
+            font-size: 1.25rem;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+
+        .test-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .test-steps li {
+            counter-increment: step-counter;
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+            position: relative;
+        }
+
+        .test-steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            background: #667eea;
+            color: white;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .expected-result {
+            background: #f0fff4;
+            border-left: 4px solid #38a169;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .expected-result strong {
+            color: #2f855a;
+        }
+
+        .code-block {
+            background: #1a202c;
+            color: #e2e8f0;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .app-launch-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem 2rem;
+            text-decoration: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .app-launch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+            font-size: 0.75rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .status-pending {
+            background: #fed7d7;
+            color: #c53030;
+        }
+
+        .status-ready {
+            background: #c6f6d5;
+            color: #2f855a;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .comparison-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .comparison-table .old-value {
+            color: #e53e3e;
+            text-decoration: line-through;
+        }
+
+        .comparison-table .new-value {
+            color: #38a169;
+            font-weight: 600;
+        }
+
+        .widget-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .widget-preview-item {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .widget-preview-item.optimal {
+            border-color: #38a169;
+            background: #f0fff4;
+        }
+
+        .widget-dimensions {
+            font-family: monospace;
+            font-size: 0.875rem;
+            color: #4a5568;
+            margin-top: 0.5rem;
+        }
+
+        .alert {
+            background: #fff5cd;
+            border: 1px solid #f6e05e;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .alert-icon {
+            display: inline-block;
+            margin-right: 0.5rem;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <div class="header">
+            <h1>🎯 T-049: Widget Sizing System</h1>
+            <p>Content-Aware Widget Dimensions for Optimal User Experience</p>
+            <div style="margin-top: 1rem;">
+                <span class="status-indicator status-ready">Ready for Testing</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🏗️ Implementation Summary</h2>
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>📐 Widget Size Calculator</h3>
+                    <p><strong>File:</strong> <code>src/utils/widgetSizing.ts</code></p>
+                    <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+                        <li>Content-aware dimension calculations</li>
+                        <li>Breakpoint-specific sizing (lg/md/sm)</li>
+                        <li>Grid unit conversion (30px per unit)</li>
+                        <li>Widget-specific content requirements</li>
+                    </ul>
+                </div>
+                <div class="test-card">
+                    <h3>🔧 Grid Configuration Updates</h3>
+                    <p><strong>File:</strong> <code>src/components/widgets/WidgetGrid.tsx</code></p>
+                    <ul style="margin-top: 1rem; padding-left: 1.5rem;">
+                        <li>Row height increased: 12px → 30px</li>
+                        <li>Dynamic layout generation</li>
+                        <li>Content-aware default sizes</li>
+                        <li>Professional widget positioning</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Before vs After Comparison</h2>
+            <table class="comparison-table">
+                <thead>
+                    <tr>
+                        <th>Widget</th>
+                        <th>Old Dimensions (lg)</th>
+                        <th>New Dimensions (lg)</th>
+                        <th>Improvement</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>PlayerSearch</strong></td>
+                        <td><span class="old-value">12x8 (144x96px)</span></td>
+                        <td><span class="new-value">14x12 (420x360px)</span></td>
+                        <td>Shows 8-10 table rows without scrolling</td>
+                    </tr>
+                    <tr>
+                        <td><strong>VBDScatter</strong></td>
+                        <td><span class="old-value">16x12 (192x144px)</span></td>
+                        <td><span class="new-value">16x14 (480x420px)</span></td>
+                        <td>Full chart with axes and legends visible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>BudgetTracker</strong></td>
+                        <td><span class="old-value">8x6 (96x72px)</span></td>
+                        <td><span class="new-value">10x8 (300x240px)</span></td>
+                        <td>All budget categories visible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DraftEntry</strong></td>
+                        <td><span class="old-value">12x8 (144x96px)</span></td>
+                        <td><span class="new-value">12x10 (360x300px)</span></td>
+                        <td>Form fields + controls fit properly</td>
+                    </tr>
+                    <tr>
+                        <td><strong>RosterPanel</strong></td>
+                        <td><span class="old-value">8x6 (96x72px)</span></td>
+                        <td><span class="new-value">10x12 (300x360px)</span></td>
+                        <td>All position slots visible</td>
+                    </tr>
+                    <tr>
+                        <td><strong>DraftLedger</strong></td>
+                        <td><span class="old-value">8x8 (96x96px)</span></td>
+                        <td><span class="new-value">14x10 (420x300px)</span></td>
+                        <td>Recent picks table fully displayed</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>🧪 Validation Instructions</h2>
+            
+            <div class="alert">
+                <span class="alert-icon">⚠️</span>
+                <strong>Important:</strong> Start the development server before testing
+            </div>
+
+            <div style="margin: 2rem 0;">
+                <a href="http://localhost:5173" class="app-launch-button" target="_blank">
+                    🚀 Launch FFB Application
+                </a>
+            </div>
+
+            <div class="test-grid">
+                <div class="test-card">
+                    <h3>🎯 Setup & Launch</h3>
+                    <ol class="test-steps">
+                        <li>Start dev server: <code>npm run dev</code></li>
+                        <li>Open application in browser</li>
+                        <li>Wait for widgets to load completely</li>
+                        <li>Observe initial widget dimensions</li>
+                    </ol>
+                    <div class="expected-result">
+                        <strong>Expected:</strong> All widgets display their content without requiring manual resizing
+                    </div>
+                </div>
+
+                <div class="test-card">
+                    <h3>📏 Dimension Validation</h3>
+                    <ol class="test-steps">
+                        <li>Check PlayerSearch widget shows 8-10 rows</li>
+                        <li>Verify VBDScatter chart is fully visible</li>
+                        <li>Confirm BudgetTracker shows all categories</li>
+                        <li>Validate DraftEntry form fields are accessible</li>
+                    </ol>
+                    <div class="expected-result">
+                        <strong>Expected:</strong> No horizontal or vertical scrolling needed for primary content
+                    </div>
+                </div>
+
+                <div class="test-card">
+                    <h3>📱 Responsive Testing</h3>
+                    <ol class="test-steps">
+                        <li>Test at desktop resolution (1200px+)</li>
+                        <li>Resize to tablet view (768px-1199px)</li>
+                        <li>Test mobile view (below 768px)</li>
+                        <li>Verify widgets adapt appropriately</li>
+                    </ol>
+                    <div class="expected-result">
+                        <strong>Expected:</strong> Content remains accessible across all breakpoints
+                    </div>
+                </div>
+
+                <div class="test-card">
+                    <h3>🎛️ Customization Testing</h3>
+                    <ol class="test-steps">
+                        <li>Enable "Edit Layout" mode</li>
+                        <li>Try resizing widgets (should still work)</li>
+                        <li>Try moving widgets around</li>
+                        <li>Reset layout to see new defaults</li>
+                    </ol>
+                    <div class="expected-result">
+                        <strong>Expected:</strong> Users can still customize but don't need to anymore
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✅ Pass Criteria</h2>
+            <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="criteria1" style="transform: scale(1.2);">
+                    <label for="criteria1"><strong>Content Visibility:</strong> All widgets display their primary content without scrolling on first load</label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="criteria2" style="transform: scale(1.2);">
+                    <label for="criteria2"><strong>Professional Appearance:</strong> Widgets look properly proportioned and professional</label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="criteria3" style="transform: scale(1.2);">
+                    <label for="criteria3"><strong>Responsive Behavior:</strong> Widget sizes adapt appropriately across breakpoints</label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="criteria4" style="transform: scale(1.2);">
+                    <label for="criteria4"><strong>User Experience:</strong> Users don't need to manually resize widgets for typical usage</label>
+                </div>
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <input type="checkbox" id="criteria5" style="transform: scale(1.2);">
+                    <label for="criteria5"><strong>Customization Preserved:</strong> Edit mode still allows manual resizing when needed</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Technical Implementation Details</h2>
+            <div class="code-block">
+# Key Changes Made:
+
+1. Widget Size Calculator (src/utils/widgetSizing.ts):
+   - Content-aware dimension calculations
+   - Breakpoint-specific sizing with multipliers
+   - Grid unit conversion (30px per unit)
+   - Widget-specific content requirements
+
+2. Grid Configuration Updates:
+   - Row height: 12px → 30px (better granularity)
+   - Dynamic layout generation using sizing system
+   - Optimal default positions for each widget
+
+3. Content-Based Sizing Logic:
+   - PlayerSearch: Based on table rows + filters + search
+   - VBDScatter: Chart dimensions + axes + legends
+   - Budget/Roster: Item count + spacing requirements
+   - Forms: Field count + buttons + preview areas
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📁 Files Modified</h2>
+            <ul style="list-style-type: none; padding: 0;">
+                <li style="padding: 0.5rem; background: #f7fafc; margin: 0.25rem 0; border-radius: 0.5rem;">
+                    <strong>📄 Created:</strong> <code>src/utils/widgetSizing.ts</code> - Widget size calculator with content-aware logic
+                </li>
+                <li style="padding: 0.5rem; background: #f7fafc; margin: 0.25rem 0; border-radius: 0.5rem;">
+                    <strong>🔄 Modified:</strong> <code>src/components/widgets/WidgetGrid.tsx</code> - Updated grid configuration and default layouts
+                </li>
+                <li style="padding: 0.5rem; background: #f7fafc; margin: 0.25rem 0; border-radius: 0.5rem;">
+                    <strong>📝 Created:</strong> <code>demos/ui/T-049_widget_sizing_system_validation.html</code> - This validation page
+                </li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: rgba(102, 126, 234, 0.1); border-radius: 1rem;">
+            <h3 style="color: #2d3748; margin-bottom: 1rem;">🎯 Ready for Human Validation</h3>
+            <p style="color: #4a5568; margin-bottom: 1.5rem;">
+                Please test the widget sizing system and confirm all pass criteria are met before proceeding.
+            </p>
+            <div style="font-size: 0.875rem; color: #718096;">
+                <strong>Next Steps:</strong> Once validated, this will solve the "right-sized" default widget dimensions problem
+            </div>
+        </div>
+    </div>
+</body>
+</html>

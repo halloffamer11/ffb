@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-048: VBD Column Fixes Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #059669, #047857);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+        .step-number {
+            background: #059669;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-content h4 {
+            margin: 0 0 8px 0;
+            color: #1e293b;
+        }
+        .step-content p {
+            margin: 0 0 8px 0;
+            color: #64748b;
+        }
+        .success {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+        .error {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .warning {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+        }
+        .info {
+            background: #eff6ff;
+            border-left: 4px solid #3b82f6;
+        }
+        .link-button {
+            display: inline-block;
+            background: #059669;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.2s;
+        }
+        .link-button:hover {
+            background: #047857;
+        }
+        .console-expected {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 8px 0;
+            white-space: pre-wrap;
+        }
+        .code-block {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        .checklist input[type="checkbox"] {
+            margin-right: 12px;
+        }
+        .fix-comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .before-after {
+            padding: 15px;
+            border-radius: 8px;
+        }
+        .before {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .after {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>✅ T-048: VBD Column Fixes</h1>
+        <p>Player Search Widget improvements: VBD calculation + column stability</p>
+    </div>
+
+    <div class="test-section info">
+        <h2>🛠️ Fixes Implemented</h2>
+        <div class="fix-comparison">
+            <div class="before-after before">
+                <h3>❌ Before (Issues)</h3>
+                <ul>
+                    <li>VBD column showed 0.0 for all imported players</li>
+                    <li>Data columns shifted right when hovering over players</li>
+                    <li>VBD column was not sortable</li>
+                </ul>
+            </div>
+            <div class="before-after after">
+                <h3>✅ After (Fixed)</h3>
+                <ul>
+                    <li>VBD calculated correctly after CSV import</li>
+                    <li>Column layout stable on hover/selection</li>
+                    <li>VBD column fully sortable with custom logic</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Technical Changes Made:</h3>
+        <div class="code-block">// 1. VBD Calculation Fix (DataManagementPage.tsx)
+// Added recalculation after import
+const { recalcAll } = await import('../core/recalculation');
+await recalcAll();
+
+// 2. Column Shift Fix (PlayerSearchWidget.tsx) 
+// Removed CSS pseudo-elements causing layout instability
+// No more ::before or ::after content on hover/select
+
+// 3. VBD Sorting Fix (PlayerSearchWidget.tsx)
+// Added custom sorting function to VBD column
+sortingFn: (rowA, rowB, columnId) => {
+  const a = rowA.original.vbd || 0;
+  const b = rowB.original.vbd || 0;
+  return a - b;
+}</div>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Validation Test Steps</h2>
+        
+        <div class="test-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Access React Application</h4>
+                <p>Open the React app and verify it loads without errors</p>
+                <a href="http://localhost:5174/" class="link-button" target="_blank">🚀 Open React App</a>
+                <p><strong>Expected:</strong> App loads with Player Search widget visible</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Clear Data and Import Fresh Dataset</h4>
+                <p>1. Clear localStorage to start fresh:</p>
+                <div class="code-block">// Open browser console (F12) and run:
+localStorage.removeItem('workspace::players');
+localStorage.removeItem('workspace::state');
+location.reload();</div>
+                <p>2. Navigate to 📊 Import Data</p>
+                <p>3. Select "Custom CSV" and upload <code>demos/data/top300_2024.csv</code></p>
+                <p>4. Click "Import Data"</p>
+                <p><strong>Expected:</strong> Console shows "Imported 300 players via draft store"</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>🎯 Critical: Verify VBD Values</h4>
+                <p>In the Player Search widget, check the VBD column:</p>
+                <p>1. VBD column should show calculated values (not 0.0)</p>
+                <p>2. Top players should have positive VBD values</p>
+                <p>3. Lower-tier players should have negative VBD values</p>
+                <div class="console-expected">Expected VBD patterns:
+- Josh Allen (QB): +40 to +60 range
+- Christian McCaffrey (RB): +50 to +70 range  
+- Cooper Kupp (WR): +30 to +50 range
+- Travis Kelce (TE): +20 to +40 range
+- Lower ADP players: negative VBD values</div>
+                <p><strong>🚨 Critical:</strong> No more 0.0 values for imported players!</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h4>🎯 Critical: Test Column Stability</h4>
+                <p>Hover over and select players to verify column alignment:</p>
+                <p>1. Hover over multiple player rows</p>
+                <p>2. Click to select different players</p>
+                <p>3. Observe that data stays in correct columns</p>
+                <p><strong>Expected:</strong> Player name stays in first column, team in second, position in third, etc.</p>
+                <p><strong>🚨 Critical:</strong> No data shifting or column misalignment!</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <h4>Test VBD Column Sorting</h4>
+                <p>Click the VBD column header to test sorting:</p>
+                <p>1. Click once: ascending sort (lowest to highest VBD)</p>
+                <p>2. Click again: descending sort (highest to lowest VBD)</p>
+                <p>3. Verify players reorder correctly by VBD value</p>
+                <p><strong>Expected:</strong> Players sort correctly by VBD with top players first in descending order</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+                <h4>Search and Filter Functionality</h4>
+                <p>Test that fixes don't break existing features:</p>
+                <p>1. Search for "jackson" → Should find Lamar Jackson</p>
+                <p>2. Filter by position (QB only)</p>
+                <p>3. Hover over filtered results</p>
+                <p><strong>Expected:</strong> All features work with stable columns and correct VBD</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section info">
+        <h2>🔍 Technical Verification</h2>
+        
+        <h3>Verify VBD Calculation Pipeline</h3>
+        <p>Open browser console and check calculation flow:</p>
+        <div class="code-block">// Check that recalculation ran after import
+// Look for console messages like:
+// "recalc:complete" with player count
+// Check VBD values in store:
+const players = JSON.parse(localStorage.getItem('workspace::players') || '[]');
+console.log('VBD sample:', players.slice(0, 5).map(p => ({
+  name: p.name, 
+  vbd: p.vbd 
+})));</div>
+
+        <h3>Inspect Column Layout</h3>
+        <p>Use browser DevTools to verify no layout-shifting CSS:</p>
+        <div class="code-block">// Check that table rows don't have position-shifting pseudo-elements
+// Look for absence of ::before or ::after with absolute positioning
+// Verify stable table-layout: fixed on Table component</div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Validation Checklist</h2>
+        <ul class="checklist">
+            <li><input type="checkbox" id="app-loads"> <label for="app-loads">React app loads without errors</label></li>
+            <li><input type="checkbox" id="import-success"> <label for="import-success">CSV import completes successfully</label></li>
+            <li><input type="checkbox" id="vbd-calculated"> <label for="vbd-calculated">🎯 CRITICAL: VBD column shows calculated values (not 0.0)</label></li>
+            <li><input type="checkbox" id="vbd-realistic"> <label for="vbd-realistic">VBD values look realistic (positive for top players)</label></li>
+            <li><input type="checkbox" id="columns-stable"> <label for="columns-stable">🎯 CRITICAL: No column shifting on hover/select</label></li>
+            <li><input type="checkbox" id="hover-stable"> <label for="hover-stable">Player data stays in correct columns when hovering</label></li>
+            <li><input type="checkbox" id="select-stable"> <label for="select-stable">Player data stays in correct columns when selecting</label></li>
+            <li><input type="checkbox" id="vbd-sortable"> <label for="vbd-sortable">VBD column is clickable and sortable</label></li>
+            <li><input type="checkbox" id="sort-ascending"> <label for="sort-ascending">VBD ascending sort works correctly</label></li>
+            <li><input type="checkbox" id="sort-descending"> <label for="sort-descending">VBD descending sort works correctly</label></li>
+            <li><input type="checkbox" id="search-works"> <label for="search-works">Search functionality still works</label></li>
+            <li><input type="checkbox" id="filters-work"> <label for="filters-work">Position filters still work</label></li>
+        </ul>
+    </div>
+
+    <div class="test-section success">
+        <h2>✅ Success Criteria</h2>
+        <p><strong>All fixes are successful if:</strong></p>
+        <ul>
+            <li>✅ VBD column displays calculated values for imported players</li>
+            <li>✅ No column shifting occurs when hovering over players</li>
+            <li>✅ No column shifting occurs when selecting players</li>
+            <li>✅ VBD column sorts players correctly by value</li>
+            <li>✅ All existing search and filter functionality preserved</li>
+            <li>✅ No console errors during normal usage</li>
+        </ul>
+    </div>
+
+    <div class="test-section warning">
+        <h2>⚠️ Fix Failed If</h2>
+        <ul>
+            <li>❌ VBD column still shows 0.0 for imported players</li>
+            <li>❌ Data shifts to wrong columns when hovering</li>
+            <li>❌ Data shifts to wrong columns when selecting</li>
+            <li>❌ VBD column header is not clickable</li>
+            <li>❌ Sorting doesn't reorder players by VBD</li>
+            <li>❌ Search or filters break after fixes</li>
+        </ul>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f0fdf4; border-radius: 8px;">
+        <h3>🎯 Expected Outcome</h3>
+        <p>Player Search widget should display <strong>calculated VBD values</strong> for all imported players with <strong>stable column layout</strong> during interactions.</p>
+        <p><strong>This resolves the critical display issues that were affecting the user experience.</strong></p>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Progress tracking
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const completed = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).length;
+                    const total = document.querySelectorAll('input[type="checkbox"]').length;
+                    const critical = document.getElementById('vbd-calculated').checked && 
+                                   document.getElementById('columns-stable').checked;
+                    
+                    console.log(`VBD fixes validation progress: ${completed}/${total} steps completed`);
+                    
+                    if (critical) {
+                        console.log('🎉 CRITICAL FIXES VALIDATED: VBD calculation and column stability!');
+                    }
+                    
+                    if (completed === total && critical) {
+                        console.log('🎉 All VBD column fixes validated successfully!');
+                        document.body.style.backgroundColor = '#f0fdf4';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

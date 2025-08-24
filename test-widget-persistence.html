@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Widget Layout Persistence</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .test-header {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .test-steps {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 20px;
+        }
+        .step {
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .step:last-child {
+            border-bottom: none;
+        }
+        .console-output {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: monospace;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .link-button {
+            display: inline-block;
+            background: #3b82f6;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+        }
+        .link-button:hover {
+            background: #2563eb;
+        }
+        .debug-info {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-header">
+        <h1>🧪 Widget Layout Persistence Test</h1>
+        <p>Step-by-step testing for React Grid Layout persistence</p>
+    </div>
+
+    <div class="test-steps">
+        <h2>📋 Testing Instructions</h2>
+        
+        <div class="step">
+            <strong>Step 1:</strong> Open the React Application
+            <br>
+            <a href="http://localhost:5173/" class="link-button" target="_blank">🚀 Open React App</a>
+        </div>
+        
+        <div class="step">
+            <strong>Step 2:</strong> Open Browser Developer Tools
+            <br>
+            Press F12 or right-click → Inspect Element → Console tab
+        </div>
+        
+        <div class="step">
+            <strong>Step 3:</strong> Look for Widget Grid Debug Messages
+            <br>
+            You should see messages like:
+            <div class="console-output">🔧 WidgetGrid: Loading saved layouts...
+🔧 WidgetGrid: Saved layouts from storage: null
+🔧 WidgetGrid: No saved layouts found, using defaults</div>
+        </div>
+        
+        <div class="step">
+            <strong>Step 4:</strong> Enable Edit Mode
+            <br>
+            Click the "Edit Layout" button in the top-right of the React app
+        </div>
+        
+        <div class="step">
+            <strong>Step 5:</strong> Move a Widget
+            <br>
+            Drag any widget (like Player Search) to a new position by its title bar
+        </div>
+        
+        <div class="step">
+            <strong>Step 6:</strong> Check Console for Save Messages
+            <br>
+            You should see:
+            <div class="console-output">🔧 WidgetGrid: Layout changed { _layout: [...], allLayouts: {...} }
+🔧 WidgetGrid: Complete layouts to save: {...}
+🔧 WidgetGrid: Save result: { ok: true }
+✅ WidgetGrid: Layouts saved successfully</div>
+        </div>
+        
+        <div class="step">
+            <strong>Step 7:</strong> Test Persistence
+            <br>
+            Refresh the page (F5) and check if the widget stayed in its new position
+        </div>
+        
+        <div class="step">
+            <strong>Step 8:</strong> Check Console After Refresh
+            <br>
+            After refresh, you should see:
+            <div class="console-output">🔧 WidgetGrid: Loading saved layouts...
+🔧 WidgetGrid: Saved layouts from storage: { lg: [...], md: [...], sm: [...] }
+🔧 WidgetGrid: Merged layouts: {...}</div>
+        </div>
+    </div>
+
+    <div class="debug-info">
+        <h3>🔍 Debug Information</h3>
+        <p><strong>What to look for if persistence isn't working:</strong></p>
+        <ul>
+            <li><strong>Storage not available:</strong> Check if localStorage is blocked or full</li>
+            <li><strong>Layout change not triggered:</strong> React Grid Layout might not be calling onLayoutChange</li>
+            <li><strong>Save failing:</strong> Storage adapter might be encountering quota issues</li>
+            <li><strong>Load failing:</strong> Data might be corrupted or in wrong format</li>
+        </ul>
+        
+        <p><strong>Common Issues:</strong></p>
+        <ul>
+            <li>Browser in private/incognito mode (localStorage disabled)</li>
+            <li>Site localStorage quota exceeded</li>
+            <li>React Grid Layout not properly configured</li>
+            <li>onLayoutChange only triggers during drag/resize, not on mount</li>
+        </ul>
+    </div>
+
+    <div class="test-steps">
+        <h2>🛠️ Manual Debug Commands</h2>
+        <p>Open browser console and run these commands to debug:</p>
+        
+        <div class="step">
+            <strong>Check localStorage directly:</strong>
+            <div class="console-output">// Check if layouts are saved
+Object.keys(localStorage).filter(key => key.includes('widget'))
+
+// View the saved layout data
+JSON.parse(localStorage.getItem('widget-layouts::layouts') || 'null')</div>
+        </div>
+        
+        <div class="step">
+            <strong>Test storage adapter directly:</strong>
+            <div class="console-output">// Import and test the adapter (run in browser console on the React app page)
+const { createStorageAdapter } = await import('./src/adapters/storage.js');
+const adapter = createStorageAdapter({ namespace: 'widget-layouts', version: '1.0.0' });
+console.log('Available:', adapter.isAvailable());
+console.log('Current layouts:', adapter.get('layouts'));</div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; padding: 20px; background: #f1f5f9; border-radius: 8px;">
+        <h3>Expected Result</h3>
+        <p>After moving widgets and refreshing, they should stay in their new positions.</p>
+        <p><strong>If this doesn't work:</strong> Check the browser console for error messages and debug information.</p>
+    </div>
+</body>
+</html>

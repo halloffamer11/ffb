@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Widget Pop-out Functionality - HITL Validation</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #0b0b0c;
+      color: #f5f5f6;
+      line-height: 1.6;
+    }
+    
+    .validation-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #121214;
+      border: 1px solid #2a2a2f;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #2a2a2f;
+    }
+    
+    .header h1 {
+      color: #ccff00;
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      letter-spacing: -0.025em;
+    }
+    
+    .header p {
+      color: #b3b3b8;
+      font-size: 14px;
+      margin: 0;
+    }
+    
+    .section {
+      margin-bottom: 32px;
+    }
+    
+    .section h2 {
+      color: #f5f5f6;
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 16px 0;
+      letter-spacing: -0.025em;
+    }
+    
+    .section h3 {
+      color: #b3b3b8;
+      font-size: 16px;
+      font-weight: 500;
+      margin: 0 0 12px 0;
+    }
+    
+    .instructions {
+      background: #18181b;
+      border: 1px solid #3a3a40;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .instructions ul, .instructions ol {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .instructions li {
+      margin-bottom: 8px;
+      color: #b3b3b8;
+    }
+    
+    .pass-criteria {
+      background: rgba(61, 220, 132, 0.1);
+      border: 1px solid rgba(61, 220, 132, 0.3);
+      border-radius: 6px;
+      padding: 16px;
+      margin-top: 16px;
+    }
+    
+    .pass-criteria h4 {
+      color: #3ddc84;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+    
+    .pass-criteria ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+    
+    .pass-criteria li {
+      margin-bottom: 4px;
+      color: #b3b3b8;
+      font-size: 13px;
+    }
+    
+    .widget-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin: 16px 0;
+    }
+    
+    .widget-item {
+      background: #1f1f23;
+      border: 1px solid #3a3a40;
+      border-radius: 6px;
+      padding: 12px;
+      text-align: center;
+    }
+    
+    .widget-item h4 {
+      color: #ccff00;
+      font-size: 14px;
+      font-weight: 500;
+      margin: 0 0 4px 0;
+    }
+    
+    .widget-item p {
+      color: #8a8a90;
+      font-size: 12px;
+      margin: 0;
+    }
+    
+    .app-iframe {
+      width: 100%;
+      height: 800px;
+      border: 2px solid #3a3a40;
+      border-radius: 8px;
+      background: #0b0b0c;
+      margin-top: 16px;
+    }
+    
+    .keyboard-shortcuts {
+      background: #1a1a1e;
+      border: 1px solid #3a3a40;
+      border-radius: 6px;
+      padding: 12px;
+      margin-top: 12px;
+      font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+      font-size: 12px;
+      color: #b3b3b8;
+    }
+    
+    .keyboard-shortcuts code {
+      background: rgba(204, 255, 0, 0.1);
+      color: #ccff00;
+      padding: 2px 4px;
+      border-radius: 3px;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+      margin-top: 16px;
+    }
+    
+    .feature-card {
+      background: #18181b;
+      border: 1px solid #2a2a2f;
+      border-radius: 6px;
+      padding: 16px;
+    }
+    
+    .feature-card h4 {
+      color: #ccff00;
+      font-size: 14px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+    }
+    
+    .feature-card p {
+      color: #b3b3b8;
+      font-size: 13px;
+      margin: 0;
+    }
+    
+    .launch-button {
+      display: inline-flex;
+      align-items: center;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #ccff00 0%, #a3d900 100%);
+      color: #0b0b0c;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    
+    .launch-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(204, 255, 0, 0.3);
+    }
+    
+    .launch-button::before {
+      content: "🚀";
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="validation-container">
+    <div class="header">
+      <h1>Widget Pop-out Functionality</h1>
+      <p>HITL Validation for T-049 - Complete Widget Fullscreen Modal System</p>
+    </div>
+    
+    <div class="section">
+      <h2>🎯 Implementation Summary</h2>
+      <div class="instructions">
+        <p><strong>Purpose:</strong> Enable any widget to expand to fullscreen view with complete functionality preserved, professional animations, and keyboard shortcuts.</p>
+        
+        <h3>Code Added:</h3>
+        <ul>
+          <li><code>/src/components/widgets/WidgetPopOutModal.tsx</code> - Fullscreen modal component with portal rendering</li>
+          <li>Enhanced <code>WidgetGrid.tsx</code> with pop-out state management and handlers</li>
+          <li>Updated <code>styledHelpers.ts</code> with additional theme token mappings</li>
+        </ul>
+        
+        <h3>Integration:</h3>
+        <ul>
+          <li>Connected to existing ⤴ buttons in all 7 widget containers</li>
+          <li>Pop-out buttons only visible in normal mode (hidden during edit mode)</li>
+          <li>Seamless state preservation between normal and pop-out views</li>
+          <li>Professional animations and backdrop effects</li>
+        </ul>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>🧪 Validation Instructions</h2>
+      
+      <div class="instructions">
+        <h3>Setup:</h3>
+        <ol>
+          <li>Start dev server: <code>npm run dev</code></li>
+          <li>Open the main application at <code>http://localhost:5173</code></li>
+          <li>Ensure you're NOT in edit mode (no widget drag handles visible)</li>
+        </ol>
+      </div>
+      
+      <div class="instructions">
+        <h3>Test Steps:</h3>
+        <ol>
+          <li><strong>Locate Pop-out Buttons:</strong> Look for ⤴ button in top-right corner of each widget</li>
+          <li><strong>Test Each Widget Type:</strong> Click the pop-out button on different widgets</li>
+          <li><strong>Verify Fullscreen View:</strong> Widget should expand to fill entire screen with dark backdrop</li>
+          <li><strong>Test Functionality:</strong> All widget features should work normally in pop-out mode</li>
+          <li><strong>Test Close Methods:</strong> Try both the × button and ESC key to close</li>
+          <li><strong>Test Animation:</strong> Observe smooth fade-in/scale-in when opening, fade-out when closing</li>
+          <li><strong>Test Focus Management:</strong> Modal should trap focus and handle keyboard navigation</li>
+        </ol>
+      </div>
+      
+      <div class="keyboard-shortcuts">
+        <strong>Keyboard Shortcuts:</strong><br>
+        <code>ESC</code> - Close active pop-out modal<br>
+        <code>Tab</code> / <code>Shift+Tab</code> - Navigate within modal<br>
+        Click backdrop or × button - Close modal
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>🎛️ Widget Types to Test</h2>
+      <div class="widget-list">
+        <div class="widget-item">
+          <h4>Player Search</h4>
+          <p>Search, filters, player list</p>
+        </div>
+        <div class="widget-item">
+          <h4>Draft Entry</h4>
+          <p>Player selection, bidding</p>
+        </div>
+        <div class="widget-item">
+          <h4>Player Analysis</h4>
+          <p>Stats, projections, VBD</p>
+        </div>
+        <div class="widget-item">
+          <h4>VBD Scatter Plot</h4>
+          <p>Interactive chart, selections</p>
+        </div>
+        <div class="widget-item">
+          <h4>Budget Tracker</h4>
+          <p>Spending, constraints</p>
+        </div>
+        <div class="widget-item">
+          <h4>Roster Panel</h4>
+          <p>Team composition</p>
+        </div>
+        <div class="widget-item">
+          <h4>Draft Ledger</h4>
+          <p>Transaction history</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>✨ Key Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h4>Portal Rendering</h4>
+          <p>Modal renders at document.body level for proper z-index layering and focus management</p>
+        </div>
+        <div class="feature-card">
+          <h4>State Preservation</h4>
+          <p>All widget data, selections, and interactions maintained between normal and pop-out views</p>
+        </div>
+        <div class="feature-card">
+          <h4>Professional Styling</h4>
+          <p>Backdrop blur, accent borders, smooth animations using design tokens</p>
+        </div>
+        <div class="feature-card">
+          <h4>Accessibility</h4>
+          <p>ARIA attributes, keyboard navigation, focus trapping, ESC key support</p>
+        </div>
+        <div class="feature-card">
+          <h4>Multiple Close Methods</h4>
+          <p>ESC key, close button, backdrop click - all with smooth animations</p>
+        </div>
+        <div class="feature-card">
+          <h4>Edit Mode Integration</h4>
+          <p>Pop-out buttons hidden during edit mode, only show remove buttons</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>🚀 Launch Application</h2>
+      <p>Click below to open the main application and test the pop-out functionality:</p>
+      <a href="http://localhost:5173" target="_blank" class="launch-button">Open FFB Dashboard</a>
+      
+      <div class="instructions" style="margin-top: 16px;">
+        <p><strong>Note:</strong> If the link doesn't work, ensure the dev server is running with <code>npm run dev</code> and access the application at <code>http://localhost:5173</code></p>
+      </div>
+    </div>
+    
+    <div class="pass-criteria">
+      <h4>✅ Pass Criteria</h4>
+      <ul>
+        <li>Pop-out button (⤴) visible on all 7 widget types when NOT in edit mode</li>
+        <li>Clicking pop-out button opens fullscreen modal with smooth animation</li>
+        <li>Widget content renders correctly and maintains all functionality in pop-out view</li>
+        <li>ESC key closes modal with fade-out animation</li>
+        <li>Close button (×) in top-right works correctly</li>
+        <li>Clicking backdrop (dark area) closes modal</li>
+        <li>Body scroll is disabled when modal is open</li>
+        <li>Modal shows widget title and pop-out icon in header</li>
+        <li>All 7 widget types can be popped out successfully</li>
+        <li>No JavaScript errors in browser console during pop-out operations</li>
+        <li>Smooth animations for modal open/close (fade + scale effects)</li>
+        <li>Professional styling with accent borders and backdrop blur</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>

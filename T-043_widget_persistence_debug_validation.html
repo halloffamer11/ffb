@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-043: Widget Persistence Debug Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+            color: #1e293b;
+            line-height: 1.6;
+        }
+        .header {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: white;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-step {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            background: #f8fafc;
+        }
+        .step-number {
+            background: #dc2626;
+            color: white;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        .step-content {
+            flex: 1;
+        }
+        .step-content h4 {
+            margin: 0 0 8px 0;
+            color: #1e293b;
+        }
+        .step-content p {
+            margin: 0 0 8px 0;
+            color: #64748b;
+        }
+        .console-expected {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 8px 0;
+            white-space: pre-wrap;
+        }
+        .warning {
+            background: #fffbeb;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #f0fdf4;
+            border-left: 4px solid #22c55e;
+        }
+        .error {
+            background: #fef2f2;
+            border-left: 4px solid #ef4444;
+        }
+        .link-button {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            text-decoration: none;
+            padding: 12px 20px;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+            transition: background 0.2s;
+        }
+        .link-button:hover {
+            background: #b91c1c;
+        }
+        .checklist {
+            list-style: none;
+            padding: 0;
+        }
+        .checklist li {
+            padding: 8px 0;
+            display: flex;
+            align-items: center;
+        }
+        .checklist input[type="checkbox"] {
+            margin-right: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🐛 Widget Layout Persistence Debug</h1>
+        <p>Comprehensive debugging for the widget layout persistence issue</p>
+    </div>
+
+    <div class="test-section error">
+        <h2>❌ Issue Identified</h2>
+        <p><strong>Problem:</strong> Widget layouts are not persisting across page refreshes.</p>
+        <p><strong>Symptom:</strong> When widgets are moved and the page is refreshed, they return to default positions.</p>
+        <p><strong>Expected:</strong> Widget positions should be saved and restored across sessions.</p>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Debug Testing Steps</h2>
+
+        <div class="test-step">
+            <div class="step-number">1</div>
+            <div class="step-content">
+                <h4>Open React App & Developer Tools</h4>
+                <p>Open the React application and browser developer tools console</p>
+                <a href="http://localhost:5173/" class="link-button" target="_blank">🚀 Open React App</a>
+                <p><strong>Action:</strong> Press F12 to open developer tools, click Console tab</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">2</div>
+            <div class="step-content">
+                <h4>Check Initial Load Messages</h4>
+                <p>Look for WidgetGrid debug messages on initial load</p>
+                <div class="console-expected">Expected console messages:
+🔧 WidgetGrid: Loading saved layouts...
+🔧 WidgetGrid: Saved layouts from storage: null (or actual data)
+🔧 WidgetGrid: No saved layouts found, using defaults (or "Merged layouts:")
+🔧 WidgetGrid: Test save after load: { ok: true }</div>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">3</div>
+            <div class="step-content">
+                <h4>Test Manual Save Function</h4>
+                <p>Click the "Manual Save" button in the React app</p>
+                <div class="console-expected">Expected console messages:
+🔧 Manual save test: { lg: [...], md: [...], sm: [...] }
+🔧 Manual save result: { ok: true }</div>
+                <p><strong>If this fails:</strong> Storage adapter has an issue</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">4</div>
+            <div class="step-content">
+                <h4>Enter Edit Mode & Move Widget</h4>
+                <p>Click "Edit Layout" button, then drag a widget (e.g., Player Search) to a new position</p>
+                <div class="console-expected">Expected console messages:
+🔧 WidgetGrid: Layout changed { _layout: [...], allLayouts: {...} }
+🔧 WidgetGrid: Complete layouts to save: {...}
+🔧 WidgetGrid: Save result: { ok: true }
+✅ WidgetGrid: Layouts saved successfully</div>
+                <p><strong>If no messages:</strong> onLayoutChange is not being triggered</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">5</div>
+            <div class="step-content">
+                <h4>Check localStorage Directly</h4>
+                <p>Run this command in browser console to check if data was saved</p>
+                <div class="console-expected">localStorage.getItem('widget-layouts::layouts')</div>
+                <p><strong>Expected:</strong> JSON string with layout data</p>
+                <p><strong>If null:</strong> Data is not being saved to localStorage</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">6</div>
+            <div class="step-content">
+                <h4>Test Page Refresh</h4>
+                <p>Refresh the page (F5) and check if widget stayed in new position</p>
+                <div class="console-expected">Expected console messages after refresh:
+🔧 WidgetGrid: Loading saved layouts...
+🔧 WidgetGrid: Saved layouts from storage: { lg: [...], md: [...], sm: [...] }
+🔧 WidgetGrid: Merged layouts: {...}</div>
+                <p><strong>Result:</strong> Widget should be in the moved position</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">7</div>
+            <div class="step-content">
+                <h4>Advanced Debugging</h4>
+                <p>If persistence still fails, run these commands in console:</p>
+                <div class="console-expected">// Check all localStorage keys
+Object.keys(localStorage).filter(key => key.includes('widget'))
+
+// Test storage adapter directly
+import('./src/adapters/storage.js').then(({ createStorageAdapter }) => {
+  const adapter = createStorageAdapter({ namespace: 'widget-layouts', version: '1.0.0' });
+  console.log('Available:', adapter.isAvailable());
+  console.log('Current layouts:', adapter.get('layouts'));
+});</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="warning">
+        <h3>🔧 Potential Issues to Check</h3>
+        <ul>
+            <li><strong>Browser Storage:</strong> Private/incognito mode disables localStorage</li>
+            <li><strong>Storage Quota:</strong> localStorage might be full</li>
+            <li><strong>React Grid Layout:</strong> onLayoutChange might only trigger during drag, not on mount</li>
+            <li><strong>State Management:</strong> React state might not be syncing with storage calls</li>
+            <li><strong>Namespace Collision:</strong> Multiple storage adapters might conflict</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Debug Checklist</h2>
+        <ul class="checklist">
+            <li><input type="checkbox" id="initial-load"> <label for="initial-load">Initial load messages appear in console</label></li>
+            <li><input type="checkbox" id="manual-save"> <label for="manual-save">Manual Save button works and shows success</label></li>
+            <li><input type="checkbox" id="drag-triggers"> <label for="drag-triggers">Dragging widget triggers layout change messages</label></li>
+            <li><input type="checkbox" id="localstorage-data"> <label for="localstorage-data">localStorage contains widget layout data</label></li>
+            <li><input type="checkbox" id="refresh-loads"> <label for="refresh-loads">Page refresh shows "saved layouts from storage" message</label></li>
+            <li><input type="checkbox" id="position-persists"> <label for="position-persists">Widget position actually persists after refresh</label></li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Root Cause Analysis</h2>
+        <div class="test-step">
+            <div class="step-number">A</div>
+            <div class="step-content">
+                <h4>If Manual Save works but drag doesn't save:</h4>
+                <p>Issue: React Grid Layout onLayoutChange not triggering</p>
+                <p>Solution: Check draggableHandle, isDraggable settings, or React Grid Layout configuration</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">B</div>
+            <div class="step-content">
+                <h4>If saving works but loading doesn't:</h4>
+                <p>Issue: Data format mismatch or loading logic problem</p>
+                <p>Solution: Check data serialization/deserialization and merge logic</p>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <div class="step-number">C</div>
+            <div class="step-content">
+                <h4>If neither saving nor loading works:</h4>
+                <p>Issue: Storage adapter or localStorage access problem</p>
+                <p>Solution: Check browser settings, storage quotas, or adapter configuration</p>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 30px; padding: 20px; background: #fef2f2; border-radius: 8px;">
+        <h3>🎯 Expected Outcome</h3>
+        <p>After completing these debug steps, we should identify exactly where the persistence is failing.</p>
+        <p><strong>Goal:</strong> Widget layouts should persist across page refreshes with proper console logging showing the save/load process.</p>
+    </div>
+
+    <script>
+        // Auto-check completed items based on localStorage detection
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if we can detect any widget layouts in localStorage
+            if (localStorage.getItem('widget-layouts::layouts')) {
+                document.getElementById('localstorage-data').checked = true;
+            }
+            
+            // Add click handlers to update state
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const completed = Array.from(document.querySelectorAll('input[type="checkbox"]:checked')).length;
+                    const total = document.querySelectorAll('input[type="checkbox"]').length;
+                    console.log(`Debug progress: ${completed}/${total} steps completed`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

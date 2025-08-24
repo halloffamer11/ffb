@@ -1,0 +1,40 @@
+## Feature requests
+
+1/ Enable a keyboard shortcut for the navigation pane. When the user presses "n" on the keyboard it should toggle the collapse/expand state of the navigation pane. ensure that the navigation pane shortcuts remain functional in both states. ensure that this keyboard shortcut does not activate when a search bar is in focus to avoid accidental activation.
+
+1.2/ Enable a keyboard shortcut for the edit layout widget function. When the user presses "e" on the keyboard it should toggle the edit mode. ensure that pressing "e" will also exit edit mode. ensure that this keyboard shortcut does not activate when a search bar is in focus to avoid accidental activation.
+
+1.3/ add keyboard shortcuts for each of the pre-defined widget layouts. currently the layouts are "default" "analytics" and "draft mode". The desired 3 are "pre-draft", "nomination", and "player analytics". Set up the keyboard shortcuts to be 1, 2, 3. ensure that this keyboard shortcut does not activate when a search bar is in focus to avoid accidental activation.
+
+2/ refine the functions of the header pane. the current header pane is located at the top of the page and extends across the entire horizontal width. 
+
+2.1/ the search bar at the top duplicates the functions of the player search widget without the table display. this functionality must remain and ensure that all widgets and data functions that filter players use the same "player focus" state. for example, if a player is searched and selected in either the top pane or the player search widget the VBD ranking plot will update to show the "focus" dot for the selected player consistent with this. Additionally, add a feature to both the top pane and the player search widget that are synced which allow for filtering by position using a checkbox. There should be a toggle switch for ALL and a checkbox for QB, RB, WR, TE, K, DEF. Make ALL a toggle switch and then ensure none of the individual positions are selected when ALL is enabled. If the user checks any of the position boxes the ALL toggle is turned off and the checkbox shows that position checked. If the user then selects a second position (such as WR, RB) then the filter acts on that filter and so on.
+
+2.2/ Enable the league settings configuration using the gear icon in the header pane. when selected a separate page should load to configure the league settings.
+
+2.3/ Enable a new input data settings button on the top header pane. when selected a separate page should load to allow for data import and configuration settings. 
+
+2.4/ Enable a new developer button on the top header pane. when selected a separate page should load allowing for viewing of any data loaded in the application. there should exist developer buttons to load test data sets for players and also drafting and edge-case simulation quick-actions. the purpose of this developer page is to allow for human interaction with the backend data and calculations in order to validate desired situations or scenarios. It should also be use to help debug issues when using the application normally. Even though this is a developer function do not worry about adding a production-level off button. For now we can assume this is being developed as an alpha-product for users who will use the developer tab.
+
+2.5/ remove the "live" status bar icon as it serves no purpose.
+2.6/ keep the bell and account/profile settings buttons, but do not add any functions there yet. we will add those later.
+
+3/ in the main dashboard and widget display I want to refine the experience. leverage your expertise and knowledge of best practices for scalable, production-ready react web sites and apply them to solve the following user-pain scenarios:
+3.1/ default widget size collapses too small and requires the user to resize and reorder all of the widgets at initialization. instead, define a standard default size for widgets that is on the compact size, but allows the user to understand what data and functions the widget includes.
+3.2/ default widget dashboards. let's define 3 standard, fixed widget configurations out of the box. we will also allow for custom widget dashboards that can be added and customized, but don't implement this now. For now the 3 standard widget dashboards are for pre-draft, nomination, and player analytics. we will continue to develop these default standard widget layouts so remain flexible in continuous improvement of these fixed options.
+
+4/ pre-draft filters in the navigation pane.
+4.1/ enable the 3 pre-draft filters in the side pane to deploy filters across the application environment. each button should toggle between the pre-click filter status and the customized filters for each button. it's important that toggling the filter MUST return to whatever the previous filters were before pressing the button.
+
+5/ UI compact and user friendliness
+5.1/ the current ui defaults widgets to non-functional sizes. the default size for each widget should be to "right-size" the widget to show all data in the widget. the user can then change the size of the widget to optimize the layout and the contents should adapt to fill the space, but the initial size should be compact.
+5.2/ the headers for each widget should be very compact with minimal padding and margins. there is too much vertical space. 
+5.2/ the widget buttons do not work. when NOT in layout edit mode only the widget name and pop out widget button should show up. When edit mode is enabled the resize target on the left should instead be redefined to be the entire title row and the close widget option should appear. the "link widget data sync" button can be removed since all widgets are linked at all time and there is not planned functionality to make this optional.
+
+6/ general UI improvements
+6.1/ the widget layout is using a shadow overlay that makes text at the edges harder to read. eliminate this overlay effect to prioritize readability.
+6.2/ the widget layout truncates at the bottom. I can scroll the widget page for at least an additional page length, but the edit widgets function does not allow me to put any widget past the initial screen. update this in 2 ways. first, ensure that widgets can use the entire space no matter what size it is. second, ensure the edit layout mode allows for removal of widgets, but also adding widgets back. the edit layout function should expand vertically to capture all of the widgets that are placed or added. when the user exits edit layout mode the final size of the screen should be fit to the size of the widgets defined there, but not any larger. this is a dynamically sized grid based on the widgets placed.
+6.3/ move the fixed widget dashboards from the dropdown menu to the navigation bar. the current page uses the dropdown function to select from the 3 fixed layouts. I want to push these layouts to the side bar and replace the non-functional layouts "default" "analytics" and "draft mode".
+6.4/ the 1,2,3 keyboard shortcuts work perfectly for changing the layouts. however, i need the keys to allow for text input when in a search bar focus. for example, when searching for players in the player search bar I can press 1, 2, or 3 and that character shows up in the search bar but does NOT trigger the layout change. the current implementation also does not trigger a layout change, but it does prevent input of the 1, 2, 3 characters in the search bar.
+6.5/ add a "default data" button to the data management page. this should link to the demo data located at "/Users/dreiss/Documents/Cursor/FFB/demos/data" in file "top300_2024.csv".
+6.6/ enable the "pop out widget" function button on each widget. it should expand the view of the widget to full-page temporarily. the widget takes up the whole screen and the user can only interact with the features in that widget until the screen is minimized back to normal.

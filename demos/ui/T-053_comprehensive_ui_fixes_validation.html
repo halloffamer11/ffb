@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-053: Comprehensive UI Fixes Validation</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #0b0b0c;
+            color: #f5f5f6;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #ccff00;
+        }
+        .test-section {
+            background: #121214;
+            border: 1px solid #2a2a2f;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .test-step {
+            background: #18181b;
+            border: 1px solid #3a3a40;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+        .expected {
+            color: #3ddc84;
+            font-weight: 500;
+        }
+        .instruction {
+            color: #60a5fa;
+            font-weight: 500;
+        }
+        .warning {
+            color: #fbbf24;
+            background: rgba(251, 191, 36, 0.1);
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #fbbf24;
+        }
+        .button {
+            background: #ccff00;
+            color: #0b0b0c;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 10px 10px 0;
+        }
+        .button:hover {
+            background: #b8e600;
+        }
+        .issue-fixed {
+            color: #3ddc84;
+            font-weight: 600;
+        }
+        .issue-broken {
+            color: #ff5a5f;
+            font-weight: 600;
+        }
+        .keyboard-shortcut {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 T-053: Comprehensive UI Fixes Validation</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This validation tests all 4 comprehensive UI fixes implemented. 
+            Please test each section thoroughly and confirm all issues are resolved.
+        </div>
+
+        <a href="http://localhost:5173" class="button" target="_blank">🚀 Open Main Application</a>
+        
+        <h2>🎯 Issues Fixed</h2>
+        <ol>
+            <li><strong>Dark Shadow/Gradient on Player Search Widget</strong> - Removed dark gradients making widgets darker than background</li>
+            <li><strong>Widget Popout Functionality</strong> - Enhanced debugging and modal state management</li>
+            <li><strong>Sidebar Layout Preset Buttons</strong> - Fixed click handlers and added proper logging</li>
+            <li><strong>Add/Delete Button Visibility</strong> - Improved edit mode controls and visibility</li>
+        </ol>
+
+        <div class="test-section">
+            <h2>🧪 Test 1: Dark Gradient Removal</h2>
+            <p><strong>Purpose:</strong> Verify that widgets no longer have dark shadows/gradients that make them darker than the main background.</p>
+            
+            <div class="test-step">
+                <h3>Step 1: Visual Inspection</h3>
+                <p class="instruction">1. Open the main application</p>
+                <p class="instruction">2. Look at the Player Search widget (top-left by default)</p>
+                <p class="instruction">3. Compare the widget background color to the main canvas background</p>
+                <p class="expected">✅ Expected: Widget background should be the same or lighter than main background (no dark gradient overlay)</p>
+                <p class="expected">✅ Expected: Widget headers should use flat colors instead of dark gradients</p>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 2: Hover States</h3>
+                <p class="instruction">1. Hover over different widgets</p>
+                <p class="instruction">2. Check hover state backgrounds</p>
+                <p class="expected">✅ Expected: Hover states should use lighter, subtle backgrounds (not darker gradients)</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Test 2: Widget Popout Functionality</h2>
+            <p><strong>Purpose:</strong> Verify that clicking the popout button (⤴) opens widgets in fullscreen modal.</p>
+            
+            <div class="test-step">
+                <h3>Step 1: Popout Button Visibility</h3>
+                <p class="instruction">1. Look at widget headers (NOT in edit mode)</p>
+                <p class="instruction">2. Find the popout button (⤴) in the top-right of each widget</p>
+                <p class="expected">✅ Expected: Popout button (⤴) should be visible on all widget headers when NOT in edit mode</p>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 2: Popout Functionality</h3>
+                <p class="instruction">1. Click the popout button (⤴) on the Player Search widget</p>
+                <p class="instruction">2. Check browser console for debug messages</p>
+                <p class="instruction">3. Look for modal overlay</p>
+                <p class="expected">✅ Expected: Modal should open with widget content</p>
+                <p class="expected">✅ Expected: Red debug indicator "Modal should be rendering: search" should appear</p>
+                <p class="expected">✅ Expected: Console should show popout debug messages</p>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 3: Modal Interaction</h3>
+                <p class="instruction">1. If modal opens, try pressing <span class="keyboard-shortcut">ESC</span> to close</p>
+                <p class="instruction">2. Try clicking the × button to close</p>
+                <p class="instruction">3. Try clicking outside the modal to close</p>
+                <p class="expected">✅ Expected: Modal should close via ESC, × button, or clicking outside</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Test 3: Sidebar Layout Preset Buttons</h2>
+            <p><strong>Purpose:</strong> Verify that clicking preset buttons in the left sidebar changes layouts.</p>
+            
+            <div class="test-step">
+                <h3>Step 1: Preset Button Visibility</h3>
+                <p class="instruction">1. Look at the left sidebar "Layouts" section</p>
+                <p class="instruction">2. Find preset buttons: Pre-Draft, Nomination, Player Analytics</p>
+                <p class="expected">✅ Expected: Three preset buttons should be visible with icons and keyboard shortcuts</p>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 2: Preset Switching</h3>
+                <p class="instruction">1. Click on "Nomination" preset button</p>
+                <p class="instruction">2. Check browser console for preset switch messages</p>
+                <p class="instruction">3. Observe if widget layout changes</p>
+                <p class="expected">✅ Expected: Console should show "🎯 LeftRail: Preset clicked: nomination"</p>
+                <p class="expected">✅ Expected: Console should show "🎯 LeftRail: Preset switch result: true"</p>
+                <p class="expected">✅ Expected: Widget layout should visibly change (widgets move to new positions)</p>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 3: Keyboard Shortcuts</h3>
+                <p class="instruction">1. Press <span class="keyboard-shortcut">1</span> key (for Pre-Draft)</p>
+                <p class="instruction">2. Press <span class="keyboard-shortcut">2</span> key (for Nomination)</p>
+                <p class="instruction">3. Press <span class="keyboard-shortcut">3</span> key (for Player Analytics)</p>
+                <p class="expected">✅ Expected: Each keypress should change layout and show console messages</p>
+                <p class="expected">✅ Expected: Active preset button should be highlighted</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🧪 Test 4: Add/Delete Button Visibility</h2>
+            <p><strong>Purpose:</strong> Verify that edit mode shows widget management controls properly.</p>
+            
+            <div class="test-step">
+                <h3>Step 1: Edit Mode Toggle</h3>
+                <p class="instruction">1. Look for "Edit Layout" button (top-right area)</p>
+                <p class="instruction">2. Click "Edit Layout" to enter edit mode</p>
+                <p class="instruction">3. Check browser console for edit mode messages</p>
+                <p class="expected">✅ Expected: Button should change to "Exit Edit Mode" and become highlighted</p>
+                <p class="expected">✅ Expected: Console should show "🔧 WidgetGrid: Toggling edit mode from false to true"</p>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 2: Edit Mode Controls</h3>
+                <p class="instruction">1. In edit mode, look for "Edit Mode Active" panel at top</p>
+                <p class="instruction">2. Check widget headers for × (remove) buttons</p>
+                <p class="instruction">3. Verify drag handles (⋮⋮) appear on widget titles</p>
+                <p class="expected">✅ Expected: "Edit Mode Active" panel should appear below controls</p>
+                <p class="expected">✅ Expected: Widget headers should show × buttons instead of ⤴ buttons</p>
+                <p class="expected">✅ Expected: Widget titles should show drag handles (⋮⋮)</p>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 3: Widget Removal and Addition</h3>
+                <p class="instruction">1. Click × button on any widget to remove it</p>
+                <p class="instruction">2. Check if "Edit Mode Active" panel updates to show add buttons</p>
+                <p class="instruction">3. Try clicking an "Add" button to restore a widget</p>
+                <p class="expected">✅ Expected: Widget should disappear when × is clicked</p>
+                <p class="expected">✅ Expected: "Edit Mode Active" panel should show add buttons for hidden widgets</p>
+                <p class="expected">✅ Expected: Clicking add button should restore the widget</p>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 4: Drag and Resize</h3>
+                <p class="instruction">1. Try dragging a widget by its title bar (with ⋮⋮)</p>
+                <p class="instruction">2. Try resizing a widget using corner handles</p>
+                <p class="expected">✅ Expected: Widgets should be draggable and resizable in edit mode</p>
+                <p class="expected">✅ Expected: Layout changes should persist when exiting edit mode</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>📋 Validation Checklist</h2>
+            <p>Mark each item as you verify it works:</p>
+            <ul>
+                <li>□ Widgets have light backgrounds (no dark gradients)</li>
+                <li>□ Popout buttons (⤴) are visible and functional</li>
+                <li>□ Popout modal opens with red debug indicator</li>
+                <li>□ Preset buttons change layouts with console logging</li>
+                <li>□ Keyboard shortcuts (1,2,3) switch presets</li>
+                <li>□ Edit mode toggle works with console logging</li>
+                <li>□ "Edit Mode Active" panel appears in edit mode</li>
+                <li>□ Widget × (remove) buttons work in edit mode</li>
+                <li>□ Widget add buttons appear and work in edit mode</li>
+                <li>□ Widget dragging and resizing works in edit mode</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h2>🐛 Troubleshooting</h2>
+            
+            <h3>If widgets still have dark backgrounds:</h3>
+            <p>Check browser console for theme loading errors. The gradients should now use CSS variables like var(--surface-1) instead of dark hex colors.</p>
+            
+            <h3>If popout doesn't work:</h3>
+            <p>Look for the red debug text "Modal should be rendering: [widget-id]" at top-right. Check console for popout debug messages starting with "🔧 WidgetGrid: Popping out widget".</p>
+            
+            <h3>If preset buttons don't work:</h3>
+            <p>Check console for messages starting with "🎯 LeftRail: Preset clicked" and "🎯 LeftRail: Preset switch result". Make sure you're clicking the actual preset buttons in the Layouts section.</p>
+            
+            <h3>If edit mode doesn't show controls:</h3>
+            <p>Check console for "🔧 WidgetGrid: Toggling edit mode" messages. The "Edit Mode Active" panel should appear near the top of the page when edit mode is enabled.</p>
+        </div>
+
+        <div class="test-section">
+            <h2>✅ Pass Criteria</h2>
+            <p>This validation passes if:</p>
+            <ol>
+                <li><span class="issue-fixed">✅ All widgets have light/neutral backgrounds (no dark gradients)</span></li>
+                <li><span class="issue-fixed">✅ Popout functionality works with visible modal and debug indicators</span></li>
+                <li><span class="issue-fixed">✅ Preset buttons change layouts with proper console logging</span></li>
+                <li><span class="issue-fixed">✅ Edit mode shows proper controls and manages widget visibility</span></li>
+                <li><span class="issue-fixed">✅ All console debugging messages appear as expected</span></li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <strong>📝 Next Steps:</strong> After validating all fixes work correctly, please confirm with "HITL validation passed" to proceed.
+        </div>
+    </div>
+
+    <script>
+        // Add some interactive feedback for the validation page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🔧 T-053 Validation page loaded');
+            console.log('🔧 Please test all 4 comprehensive UI fixes');
+            console.log('🔧 1. Dark gradient removal');
+            console.log('🔧 2. Widget popout functionality'); 
+            console.log('🔧 3. Sidebar layout preset buttons');
+            console.log('🔧 4. Add/delete button visibility');
+        });
+    </script>
+</body>
+</html>

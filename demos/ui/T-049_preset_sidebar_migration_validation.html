@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-049: Preset Sidebar Migration Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8fafc;
+        }
+        .header {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .test-step {
+            background: #f1f5f9;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .expected {
+            background: #f0fdf4;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            border-left: 4px solid #10b981;
+        }
+        .checklist {
+            background: #fefce8;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 12px 0;
+            border-left: 4px solid #eab308;
+        }
+        .checklist ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .validation-iframe {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-top: 16px;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .feature-tag {
+            display: inline-block;
+            background: #dbeafe;
+            color: #1e40af;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        .keyboard-shortcut {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 12px;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>T-049: Preset Selection Migration to Sidebar Validation</h1>
+        <p><span class="status-indicator status-pending">Validation Required</span></p>
+        
+        <h2>Implementation Summary</h2>
+        <ul>
+            <li><strong>Purpose:</strong> Move preset selection from dropdown widget to navigation sidebar for better accessibility and UX</li>
+            <li><strong>Code Added:</strong> 
+                <span class="feature-tag">LeftRail preset buttons</span>
+                <span class="feature-tag">Preset-specific styling</span>
+                <span class="feature-tag">Active state indicators</span>
+            </li>
+            <li><strong>Code Removed:</strong> 
+                <span class="feature-tag">PresetSelector dropdown</span>
+                <span class="feature-tag">WidgetGrid preset controls</span>
+            </li>
+            <li><strong>Integration:</strong> Connected to existing useLayoutPresets hook, preserves all functionality</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🎯 Validation Instructions</h2>
+        
+        <div class="test-step">
+            <h3>Setup</h3>
+            <ol>
+                <li>Ensure dev server is running: <code>npm run dev</code></li>
+                <li>Open the main application: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></li>
+                <li>Verify the application loads without console errors</li>
+            </ol>
+        </div>
+
+        <div class="test-step">
+            <h3>Test Step 1: Verify Preset Buttons in Sidebar</h3>
+            <p><strong>Action:</strong> Look at the left navigation rail under "Layouts" section</p>
+            <div class="expected">
+                <strong>Expected:</strong>
+                <ul>
+                    <li>Three preset buttons visible: "🔍 Pre-Draft Research", "⚡ Active Nomination", "📊 Player Analytics"</li>
+                    <li>Each button shows preset name and keyboard shortcut (1, 2, 3)</li>
+                    <li>Active preset is highlighted with colored left border and background</li>
+                    <li>Preset colors match their theme: Blue (Pre-Draft), Red (Nomination), Purple (Analytics)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <h3>Test Step 2: Verify Dropdown Removal</h3>
+            <p><strong>Action:</strong> Look at the main widget area header</p>
+            <div class="expected">
+                <strong>Expected:</strong>
+                <ul>
+                    <li>No preset dropdown selector visible in widget area</li>
+                    <li>Only layout control buttons remain: "Manual Save", "Reset Layout", "Edit Layout"</li>
+                    <li>Layout controls are now right-aligned</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <h3>Test Step 3: Test Sidebar Preset Switching</h3>
+            <p><strong>Action:</strong> Click each preset button in the sidebar</p>
+            <div class="expected">
+                <strong>Expected:</strong>
+                <ul>
+                    <li>Clicking "Pre-Draft Research" → Widget layout changes to research-focused (large search, prominent VBD chart)</li>
+                    <li>Clicking "Active Nomination" → Layout changes to draft-focused (prominent draft entry and budget)</li>
+                    <li>Clicking "Player Analytics" → Layout changes to analysis-focused (huge VBD chart dominates)</li>
+                    <li>Active button shows visual feedback with colored highlighting</li>
+                    <li>Hover effects work properly on preset buttons</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <h3>Test Step 4: Verify Keyboard Shortcuts Still Work</h3>
+            <p><strong>Action:</strong> Press keyboard keys <span class="keyboard-shortcut">1</span>, <span class="keyboard-shortcut">2</span>, <span class="keyboard-shortcut">3</span></p>
+            <div class="expected">
+                <strong>Expected:</strong>
+                <ul>
+                    <li>Key "1" → Switches to Pre-Draft preset</li>
+                    <li>Key "2" → Switches to Active Nomination preset</li>
+                    <li>Key "3" → Switches to Player Analytics preset</li>
+                    <li>Sidebar buttons update to show active state when switched via keyboard</li>
+                    <li>Widget layouts change as expected</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <h3>Test Step 5: Test Sidebar Collapsed State</h3>
+            <p><strong>Action:</strong> Click the collapse button (←) in the sidebar header</p>
+            <div class="expected">
+                <strong>Expected:</strong>
+                <ul>
+                    <li>Sidebar collapses to icon-only mode</li>
+                    <li>Preset buttons show only icons (🔍, ⚡, 📊)</li>
+                    <li>Tooltips appear on hover showing preset name and shortcut</li>
+                    <li>Clicking icons still switches presets correctly</li>
+                    <li>Active state indicator still visible</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <h3>Test Step 6: Test Preset Persistence</h3>
+            <p><strong>Action:</strong> Switch presets, then refresh the page</p>
+            <div class="expected">
+                <strong>Expected:</strong>
+                <ul>
+                    <li>Selected preset persists after page refresh</li>
+                    <li>Widget layout remains in the selected preset configuration</li>
+                    <li>Sidebar shows correct active preset after refresh</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>✅ Pass Criteria</h2>
+        <div class="checklist">
+            <ul>
+                <li>✓ Preset dropdown completely removed from widget area</li>
+                <li>✓ Three preset buttons visible in sidebar with correct icons and names</li>
+                <li>✓ Sidebar preset buttons switch layouts correctly</li>
+                <li>✓ Active preset shows proper visual feedback with themed colors</li>
+                <li>✓ Keyboard shortcuts (1, 2, 3) continue to work</li>
+                <li>✓ Sidebar collapse/expand works with preset buttons</li>
+                <li>✓ Preset selection persists across page refreshes</li>
+                <li>✓ No console errors during preset switching</li>
+                <li>✓ Hover states and animations work smoothly</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📁 Files Modified</h2>
+        <ul>
+            <li><code>/src/components/layout/LeftRail.tsx</code> - Added preset buttons with useLayoutPresets hook integration</li>
+            <li><code>/src/components/widgets/WidgetGrid.tsx</code> - Removed PresetSelector dropdown and related handler</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 Quick Access</h2>
+        <p><a href="http://localhost:5173" target="_blank">Open Main Application →</a></p>
+    </div>
+
+    <div class="test-section">
+        <h2>⚠️ Validation Status</h2>
+        <p>Please test all steps above and confirm:</p>
+        <p><strong style="color: #dc2626;">HITL validation required before task completion</strong></p>
+        <p>Reply with: <strong>"HITL validation passed"</strong> after successful testing</p>
+    </div>
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-042: Professional Trading Platform Aesthetics - HITL Validation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+            background: #0b0b0c;
+            color: #f5f5f6;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: linear-gradient(145deg, #121214 0%, #18181b 100%);
+            border-radius: 12px;
+            border: 1px solid #2a2a2f;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header h1 {
+            color: #ccff00;
+            background: linear-gradient(135deg, #ccff00 0%, #a3d900 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #b3b3b8;
+            font-size: 1.2em;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            background: linear-gradient(145deg, #121214 0%, #18181b 100%);
+            border-radius: 12px;
+            border: 1px solid #2a2a2f;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .section h2 {
+            color: #ccff00;
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status.implemented {
+            background: rgba(61, 220, 132, 0.1);
+            color: #3ddc84;
+            border: 1px solid rgba(61, 220, 132, 0.3);
+        }
+        
+        .test-step {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+            border-left: 3px solid #ccff00;
+        }
+        
+        .test-step h3 {
+            color: #f5f5f6;
+            margin-bottom: 10px;
+        }
+        
+        .test-step p {
+            color: #b3b3b8;
+            margin-bottom: 15px;
+        }
+        
+        .expected {
+            background: rgba(61, 220, 132, 0.1);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #3ddc84;
+        }
+        
+        .expected strong {
+            color: #3ddc84;
+        }
+        
+        .demo-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #ccff00 0%, #a3d900 100%);
+            color: #0b0b0c;
+            padding: 12px 24px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+            box-shadow: 0 2px 8px rgba(204, 255, 0, 0.3);
+        }
+        
+        .demo-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(204, 255, 0, 0.4);
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .feature-card {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2f;
+        }
+        
+        .feature-card h4 {
+            color: #ccff00;
+            margin-bottom: 10px;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .feature-list li {
+            padding: 5px 0;
+            color: #b3b3b8;
+        }
+        
+        .feature-list li::before {
+            content: '✓';
+            color: #3ddc84;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+        
+        .comparison {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .comparison > div {
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #2a2a2f;
+        }
+        
+        .before {
+            background: rgba(255, 90, 95, 0.1);
+            border-color: rgba(255, 90, 95, 0.3);
+        }
+        
+        .after {
+            background: rgba(61, 220, 132, 0.1);
+            border-color: rgba(61, 220, 132, 0.3);
+        }
+        
+        .before h4 {
+            color: #ff5a5f;
+        }
+        
+        .after h4 {
+            color: #3ddc84;
+        }
+        
+        .validation-form {
+            background: rgba(204, 255, 0, 0.05);
+            border: 2px solid rgba(204, 255, 0, 0.3);
+            border-radius: 12px;
+            padding: 30px;
+            margin-top: 40px;
+        }
+        
+        .validation-form h3 {
+            color: #ccff00;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .checkbox-group {
+            margin: 15px 0;
+        }
+        
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 6px;
+            transition: background-color 0.15s ease;
+        }
+        
+        .checkbox-group label:hover {
+            background: rgba(255, 255, 255, 0.04);
+        }
+        
+        .checkbox-group input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ccff00 0%, #a3d900 100%);
+            color: #0b0b0c;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.15s ease;
+        }
+        
+        .submit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 16px rgba(204, 255, 0, 0.4);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Professional Trading Platform Aesthetics</h1>
+            <p>HITL Validation for T-042: Robinhood Legend Enhancement</p>
+        </div>
+
+        <div class="section">
+            <h2>
+                🚀 Implementation Summary 
+                <span class="status implemented">COMPLETED</span>
+            </h2>
+            
+            <p><strong>Purpose:</strong> Transform FFB Draft Helper into a professional trading platform with Robinhood Legend-inspired aesthetics, featuring sophisticated data visualization, dense information displays, and professional micro-interactions.</p>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>🎨 Enhanced Design System</h4>
+                    <ul class="feature-list">
+                        <li>Professional shadow system with realistic depth</li>
+                        <li>Sophisticated gradients and overlays</li>
+                        <li>Advanced animation system with cubic-bezier easing</li>
+                        <li>Extended color palette with alpha variants</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>📊 Professional Data Tables</h4>
+                    <ul class="feature-list">
+                        <li>Dense 32px row height for maximum data density</li>
+                        <li>Tabular numerics for consistent data alignment</li>
+                        <li>Professional loading skeletons with shimmer</li>
+                        <li>Enhanced selection and hover states</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>📈 Advanced Chart Visualizations</h4>
+                    <ul class="feature-list">
+                        <li>Professional grid system with primary/secondary lines</li>
+                        <li>Enhanced tooltips with structured data display</li>
+                        <li>Performance overlays and real-time indicators</li>
+                        <li>Sophisticated selection and glow effects</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>⚡ Micro-interactions & Animations</h4>
+                    <ul class="feature-list">
+                        <li>60fps smooth animations with hardware acceleration</li>
+                        <li>Professional button states and feedback</li>
+                        <li>Contextual hover effects and focus management</li>
+                        <li>Reduced motion support for accessibility</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧪 Validation Instructions</h2>
+            
+            <div class="test-step">
+                <h3>Step 1: Launch Application</h3>
+                <p>Start the development server and load the React application:</p>
+                <a href="http://localhost:5173" target="_blank" class="demo-link">Open React App</a>
+                <div class="expected">
+                    <strong>Expected:</strong> Application loads with professional dark theme, enhanced header with gradient logo, and sophisticated left navigation with active states.
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <h3>Step 2: Widget Container Enhancements</h3>
+                <p>Observe the enhanced widget containers with professional styling:</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul class="feature-list">
+                        <li>Multi-layered shadows creating realistic depth</li>
+                        <li>Smooth hover animations with 1px lift effect</li>
+                        <li>Professional resize handles with dot pattern</li>
+                        <li>Link indicators with pulsing animations</li>
+                        <li>Enhanced title bars with gradient overlays</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <h3>Step 3: Player Search Widget</h3>
+                <p>Test the professional data table with dense, trading-platform styling:</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul class="feature-list">
+                        <li>32px row height with optimal information density</li>
+                        <li>Tabular numerics for aligned VBD and points columns</li>
+                        <li>Professional zebra striping and hover effects</li>
+                        <li>Enhanced injury badges with semantic colors</li>
+                        <li>Smooth loading skeletons with shimmer animation</li>
+                        <li>Position-specific color coding (QB purple, RB green, etc.)</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <h3>Step 4: VBD Scatter Plot</h3>
+                <p>Examine the sophisticated chart visualization enhancements:</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul class="feature-list">
+                        <li>Professional grid system with primary and secondary lines</li>
+                        <li>Dark background with subtle gradient overlay</li>
+                        <li>Enhanced data points with glow effects on selection</li>
+                        <li>Structured tooltips with metric breakdowns</li>
+                        <li>Professional axes with proper typography</li>
+                        <li>Performance indicators in top-right corner</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <h3>Step 5: Interactive Elements</h3>
+                <p>Test all interactive elements for professional feedback:</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul class="feature-list">
+                        <li>Buttons lift on hover with enhanced shadows</li>
+                        <li>Focus states visible with accent-colored outlines</li>
+                        <li>Smooth transitions under 150ms for micro-interactions</li>
+                        <li>Position filters with professional toggle styling</li>
+                        <li>Left rail collapse/expand with smooth animations</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="test-step">
+                <h3>Step 6: Typography & Data Display</h3>
+                <p>Verify professional typography implementation:</p>
+                <div class="expected">
+                    <strong>Expected:</strong>
+                    <ul class="feature-list">
+                        <li>All numeric data uses tabular numerics for alignment</li>
+                        <li>Consistent font weights and spacing hierarchy</li>
+                        <li>Professional text selection with accent colors</li>
+                        <li>VBD values with color-coded backgrounds</li>
+                        <li>Proper contrast ratios meeting WCAG standards</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📊 Performance Criteria</h2>
+            
+            <div class="comparison">
+                <div class="before">
+                    <h4>Before Enhancement</h4>
+                    <ul class="feature-list" style="list-style-type: none;">
+                        <li style="color: #ff5a5f;">❌ Basic hover states</li>
+                        <li style="color: #ff5a5f;">❌ Simple shadows and borders</li>
+                        <li style="color: #ff5a5f;">❌ Standard table spacing</li>
+                        <li style="color: #ff5a5f;">❌ Basic chart styling</li>
+                        <li style="color: #ff5a5f;">❌ Limited animations</li>
+                    </ul>
+                </div>
+                <div class="after">
+                    <h4>After Enhancement</h4>
+                    <ul class="feature-list">
+                        <li>Sophisticated multi-layer shadows</li>
+                        <li>Professional gradients and micro-interactions</li>
+                        <li>Dense data tables (32px rows)</li>
+                        <li>Trading platform-grade visualizations</li>
+                        <li>60fps smooth animations throughout</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Files Modified</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>Design System</h4>
+                    <ul class="feature-list" style="list-style-type: none; font-family: monospace; font-size: 0.9em;">
+                        <li style="color: #b3b3b8;">📄 src/theme/tokens.ts</li>
+                        <li style="color: #b3b3b8;">📄 src/theme/ThemeProvider.tsx</li>
+                        <li style="color: #b3b3b8;">📄 src/theme/animations.css</li>
+                        <li style="color: #b3b3b8;">📄 src/index.css</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>Components</h4>
+                    <ul class="feature-list" style="list-style-type: none; font-family: monospace; font-size: 0.9em;">
+                        <li style="color: #b3b3b8;">📄 src/components/widgets/WidgetContainer.tsx</li>
+                        <li style="color: #b3b3b8;">📄 src/components/widgets/PlayerSearchWidget.tsx</li>
+                        <li style="color: #b3b3b8;">📄 src/components/widgets/VBDScatterWidget.tsx</li>
+                    </ul>
+                </div>
+                
+                <div class="feature-card">
+                    <h4>Layout</h4>
+                    <ul class="feature-list" style="list-style-type: none; font-family: monospace; font-size: 0.9em;">
+                        <li style="color: #b3b3b8;">📄 src/components/layout/TopAppBar.tsx</li>
+                        <li style="color: #b3b3b8;">📄 src/components/layout/LeftRail.tsx</li>
+                        <li style="color: #b3b3b8;">📄 src/components/layout/MainCanvas.tsx</li>
+                        <li style="color: #b3b3b8;">📄 src/App.tsx</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="validation-form">
+            <h3>🏁 Validation Checklist</h3>
+            <p style="text-align: center; margin-bottom: 30px; color: #b3b3b8;">
+                Please verify each enhancement before confirming validation
+            </p>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="visual-cohesion">
+                    <span>Visual cohesion: All components follow consistent professional design language</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="trading-aesthetics">
+                    <span>Professional aesthetics: Matches quality of commercial trading platforms</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="performance">
+                    <span>Performance: All animations run at 60fps without blocking</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="data-density">
+                    <span>Information density: Maximum data visibility without overwhelming users</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="accessibility">
+                    <span>Accessibility: All interactions keyboard accessible with proper focus management</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="responsive">
+                    <span>Responsive design: Works effectively across different screen sizes</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="brand-consistency">
+                    <span>Brand consistency: Robinhood Legend aesthetic maintained throughout</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="micro-interactions">
+                    <span>Micro-interactions: Subtle animations enhance rather than distract</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="typography">
+                    <span>Typography: Clear hierarchy with tabular numerics for data</span>
+                </label>
+            </div>
+            
+            <div class="checkbox-group">
+                <label>
+                    <input type="checkbox" id="data-presentation">
+                    <span>Data presentation: Professional formatting with proper contrast ratios</span>
+                </label>
+            </div>
+            
+            <button class="submit-btn" id="validate-btn" disabled>
+                Confirm HITL Validation Passed
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Validation logic
+        const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+        const submitBtn = document.getElementById('validate-btn');
+        
+        function updateSubmitButton() {
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            submitBtn.disabled = !allChecked;
+            
+            if (allChecked) {
+                submitBtn.textContent = '✅ All Criteria Met - Validation Passed';
+                submitBtn.style.background = 'linear-gradient(135deg, #3ddc84 0%, #00c851 100%)';
+            } else {
+                const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+                submitBtn.textContent = `${checkedCount}/${checkboxes.length} Criteria Met`;
+                submitBtn.style.background = 'linear-gradient(135deg, #ccff00 0%, #a3d900 100%)';
+            }
+        }
+        
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', updateSubmitButton);
+        });
+        
+        submitBtn.addEventListener('click', function() {
+            if (!submitBtn.disabled) {
+                alert('🎉 HITL Validation Passed!\n\nProfessional Trading Platform Aesthetics have been successfully implemented and validated.\n\nAll criteria met:\n• Visual cohesion and professional aesthetics\n• 60fps performance and smooth animations\n• Maximum data density with accessibility\n• Robinhood Legend brand consistency\n• Professional typography and data presentation');
+            }
+        });
+        
+        // Initialize
+        updateSubmitButton();
+    </script>
+</body>
+</html>

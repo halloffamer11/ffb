@@ -56,6 +56,9 @@ export function calculateBaselines(players, leagueSettings) {
     const baselineIndex = Math.max(0, Math.min(list.length - 1, teams * startersRequired - 1));
     const baselinePoints = list.length === 0 ? 0 : list[baselineIndex]?.points ?? 0;
     baselines.set(position, baselinePoints);
+    
+    // Debug: baseline calculation
+    console.log(`VBD Baseline ${position}: index=${baselineIndex}, points=${baselinePoints}, players=${list.length}, teams=${teams}, starters=${startersRequired}`);
   }
   
   // Calculate FLEX baseline separately after position baselines
@@ -89,7 +92,10 @@ export function calculateBaselines(players, leagueSettings) {
 export function calculatePlayerVBD(players, leagueSettings) {
   const baselines = calculateBaselines(players, leagueSettings);
   
-  return players.map(p => {
+  // Debug: log baselines
+  console.log('VBD Baselines calculated:', Object.fromEntries(baselines));
+  
+  const result = players.map(p => {
     // IR players get marked but still get VBD for reference
     const isIR = p.injuryStatus === INJURY_STATUS.IR;
     
@@ -110,6 +116,15 @@ export function calculatePlayerVBD(players, leagueSettings) {
       vbdExcluded: isIR // Mark IR players
     };
   });
+  
+  // Debug: show sample VBD calculations
+  const topPlayers = result
+    .filter(p => p.vbd !== undefined)
+    .sort((a, b) => (b.vbd || 0) - (a.vbd || 0))
+    .slice(0, 5);
+  console.log('Top 5 VBD players:', topPlayers.map(p => ({ name: p.name, pos: p.position, points: p.points, vbd: p.vbd })));
+  
+  return result;
 }
 
 /**

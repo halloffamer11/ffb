@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-049: Keyboard Shortcut Input Fix Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 10px;
+            transition: border-color 0.2s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .status {
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            font-weight: 500;
+        }
+        
+        .status.info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .status.success {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        
+        .status.error {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fca5a5;
+        }
+        
+        .instructions {
+            background: #f0f9ff;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #0ea5e9;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h3 {
+            margin-top: 0;
+            color: #0c4a6e;
+        }
+        
+        .instructions ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .preset-display {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            margin: 10px 0;
+        }
+        
+        .preset-display h4 {
+            margin: 0 0 10px 0;
+            color: #334155;
+        }
+        
+        .key-indicator {
+            display: inline-block;
+            background: #374151;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 14px;
+            margin: 0 2px;
+        }
+        
+        .results-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+        
+        #eventLog {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 2px 0;
+        }
+        
+        .log-entry.keypress {
+            color: #60a5fa;
+        }
+        
+        .log-entry.shortcut {
+            color: #34d399;
+        }
+        
+        .log-entry.blocked {
+            color: #f87171;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>T-049: Keyboard Shortcut Input Fix Validation</h1>
+            <p><strong>Purpose:</strong> Verify that 1,2,3 keys work for character input in search fields while maintaining layout shortcuts when not in focus.</p>
+        </div>
+
+        <div class="instructions">
+            <h3>Test Instructions</h3>
+            <ol>
+                <li><strong>Open the main React app</strong> in another tab: <a href="http://localhost:5173" target="_blank">http://localhost:5173</a></li>
+                <li><strong>Test character input in search fields:</strong>
+                    <ul>
+                        <li>Click in any search field in the main app (Player Search widget, header search, etc.)</li>
+                        <li>Type "123" - all characters should appear in the input field</li>
+                        <li>No layout changes should occur during typing</li>
+                    </ul>
+                </li>
+                <li><strong>Test keyboard shortcuts when not in search fields:</strong>
+                    <ul>
+                        <li>Click outside any input field</li>
+                        <li>Press <span class="key-indicator">1</span>, <span class="key-indicator">2</span>, or <span class="key-indicator">3</span></li>
+                        <li>Layout presets should switch correctly</li>
+                    </ul>
+                </li>
+                <li><strong>Test below simulated environments</strong> to verify the behavior</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 1: Search Input Focus Behavior</h3>
+            <p>Click in the search field below and try typing "123":</p>
+            <input type="text" 
+                   class="search-input" 
+                   id="searchInput" 
+                   placeholder="Type 123 here - characters should appear normally"
+                   data-widget="search">
+            <div id="searchStatus" class="status info">
+                Status: Ready for input testing
+            </div>
+            <p><strong>Expected:</strong> Characters "123" should appear in the input field. No layout changes should occur.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Non-Input Keyboard Shortcuts</h3>
+            <p>Click this area (outside any input), then press keys 1, 2, or 3:</p>
+            <div id="shortcutArea" 
+                 style="padding: 20px; background: #e5e7eb; border-radius: 6px; cursor: pointer; text-align: center;"
+                 tabindex="0">
+                Click here and then press 1, 2, or 3 keys
+            </div>
+            <div id="shortcutStatus" class="status info">
+                Status: Ready for shortcut testing
+            </div>
+            <p><strong>Expected:</strong> Layout presets should switch. Check the main app to see layout changes.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Additional Input Types</h3>
+            <textarea class="search-input" 
+                      id="textareaInput" 
+                      rows="3" 
+                      placeholder="Test typing 123 in textarea"></textarea>
+            
+            <input type="search" 
+                   class="search-input" 
+                   id="searchTypeInput" 
+                   placeholder="Test typing 123 in search type input">
+            
+            <div contenteditable="true" 
+                 class="search-input" 
+                 id="editableDiv" 
+                 style="min-height: 40px;">
+                Click here and type 123 in contenteditable div
+            </div>
+            
+            <div id="additionalStatus" class="status info">
+                Status: Ready for additional input type testing
+            </div>
+        </div>
+
+        <div class="preset-display">
+            <h4>Current Layout Presets (from main app):</h4>
+            <p>
+                <span class="key-indicator">1</span> Pre-draft - Focus on research and preparation<br>
+                <span class="key-indicator">2</span> Nomination - Active drafting and bidding<br>
+                <span class="key-indicator">3</span> Player Analytics - Deep player analysis
+            </p>
+        </div>
+
+        <div class="results-section">
+            <h3>Event Log</h3>
+            <p>This log shows keyboard events and focus states for debugging:</p>
+            <div id="eventLog">
+                <div class="log-entry">Waiting for events...</div>
+            </div>
+            <button onclick="clearLog()">Clear Log</button>
+        </div>
+    </div>
+
+    <script>
+        const eventLog = document.getElementById('eventLog');
+        let logEntries = [];
+
+        function logEvent(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const entry = `[${timestamp}] ${message}`;
+            logEntries.push({ entry, type });
+            
+            // Keep only last 50 entries
+            if (logEntries.length > 50) {
+                logEntries = logEntries.slice(-50);
+            }
+            
+            updateEventLog();
+        }
+
+        function updateEventLog() {
+            eventLog.innerHTML = logEntries
+                .map(({entry, type}) => `<div class="log-entry ${type}">${entry}</div>`)
+                .join('');
+            eventLog.scrollTop = eventLog.scrollHeight;
+        }
+
+        function clearLog() {
+            logEntries = [];
+            eventLog.innerHTML = '<div class="log-entry">Log cleared. Waiting for events...</div>';
+        }
+
+        // Monitor keyboard events
+        document.addEventListener('keydown', (event) => {
+            const activeElement = document.activeElement;
+            const isInInput = activeElement && (
+                ['input', 'textarea'].includes(activeElement.tagName.toLowerCase()) ||
+                activeElement.getAttribute('contenteditable') === 'true'
+            );
+
+            if (event.key >= '1' && event.key <= '3') {
+                if (isInInput) {
+                    logEvent(`Key "${event.key}" pressed in input field (${activeElement.tagName.toLowerCase()})`, 'keypress');
+                    logEvent(`Should allow character input - NO layout change`, 'keypress');
+                } else {
+                    logEvent(`Key "${event.key}" pressed outside input - should trigger layout shortcut`, 'shortcut');
+                }
+            }
+        });
+
+        // Monitor input changes
+        ['searchInput', 'textareaInput', 'searchTypeInput', 'editableDiv'].forEach(id => {
+            const element = document.getElementById(id);
+            if (element) {
+                element.addEventListener('input', (event) => {
+                    logEvent(`Input changed in ${id}: "${event.target.value || event.target.textContent}"`, 'keypress');
+                });
+                
+                element.addEventListener('focus', () => {
+                    logEvent(`Focus entered: ${id}`, 'info');
+                });
+                
+                element.addEventListener('blur', () => {
+                    logEvent(`Focus left: ${id}`, 'info');
+                });
+            }
+        });
+
+        // Update status indicators
+        document.getElementById('searchInput').addEventListener('input', (event) => {
+            const status = document.getElementById('searchStatus');
+            if (event.target.value.includes('123')) {
+                status.textContent = 'SUCCESS: Characters 123 typed successfully!';
+                status.className = 'status success';
+            }
+        });
+
+        document.getElementById('shortcutArea').addEventListener('focus', () => {
+            document.getElementById('shortcutStatus').textContent = 'Ready: Press 1, 2, or 3 keys to test shortcuts';
+            document.getElementById('shortcutStatus').className = 'status info';
+        });
+
+        // Initialize log
+        logEvent('Validation page loaded. Ready for testing.', 'info');
+        logEvent('Focus guard implementation should allow character input in search fields', 'info');
+        logEvent('Keyboard shortcuts should work when not in input fields', 'info');
+    </script>
+</body>
+</html>

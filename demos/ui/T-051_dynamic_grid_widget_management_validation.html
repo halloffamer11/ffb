@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-051 Dynamic Grid & Widget Management Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            background: #0f1419;
+            color: #e6e6e6;
+        }
+        
+        .validation-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #1a1f2e;
+            border-radius: 8px;
+            border: 1px solid #2d3748;
+        }
+        
+        h1, h2 {
+            color: #00d2d3;
+            border-bottom: 2px solid #2d3748;
+            padding-bottom: 10px;
+        }
+        
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #252d3a;
+            border-radius: 6px;
+            border-left: 4px solid #00d2d3;
+        }
+        
+        .step {
+            margin: 15px 0;
+            padding: 12px;
+            background: #1a1f2e;
+            border-radius: 4px;
+        }
+        
+        .step-number {
+            display: inline-block;
+            background: #00d2d3;
+            color: #000;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .expected {
+            color: #68d391;
+            font-style: italic;
+            margin-top: 5px;
+        }
+        
+        .warning {
+            color: #f56565;
+            background: #2d1b1b;
+            padding: 10px;
+            border-radius: 4px;
+            border-left: 4px solid #f56565;
+            margin: 10px 0;
+        }
+        
+        .success-criteria {
+            background: #1a2f1a;
+            border: 1px solid #48bb78;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .success-criteria h3 {
+            color: #48bb78;
+            margin-top: 0;
+        }
+        
+        .code {
+            background: #2d3748;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-family: 'Fira Code', 'Consolas', monospace;
+            font-size: 14px;
+            border: 1px solid #4a5568;
+        }
+        
+        ul {
+            padding-left: 20px;
+        }
+        
+        li {
+            margin: 8px 0;
+        }
+        
+        .app-link {
+            display: inline-block;
+            background: #00d2d3;
+            color: #000;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: background-color 0.2s;
+        }
+        
+        .app-link:hover {
+            background: #00b8b9;
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <h1>🧩 T-051: Dynamic Grid Height & Widget Add/Remove Management</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Prerequisites:</strong>
+            <ul>
+                <li>Start dev server: <span class="code">npm run dev</span></li>
+                <li>React app must be running on http://localhost:5173</li>
+                <li>Clear localStorage before testing (F12 → Application → Storage → Clear All)</li>
+            </ul>
+        </div>
+
+        <h2>🎯 Implementation Overview</h2>
+        <p>This validation tests the dynamic grid height system with widget add/remove functionality to solve the layout truncation problem described in React UI Ideas Section 6.2.</p>
+
+        <div class="test-section">
+            <h3>📏 Dynamic Grid Height System</h3>
+            <p>The grid now automatically calculates its height based on widget positions and content requirements.</p>
+            <ul>
+                <li><strong>Edit Mode:</strong> Expanded height (min 1200px) allows placing widgets anywhere</li>
+                <li><strong>View Mode:</strong> Fit-to-content height eliminates wasted space</li>
+                <li><strong>Auto-resize:</strong> Grid height updates when widgets are moved or added/removed</li>
+            </ul>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Widget Management System</h3>
+            <p>Widgets can now be removed from the layout and added back with proper state management.</p>
+            <ul>
+                <li><strong>Remove Widgets:</strong> Click × button in edit mode to hide widgets</li>
+                <li><strong>Add Widgets:</strong> Use the "Add Widgets" menu in edit mode to restore hidden widgets</li>
+                <li><strong>State Persistence:</strong> Widget visibility and positions persist in localStorage</li>
+                <li><strong>Smart Positioning:</strong> Added widgets are placed at the bottom of existing widgets</li>
+            </ul>
+        </div>
+
+        <a href="http://localhost:5173" target="_blank" class="app-link">🚀 Open React Application</a>
+
+        <h2>📋 Validation Test Steps</h2>
+
+        <div class="test-section">
+            <h3>Test 1: Dynamic Height in View Mode</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Open the application and observe the initial layout
+                <div class="expected">✓ Expected: Grid height fits the content exactly, no excessive scrolling below widgets</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Try scrolling down past the bottom widget
+                <div class="expected">✓ Expected: Minimal scrolling space below the last widget (just a small padding)</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Switch between different layout presets (1, 2, 3 keyboard shortcuts)
+                <div class="expected">✓ Expected: Grid height adjusts automatically to fit each preset's content</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 2: Dynamic Height in Edit Mode</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Click "Edit Layout" button to enter edit mode
+                <div class="expected">✓ Expected: Grid height expands significantly (minimum 1200px) for widget placement</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Try scrolling down in edit mode
+                <div class="expected">✓ Expected: Substantial scrollable space available for placing widgets anywhere</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Drag a widget to the bottom area of the expanded grid
+                <div class="expected">✓ Expected: Widget can be placed in the extended vertical space</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                Click "Exit Edit Mode"
+                <div class="expected">✓ Expected: Grid automatically resizes to fit all widgets, including the one moved to the bottom</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 3: Widget Removal System</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Enter edit mode and hover over any widget
+                <div class="expected">✓ Expected: × (remove) button appears in the top-right corner of the widget</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Click the × button on the "Budget Tracker" widget
+                <div class="expected">✓ Expected: Budget widget disappears from the layout immediately</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Remove 2-3 more widgets using their × buttons
+                <div class="expected">✓ Expected: Each widget disappears and layout automatically reflows</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                Exit edit mode and re-enter edit mode
+                <div class="expected">✓ Expected: Removed widgets stay hidden, showing state persistence</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 4: Widget Addition System</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                With some widgets removed and in edit mode, look for the "Add Widgets" menu
+                <div class="expected">✓ Expected: Menu appears at the top with buttons for each hidden widget</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Click "+ budget" button in the Add Widgets menu
+                <div class="expected">✓ Expected: Budget widget reappears at the bottom of the current layout</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Add back all removed widgets one by one
+                <div class="expected">✓ Expected: Each widget appears at the bottom, grid height expands as needed</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                When all widgets are visible, check the Add Widgets menu
+                <div class="expected">✓ Expected: Menu disappears as there are no hidden widgets to add</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 5: Auto-Fit Behavior</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                In edit mode, arrange widgets in various positions, including some far down
+                <div class="expected">✓ Expected: Widgets can be placed anywhere in the extended grid area</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Note the current scroll position and grid height
+                <div class="expected">✓ Expected: Grid has significant height in edit mode</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Exit edit mode
+                <div class="expected">✓ Expected: Grid height shrinks to exactly fit all widgets with minimal padding</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">4</span>
+                Try scrolling down past the widgets
+                <div class="expected">✓ Expected: No excessive empty space below the bottom-most widget</div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Test 6: State Persistence</h3>
+            
+            <div class="step">
+                <span class="step-number">1</span>
+                Remove some widgets and rearrange others in custom positions
+                <div class="expected">✓ Expected: Layout reflects your changes</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">2</span>
+                Refresh the page (F5)
+                <div class="expected">✓ Expected: Hidden widgets stay hidden, custom positions are preserved</div>
+            </div>
+            
+            <div class="step">
+                <span class="step-number">3</span>
+                Switch to a preset layout (keyboard shortcut 1, 2, or 3)
+                <div class="expected">✓ Expected: All widgets become visible again with preset positions</div>
+            </div>
+        </div>
+
+        <div class="success-criteria">
+            <h3>✅ Success Criteria Summary</h3>
+            <ul>
+                <li><strong>No Layout Truncation:</strong> Widgets can be placed anywhere during edit mode</li>
+                <li><strong>Auto-Fit Grid:</strong> View mode uses exactly the space needed, no wasted space</li>
+                <li><strong>Widget Removal:</strong> × buttons work to hide widgets from layout</li>
+                <li><strong>Widget Addition:</strong> Add menu allows restoring hidden widgets</li>
+                <li><strong>Smart Positioning:</strong> Added widgets appear at sensible positions</li>
+                <li><strong>State Persistence:</strong> Widget visibility and positions persist across page reloads</li>
+                <li><strong>Dynamic Height:</strong> Grid height adapts automatically to content in both modes</li>
+                <li><strong>Performance:</strong> Layout changes are smooth without janky animations</li>
+            </ul>
+        </div>
+
+        <h2>🔧 Implementation Summary</h2>
+        <div class="test-section">
+            <h3>Key Features Implemented</h3>
+            <ul>
+                <li><strong>Dynamic Grid Height:</strong> Calculates height based on widget positions and content</li>
+                <li><strong>Widget Visibility Management:</strong> Track visible/hidden widgets with state</li>
+                <li><strong>Smart Widget Addition:</strong> Place new widgets at optimal positions</li>
+                <li><strong>Auto-Fit on Exit:</strong> Grid resizes to content when leaving edit mode</li>
+                <li><strong>State Persistence:</strong> Saves widget visibility and positions to localStorage</li>
+                <li><strong>Edit Mode Expansion:</strong> Provides ample space for widget placement during editing</li>
+            </ul>
+            
+            <h3>Files Modified</h3>
+            <ul>
+                <li><code>src/components/widgets/WidgetGrid.tsx</code> - Core grid system with dynamic height and widget management</li>
+                <li><code>src/components/widgets/WidgetContainer.tsx</code> - Added onRemove prop support</li>
+                <li><code>src/components/widgets/*Widget.tsx</code> - Updated all widget components to support removal</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>📝 Testing Notes:</strong>
+            <ul>
+                <li>Clear localStorage between test runs for consistent results</li>
+                <li>Test with different screen sizes to verify responsive behavior</li>
+                <li>Check that preset layouts still work correctly after custom modifications</li>
+                <li>Verify no console errors during widget add/remove operations</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
