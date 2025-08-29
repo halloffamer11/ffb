@@ -9,11 +9,13 @@ import DraftEntryWidget from './DraftEntryWidget';
 import RosterPanelWidget from './RosterPanelWidget';
 import PlayerAnalysisWidget from './PlayerAnalysisWidget';
 import DraftLedgerWidget from './DraftLedgerWidget';
+import TeamRosterOverviewWidget from './TeamRosterOverviewWidget';
 import WidgetPopOutModal from './WidgetPopOutModal';
 import { createStorageAdapter } from '../../adapters/storage.js';
 import { getOptimalWidgetSizes, dimensionsToGridItem, getGridRowHeight, type WidgetType } from '../../utils/widgetSizing';
 import { useLayoutPresets } from '../../hooks/useLayoutPresets';
 import { type LayoutPreset } from '../../utils/layoutPresets';
+import { usePreset } from '../../stores/PresetContext';
 
 // React Grid Layout CSS will be handled via CDN or inline styles
 
@@ -178,34 +180,49 @@ const AddWidgetButton = styled.button`
 const generateDefaultLayouts = (): GridLayouts => {
   const optimalSizes = getOptimalWidgetSizes();
   
-  // Widget positioning strategy: Top row, then fill down and across
+  // Ultra-compact widget positioning for maximum screen real estate
+  // All widgets reduced by ~33% in width for efficient layout
   const widgetPositions = {
     lg: [
-      { id: 'search', x: 0, y: 0 },
-      { id: 'draft-entry', x: 14, y: 0 },
-      { id: 'player-analysis', x: 0, y: 12 },
-      { id: 'vbd-scatter', x: 10, y: 12 },
-      { id: 'budget', x: 0, y: 26 },
-      { id: 'roster', x: 10, y: 26 },
-      { id: 'draft-ledger', x: 0, y: 38 }
+      // Row 1: Search (6) + Draft Entry (4) + space = 10/12 cols
+      { id: 'search', x: 0, y: 0 },           // 6 cols: 0-5 (compact table view)
+      { id: 'draft-entry', x: 6, y: 0 },      // 4 cols: 6-9 (ultra-compact form)
+      
+      // Row 2: Roster (6) + VBD Scatter (6) = 12/12 cols (perfect fit)
+      { id: 'roster', x: 0, y: 12 },          // 6 cols: 0-5 (adaptive 3×2 grid)
+      { id: 'vbd-scatter', x: 6, y: 12 },     // 6 cols: 6-11 (compact chart)
+      
+      // Row 3: Budget (4) + Analysis (4) + space = 8/12 cols  
+      { id: 'budget', x: 0, y: 26 },          // 4 cols: 0-3 (compact stats)
+      { id: 'player-analysis', x: 4, y: 26 }, // 4 cols: 4-7 (compact 2×2 grid)
+      
+      // Row 4: Draft Ledger (5) + space = 5/12 cols
+      { id: 'draft-ledger', x: 0, y: 40 },   // 5 cols: 0-4 (compact table)
+      
+      // Row 5: Team Overview (full width) - positioned in middle for testing
+      { id: 'team-roster-overview', x: 0, y: 30 } // Full width: 0-23 (24 cols)
     ],
     md: [
-      { id: 'search', x: 0, y: 0 },
-      { id: 'draft-entry', x: 12, y: 0 },
-      { id: 'player-analysis', x: 0, y: 12 },
-      { id: 'vbd-scatter', x: 9, y: 12 },
-      { id: 'budget', x: 0, y: 26 },
-      { id: 'roster', x: 9, y: 26 },
-      { id: 'draft-ledger', x: 0, y: 38 }
+      // Optimized for 10-column grid
+      { id: 'search', x: 0, y: 0 },           // ~5 cols
+      { id: 'draft-entry', x: 5, y: 0 },      // ~3 cols (8/10 total)
+      { id: 'roster', x: 0, y: 12 },          // ~5 cols (3×2 or 2×3 adaptive)
+      { id: 'vbd-scatter', x: 5, y: 12 },     // ~5 cols (10/10 total)
+      { id: 'budget', x: 0, y: 26 },          // ~3 cols
+      { id: 'player-analysis', x: 3, y: 26 }, // ~3 cols (6/10 total)
+      { id: 'draft-ledger', x: 0, y: 40 },   // ~4 cols
+      { id: 'team-roster-overview', x: 0, y: 30 } // Full width: 0-19 (20 cols)
     ],
     sm: [
+      // Stack vertically on 6-column grid
       { id: 'search', x: 0, y: 0 },
       { id: 'draft-entry', x: 0, y: 12 },
-      { id: 'player-analysis', x: 0, y: 22 },
-      { id: 'vbd-scatter', x: 0, y: 32 },
-      { id: 'budget', x: 0, y: 46 },
-      { id: 'roster', x: 0, y: 54 },
-      { id: 'draft-ledger', x: 0, y: 66 }
+      { id: 'roster', x: 0, y: 22 },          // Adaptive: 3×2 or 2×3 depending on space
+      { id: 'vbd-scatter', x: 0, y: 36 },
+      { id: 'budget', x: 0, y: 50 },
+      { id: 'player-analysis', x: 0, y: 62 },
+      { id: 'draft-ledger', x: 0, y: 74 },
+      { id: 'team-roster-overview', x: 0, y: 30 } // Full width: 0-15 (16 cols)
     ]
   };
   
@@ -255,17 +272,31 @@ const ALL_WIDGETS: WidgetType[] = [
   'vbd-scatter',
   'budget',
   'roster',
-  'draft-ledger'
+  'draft-ledger',
+  'team-roster-overview'
 ];
 
+interface WidgetGridProps {
+  // Optional layout control handlers - when provided, buttons are hidden from widget grid
+  onSaveLayout?: () => void;
+  onResetLayout?: () => void;
+  onToggleEditMode?: () => void;
+  editMode?: boolean;
+}
+
 // Memoized WidgetGrid component for optimal performance
-const WidgetGrid = React.memo(() => {
+const WidgetGrid = React.memo(({ onSaveLayout, onResetLayout, onToggleEditMode, editMode: externalEditMode }: WidgetGridProps = {}) => {
   const [layouts, setLayouts] = useState<GridLayouts>(defaultLayouts);
-  const [editMode, setEditMode] = useState(false);
+  const [internalEditMode, setInternalEditMode] = useState(false);
   const [visibleWidgets, setVisibleWidgets] = useState<Set<string>>(new Set(ALL_WIDGETS));
+  
+  // Use external edit mode if provided, otherwise use internal
+  const editMode = externalEditMode !== undefined ? externalEditMode : internalEditMode;
+  const setEditMode = onToggleEditMode || setInternalEditMode;
   const [gridHeight, setGridHeight] = useState<number>(800); // Default height
   const [poppedOutWidget, setPoppedOutWidget] = useState<string | null>(null);
   const gridRef = useRef<HTMLDivElement>(null);
+  const hasLoadedFromStorage = useRef(false); // Prevent multiple localStorage loads
   
   // Layout presets integration
   const {
@@ -275,10 +306,37 @@ const WidgetGrid = React.memo(() => {
     switchToPreset,
     isPresetActive
   } = useLayoutPresets();
+  
+  // Keyboard shortcuts integration from PresetContext
+  const { registerLayoutControls } = usePreset();
+
 
   // Apply preset layouts when preset changes
   useEffect(() => {
     console.log(`🎯 Applying preset layout: ${currentPreset.name}`);
+    
+    // Check for saved preset-specific layout first
+    if (layoutStorage.isAvailable()) {
+      const presetKey = `preset_${currentPresetId}_layout`;
+      const savedPresetLayout = layoutStorage.get(presetKey);
+      
+      if (savedPresetLayout && savedPresetLayout.layouts) {
+        console.log(`🎯 Loading saved layout for preset: ${currentPreset.name}`);
+        setLayouts(savedPresetLayout.layouts);
+        
+        // Also restore visible widgets for this preset
+        if (savedPresetLayout.visibleWidgets) {
+          setVisibleWidgets(new Set(savedPresetLayout.visibleWidgets));
+        }
+        
+        // Mark as custom layout active
+        layoutStorage.set('customLayoutActive', true);
+        layoutStorage.set('layouts', savedPresetLayout.layouts);
+        return;
+      }
+    }
+    
+    // Use default preset layout if no saved layout exists
     const presetLayouts: GridLayouts = {
       lg: currentPreset.layouts.lg,
       md: currentPreset.layouts.md,
@@ -286,7 +344,7 @@ const WidgetGrid = React.memo(() => {
     };
     setLayouts(presetLayouts);
     
-    // Clear custom layout flag when switching to preset to prevent override
+    // Clear custom layout flag when using default preset layout
     if (layoutStorage.isAvailable()) {
       layoutStorage.remove('customLayoutActive');
     }
@@ -306,6 +364,12 @@ const WidgetGrid = React.memo(() => {
   
   // Load saved custom layouts and visible widgets only if not using a preset
   useEffect(() => {
+    // Prevent multiple loads from storage
+    if (hasLoadedFromStorage.current) {
+      console.log('🔧 WidgetGrid: Skipping storage load - already loaded');
+      return;
+    }
+    
     console.log('🔧 WidgetGrid: Loading saved layouts...');
     if (layoutStorage.isAvailable()) {
       const savedLayouts = layoutStorage.get('layouts');
@@ -353,13 +417,20 @@ const WidgetGrid = React.memo(() => {
       } else {
         console.log('🔧 WidgetGrid: Using preset layouts, ignoring saved custom layout');
       }
+      
+      hasLoadedFromStorage.current = true; // Mark as loaded
     } else {
       console.warn('🔧 WidgetGrid: Storage not available');
     }
   }, []); // Only run once on mount
   
-  // Save visible widgets to localStorage when they change
+  // Save visible widgets to localStorage when they change (but only after initial load)
   useEffect(() => {
+    // Don't save during initial load
+    if (!hasLoadedFromStorage.current) {
+      return;
+    }
+    
     if (layoutStorage.isAvailable()) {
       const visibleArray = Array.from(visibleWidgets);
       const saveResult = layoutStorage.set('visibleWidgets', visibleArray);
@@ -392,8 +463,12 @@ const WidgetGrid = React.memo(() => {
       }
     });
     
-    // Convert grid units to pixels and add generous padding
-    const calculatedHeight = (maxBottom + 6) * getGridRowHeight(); // +6 for generous bottom padding
+    // Convert grid units to pixels accounting for vertical margins between rows
+    const rowHeight = getGridRowHeight();
+    const marginY = 8; // must match ResponsiveGridLayout margin Y
+    const gridContentHeight = (maxBottom * rowHeight) + Math.max(0, (maxBottom - 1)) * marginY;
+    const paddingBottom = 6 * rowHeight; // generous bottom padding (~6 rows)
+    const calculatedHeight = gridContentHeight + paddingBottom;
     const finalHeight = Math.max(calculatedHeight, 600); // Ensure minimum height
     
     console.log(`🔧 WidgetGrid: Height calculation - breakpoint: ${breakpoint}, visible items: ${visibleItems.length}, maxBottom: ${maxBottom}, calculated: ${calculatedHeight}px, final: ${finalHeight}px`);
@@ -441,9 +516,11 @@ const WidgetGrid = React.memo(() => {
     }
   }, []);
 
-  // Memoized reset layout handler - resets to current preset
+  // Memoized reset layout handler - resets to default preset layout
   const resetLayout = useCallback(() => {
-    console.log(`🔧 WidgetGrid: Resetting layout to preset: ${currentPreset.name}`);
+    console.log(`🔧 WidgetGrid: Resetting layout to default ${currentPreset.name} layout`);
+    
+    // Reset to default preset layout
     const presetLayouts: GridLayouts = {
       lg: currentPreset.layouts.lg,
       md: currentPreset.layouts.md,
@@ -451,45 +528,120 @@ const WidgetGrid = React.memo(() => {
     };
     setLayouts(presetLayouts);
     
+    // Reset to all widgets visible (default state)
+    setVisibleWidgets(new Set(ALL_WIDGETS));
+    
+    // Clear all saved layouts from localStorage
     if (layoutStorage.isAvailable()) {
+      // Clear general custom layouts
       layoutStorage.remove('layouts');
       layoutStorage.remove('customLayoutActive');
-      console.log('✅ WidgetGrid: Custom layouts cleared, preset restored');
+      layoutStorage.remove('visibleWidgets');
+      
+      // Clear preset-specific saved layout
+      const presetKey = `preset_${currentPresetId}_layout`;
+      layoutStorage.remove(presetKey);
+      
+      console.log(`✅ WidgetGrid: All custom layouts cleared, ${currentPreset.name} default restored`);
     }
-  }, [currentPreset]);
+  }, [currentPreset, currentPresetId]);
+
+  // Save layout function that can be called externally
+  const saveLayout = useCallback(() => {
+    console.log(`🔧 Saving layout to preset: ${currentPreset.name}`);
+    
+    // Save to localStorage for persistence
+    if (layoutStorage.isAvailable()) {
+      layoutStorage.set('customLayoutActive', true);
+      layoutStorage.set('layouts', layouts);
+      
+      // Save preset-specific layout
+      const presetKey = `preset_${currentPresetId}_layout`;
+      const saveResult = layoutStorage.set(presetKey, {
+        layouts: layouts,
+        visibleWidgets: Array.from(visibleWidgets),
+        savedAt: new Date().toISOString()
+      });
+      
+      if (saveResult.ok) {
+        console.log(`✅ Layout saved to preset: ${currentPreset.name}`);
+        
+        // Export configuration file
+        const configData = {
+          presetId: currentPresetId,
+          presetName: currentPreset.name,
+          layouts: layouts,
+          visibleWidgets: Array.from(visibleWidgets),
+          exportedAt: new Date().toISOString(),
+          version: '1.0.0'
+        };
+        
+        const blob = new Blob([JSON.stringify(configData, null, 2)], { 
+          type: 'application/json' 
+        });
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ffb-layout-${currentPresetId}-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        console.log(`📁 Configuration exported as: ffb-layout-${currentPresetId}.json`);
+      } else {
+        console.warn('❌ Failed to save layout:', saveResult.error);
+      }
+    }
+  }, [layouts, visibleWidgets, currentPreset, currentPresetId]);
+
+  // Toggle edit mode with height recalculation
+  const toggleEditMode = useCallback(() => {
+    const newEditMode = !editMode;
+    console.log(`🔧 WidgetGrid: Toggling edit mode from ${editMode} to ${newEditMode}`);
+    setEditMode(newEditMode);
+    
+    // Height will be recalculated by the useEffect when editMode changes
+  }, [editMode, setEditMode]);
   
+  // Use external handlers if provided, otherwise use internal functions
+  const handleSaveLayout = onSaveLayout || saveLayout;
+  const handleResetLayout = onResetLayout || resetLayout;
+  
+  // Register layout controls with PresetContext
+  useEffect(() => {
+    if (registerLayoutControls) {
+      registerLayoutControls({
+        editMode,
+        onSaveLayout: saveLayout,
+        onResetLayout: resetLayout,
+        onToggleEditMode: toggleEditMode
+      });
+    }
+  }, [editMode, saveLayout, resetLayout, registerLayoutControls, toggleEditMode]);
 
   // Widget visibility management
   const removeWidget = useCallback((widgetId: string) => {
     console.log(`🔧 WidgetGrid: Removing widget ${widgetId}`);
-    console.log(`🔧 WidgetGrid: Current visible widgets before removal:`, Array.from(visibleWidgets));
     
     setVisibleWidgets(prev => {
-      const newSet = new Set(prev);
-      const wasRemoved = newSet.delete(widgetId);
+      console.log(`🔧 WidgetGrid: Current visible widgets before removal:`, Array.from(prev));
       
-      if (!wasRemoved) {
-        console.warn(`🔧 WidgetGrid: Widget ${widgetId} was not in visible set`);
+      if (!prev.has(widgetId)) {
+        console.warn(`🔧 WidgetGrid: Widget ${widgetId} was not in visible set - already removed`);
         return prev; // Don't update if nothing changed
       }
       
+      const newSet = new Set(prev);
+      newSet.delete(widgetId);
+      
       console.log(`🔧 WidgetGrid: New visible widgets after removal:`, Array.from(newSet));
       
-      // Immediately save to storage to prevent restoration
-      if (layoutStorage.isAvailable()) {
-        const visibleArray = Array.from(newSet);
-        const saveResult = layoutStorage.set('visibleWidgets', visibleArray);
-        console.log(`🔧 WidgetGrid: Immediately saved visible widgets:`, visibleArray, saveResult);
-      }
-      
+      // localStorage save is handled by the useEffect hook
       return newSet;
     });
-    
-    // Force a layout recalculation by updating the key or triggering a re-render
-    setTimeout(() => {
-      console.log(`🔧 WidgetGrid: Post-removal check - visible widgets:`, Array.from(visibleWidgets));
-    }, 100);
-  }, [visibleWidgets]);
+  }, []); // No dependencies - pure state updater function
 
   const addWidget = useCallback((widgetId: string) => {
     console.log(`🔧 WidgetGrid: Adding widget ${widgetId}`);
@@ -543,14 +695,6 @@ const WidgetGrid = React.memo(() => {
     }
   }, [layouts, visibleWidgets]);
 
-  // Toggle edit mode with height recalculation
-  const toggleEditMode = useCallback(() => {
-    const newEditMode = !editMode;
-    console.log(`🔧 WidgetGrid: Toggling edit mode from ${editMode} to ${newEditMode}`);
-    setEditMode(newEditMode);
-    
-    // Height will be recalculated by the useEffect when editMode changes
-  }, [editMode]);
 
   // Pop-out handlers
   const handlePopOut = useCallback((widgetId: string) => {
@@ -585,6 +729,7 @@ const WidgetGrid = React.memo(() => {
       case 'budget': return 'Budget Tracker';
       case 'roster': return 'Roster Panel';
       case 'draft-ledger': return 'Draft Ledger';
+      case 'team-roster-overview': return 'Team Roster Overview';
       default: return 'Unknown Widget';
     }
   }, []);
@@ -608,6 +753,8 @@ const WidgetGrid = React.memo(() => {
         return <RosterPanelWidget {...baseProps} />;
       case 'draft-ledger':
         return <DraftLedgerWidget {...baseProps} />;
+      case 'team-roster-overview':
+        return <TeamRosterOverviewWidget {...baseProps} />;
       default:
         return <div>Widget not found</div>;
     }
@@ -647,6 +794,8 @@ const WidgetGrid = React.memo(() => {
         return <RosterPanelWidget {...baseProps} />;
       case 'draft-ledger':
         return <DraftLedgerWidget {...baseProps} />;
+      case 'team-roster-overview':
+        return <TeamRosterOverviewWidget {...baseProps} />;
       default:
         return (
           <WidgetContainer title="Unknown Widget" widgetId={widgetId} editMode={editMode} onRemove={editMode ? () => removeWidget(widgetId) : undefined}>
@@ -658,23 +807,19 @@ const WidgetGrid = React.memo(() => {
 
   return (
     <div>
-      <div style={{ 
-        marginBottom: '16px', 
-        display: 'flex', 
-        alignItems: 'center',
-        justifyContent: 'flex-end', 
-        gap: '16px' 
-      }}>
-        {/* Layout Controls */}
-        <div style={{ display: 'flex', gap: '8px' }}>
+      {/* Layout controls moved to LeftRail - never show here */}
+      {false && (
+        <div style={{ 
+          marginBottom: '16px', 
+          display: 'flex', 
+          alignItems: 'center',
+          justifyContent: 'flex-end', 
+          gap: '16px' 
+        }}>
+          {/* Layout Controls */}
+          <div style={{ display: 'flex', gap: '8px' }}>
         <button
-          onClick={() => {
-            console.log('🔧 Manual save test:', layouts);
-            if (layoutStorage.isAvailable()) {
-              const saveResult = layoutStorage.set('layouts', layouts);
-              console.log('🔧 Manual save result:', saveResult);
-            }
-          }}
+          onClick={handleSaveLayout}
           style={{
             padding: '8px 16px',
             backgroundColor: 'var(--surface-1)',
@@ -685,10 +830,10 @@ const WidgetGrid = React.memo(() => {
             cursor: 'pointer'
           }}
         >
-          Manual Save
+          Save to {currentPreset.name}
         </button>
         <button
-          onClick={resetLayout}
+          onClick={handleResetLayout}
           aria-describedby="reset-help"
           style={{
             padding: '8px 16px',
@@ -700,7 +845,7 @@ const WidgetGrid = React.memo(() => {
             cursor: 'pointer'
           }}
         >
-          Reset Layout
+          Reset to Default
         </button>
         <div id="reset-help" className="sr-only">
           Reset all widgets to default positions and sizes
@@ -725,7 +870,8 @@ const WidgetGrid = React.memo(() => {
           {editMode ? 'Exit layout editing mode and lock widget positions' : 'Enable layout editing to move and resize widgets'}
         </div>
         </div>
-      </div>
+        </div>
+      )}
       
       {/* Widget Add Menu - show in edit mode */}
       {console.log(`🔧 WidgetGrid: Edit mode: ${editMode}, Hidden widgets: ${hiddenWidgets.length}, Show menu: ${editMode && hiddenWidgets.length > 0}`)}
@@ -744,7 +890,8 @@ const WidgetGrid = React.memo(() => {
                   'vbd-scatter': 'VBD Scatter',
                   'budget': 'Budget Tracker',
                   'roster': 'Roster Panel',
-                  'draft-ledger': 'Draft Ledger'
+                  'draft-ledger': 'Draft Ledger',
+                  'team-roster-overview': 'Team Overview'
                 };
                 const displayName = widgetNames[widgetId as keyof typeof widgetNames] || widgetId;
                 
@@ -775,7 +922,7 @@ const WidgetGrid = React.memo(() => {
         layouts={filteredLayouts}
         breakpoints={breakpoints}
         cols={cols}
-        rowHeight={getGridRowHeight()}
+        rowHeight={50}
         margin={[8, 8]}
         isDraggable={editMode}
         isResizable={editMode}
@@ -783,7 +930,7 @@ const WidgetGrid = React.memo(() => {
         onBreakpointChange={(breakpoint, cols) => {
           console.log('🔧 WidgetGrid: Breakpoint changed to', breakpoint, 'with cols', cols);
         }}
-        compactType={editMode ? null : "vertical"}
+        compactType="vertical"
         preventCollision={false}
         draggableHandle=".widget-drag-handle"
         role="application"

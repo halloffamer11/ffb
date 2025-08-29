@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget Deletion Fix Validation - T-070</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007aff;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .status-testing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007aff;
+        }
+        
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-list li {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .step-number {
+            font-weight: bold;
+            color: #007aff;
+            margin-right: 10px;
+        }
+        
+        .expected {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f5e8;
+            border-radius: 4px;
+            font-style: italic;
+        }
+        
+        .issue-description {
+            background-color: #fff2f0;
+            border: 1px solid #ffccc7;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .fix-description {
+            background-color: #f0f9ff;
+            border: 1px solid #91d5ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .app-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #007aff, #5856d6);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .app-link:hover {
+            transform: translateY(-2px);
+        }
+        
+        .criteria {
+            background-color: #f8f9fa;
+            border: 2px solid #28a745;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .criteria h4 {
+            color: #28a745;
+            margin-top: 0;
+        }
+        
+        .fail-criteria {
+            background-color: #fff5f5;
+            border: 2px solid #dc3545;
+            color: #721c24;
+        }
+        
+        .fail-criteria h4 {
+            color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Widget Deletion Fix Validation</h1>
+            <h2>T-070: Fix Widget Deletion Flash Bug</h2>
+            <div class="status-badge status-testing">HITL VALIDATION REQUIRED</div>
+        </div>
+
+        <div class="section">
+            <h3>🐛 Issue Description</h3>
+            <div class="issue-description">
+                <strong>Problem:</strong> Widget deletion buttons (×) were nearly impossible to click because the drag handle overlay was covering the entire title bar, including the control buttons.
+                
+                <p><strong>Root Cause:</strong> The drag handle target zone covered the entire title bar, making the × button unclickable since drag events were intercepting click events on the controls area.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🔧 Fix Implementation</h3>
+            <div class="fix-description">
+                <strong>Solution:</strong> Moved the drag handle from the entire title bar to only the title section, excluding the controls area where the × button is located.
+                
+                <p><strong>Technical Details:</strong></p>
+                <ul>
+                    <li>Removed <code>widget-drag-handle</code> class from the entire TitleBar component</li>
+                    <li>Applied <code>widget-drag-handle</code> class only to the TitleSection (title + drag dots)</li>
+                    <li>Left the Controls section (× button area) completely free from drag handling</li>
+                    <li>Added event.stopPropagation() to prevent any remaining event conflicts</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Validation Instructions</h3>
+            
+            <h4>Setup</h4>
+            <ul>
+                <li>Dev server should be running on: <a href="http://localhost:5174/" class="app-link" target="_blank">http://localhost:5174/</a></li>
+                <li>Open the FFB Draft Helper application</li>
+            </ul>
+
+            <h4>Test Steps</h4>
+            <ol class="step-list">
+                <li>
+                    <span class="step-number">Step 1:</span>
+                    Navigate to the main dashboard page
+                    <div class="expected">Expected: Dashboard loads with multiple widgets visible</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">Step 2:</span>
+                    Click the "Edit Layout" button in the top toolbar
+                    <div class="expected">Expected: Edit mode activates, showing × buttons in widget headers</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">Step 3:</span>
+                    Click the × button ONCE on any widget (e.g., Player Search Widget)
+                    <div class="expected">Expected: Widget disappears immediately with a SINGLE CLICK - no multiple clicking required</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">Step 4:</span>
+                    Wait 2-3 seconds and observe the layout
+                    <div class="expected">Expected: Deleted widget remains gone, other widgets adjust layout smoothly</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">Step 5:</span>
+                    Test dragging widgets by their title area (avoiding the × button)
+                    <div class="expected">Expected: Widgets can still be dragged by clicking on title/drag dots area</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">Step 6:</span>
+                    Delete 2-3 more widgets using their × buttons
+                    <div class="expected">Expected: Each widget deletes with single click, no interference from drag handling</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">Step 7:</span>
+                    Exit edit mode and return to normal view
+                    <div class="expected">Expected: Deleted widgets remain hidden in normal mode</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">Step 8:</span>
+                    Refresh the page completely (F5/Cmd+R)
+                    <div class="expected">Expected: Deleted widgets stay deleted after page reload (localStorage persistence)</div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="criteria">
+            <h4>✅ Pass Criteria</h4>
+            <ul>
+                <li><strong>Easy single-click deletion</strong> - × button is immediately clickable</li>
+                <li>Widget disappears instantly with no delays or multiple clicks required</li>
+                <li>Drag functionality still works when clicking on title/drag dots area</li>
+                <li>No interference between drag handling and button clicks</li>
+                <li>All widget types can be successfully deleted and dragged independently</li>
+                <li>Deletion state persists through page refreshes</li>
+            </ul>
+        </div>
+
+        <div class="criteria fail-criteria">
+            <h4>❌ Fail Criteria</h4>
+            <ul>
+                <li>Any widget flashing (disappear then reappear)</li>
+                <li>Deleted widgets returning after timeouts</li>
+                <li>Console errors during widget deletion</li>
+                <li>Layout breaking or overlapping after deletions</li>
+                <li>Loss of deletion state on page refresh</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>📋 Files Modified</h3>
+            <ul>
+                <li><code>src/components/widgets/WidgetGrid.tsx</code> - Fixed stale closure in removeWidget by removing visibleWidgets dependency</li>
+                <li><code>src/components/widgets/WidgetContainer.tsx</code> - Added event.stopPropagation() to delete button handler</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5e7;">
+            <p><strong>Please confirm validation results before proceeding to task completion.</strong></p>
+            <a href="http://localhost:5174/" class="app-link" target="_blank">Open FFB Application →</a>
+        </div>
+    </div>
+</body>
+</html>

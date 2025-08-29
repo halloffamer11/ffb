@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-070 Layout Control Buttons Fix Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1e293b, #334155);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border-left: 4px solid #00d2d3;
+        }
+        
+        .validation-section {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-step {
+            background: #0f1729;
+            border-left: 3px solid #00d2d3;
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .expected {
+            color: #10b981;
+            font-weight: 600;
+        }
+        
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        
+        .pass { background: #10b981; color: white; }
+        .fail { background: #ef4444; color: white; }
+        .pending { background: #f59e0b; color: white; }
+        
+        .access-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #00d2d3, #0891b2);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .access-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 210, 211, 0.3);
+        }
+        
+        .implementation-summary {
+            background: #1e293b;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #334155;
+        }
+        
+        code {
+            background: #0f1729;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            color: #00d2d3;
+        }
+        
+        .key {
+            background: linear-gradient(135deg, #374151, #4b5563);
+            color: #f3f4f6;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-weight: 600;
+            border: 1px solid #6b7280;
+            display: inline-block;
+            min-width: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🔧 T-070: Layout Control Buttons Fix Validation</h1>
+        <p>Fixing non-functional layout control buttons in the left sidebar while maintaining keyboard shortcuts</p>
+        <p><strong>Issue:</strong> Edit Layout, Save, and Reset buttons didn't work due to stale closure bugs</p>
+    </div>
+
+    <div class="implementation-summary">
+        <h2>🛠 Implementation Summary</h2>
+        <p><strong>Problem:</strong> Layout control buttons in left sidebar were using stale closures, capturing old values of <code>editMode</code> when registered.</p>
+        
+        <h3>Root Cause Analysis:</h3>
+        <ul>
+            <li><strong>Stale Closure:</strong> <code>registerLayoutControls</code> was capturing <code>editMode</code> value at registration time</li>
+            <li><strong>Duplicate Systems:</strong> Both <code>registerEditModeToggle</code> and <code>registerLayoutControls</code> handling edit mode</li>
+            <li><strong>Navigation Toggle:</strong> Same stale closure issue affected navigation toggle</li>
+        </ul>
+
+        <h3>Code Changes:</h3>
+        <ul>
+            <li><strong>WidgetGrid.tsx:</strong> Fixed <code>onToggleEditMode</code> to use stable <code>toggleEditMode</code> callback</li>
+            <li><strong>WidgetGrid.tsx:</strong> Fixed temporal dead zone error by moving <code>toggleEditMode</code> definition before usage</li>
+            <li><strong>PresetContext.tsx:</strong> Removed duplicate <code>registerEditModeToggle</code> system</li>
+            <li><strong>PresetContext.tsx:</strong> Updated 'e' key handler to use <code>layoutControlsRef.current.onToggleEditMode</code></li>
+            <li><strong>DashboardPage.tsx:</strong> Fixed navigation toggle to use functional state update</li>
+        </ul>
+
+        <h3>Files Modified:</h3>
+        <ul>
+            <li><code>src/components/widgets/WidgetGrid.tsx</code> - Fixed button registrations</li>
+            <li><code>src/stores/PresetContext.tsx</code> - Removed duplicate system, fixed keyboard shortcuts</li>
+            <li><code>src/pages/DashboardPage.tsx</code> - Fixed navigation toggle closure</li>
+        </ul>
+    </div>
+
+    <div class="validation-section">
+        <h2>🎯 Access Validation Environment</h2>
+        <div class="test-step">
+            <strong>Setup:</strong> Start the development server<br>
+            <code>npm run dev</code>
+        </div>
+        <div class="test-step">
+            <strong>Access:</strong> 
+            <a href="http://localhost:5173" class="access-button" target="_blank">
+                🚀 Open FFB Dashboard
+            </a>
+        </div>
+    </div>
+
+    <div class="validation-section">
+        <h2>🧪 Validation Test Plan</h2>
+        
+        <div class="test-step">
+            <strong>Test 1:</strong> Edit Layout Button Functionality<br>
+            1. Click the "Edit Layout" button (✏️) in the left sidebar<br>
+            2. <span class="expected">Expected:</span> Edit mode should activate (button changes to "Exit Edit Mode" 🔒)<br>
+            3. Click the button again to exit edit mode<br>
+            4. <span class="expected">Expected:</span> Edit mode should deactivate (button returns to "Edit Layout" ✏️)<br>
+            <span class="status pending">PENDING</span>
+        </div>
+
+        <div class="test-step">
+            <strong>Test 2:</strong> Save Layout Button Functionality<br>
+            1. Enter edit mode and move some widgets around<br>
+            2. Click the "Save to [Preset Name]" button (💾) in the left sidebar<br>
+            3. <span class="expected">Expected:</span> Layout should be saved and a configuration file should download<br>
+            <span class="status pending">PENDING</span>
+        </div>
+
+        <div class="test-step">
+            <strong>Test 3:</strong> Reset Layout Button Functionality<br>
+            1. Move widgets to different positions<br>
+            2. Click the "Reset to Default" button (🔄) in the left sidebar<br>
+            3. <span class="expected">Expected:</span> All widgets should return to their default positions<br>
+            <span class="status pending">PENDING</span>
+        </div>
+
+        <div class="test-step">
+            <strong>Test 4:</strong> Keyboard Shortcut Still Works<br>
+            1. Press the <span class="key">E</span> key<br>
+            2. <span class="expected">Expected:</span> Edit mode should toggle on/off<br>
+            3. Press <span class="key">E</span> again to verify toggle works both ways<br>
+            <span class="status pending">PENDING</span>
+        </div>
+
+        <div class="test-step">
+            <strong>Test 5:</strong> Navigation Toggle Fixed<br>
+            1. Press the <span class="key">N</span> key<br>
+            2. <span class="expected">Expected:</span> Left sidebar should collapse/expand<br>
+            3. Click the collapse button (← N) to verify button works too<br>
+            <span class="status pending">PENDING</span>
+        </div>
+
+        <div class="test-step">
+            <strong>Test 6:</strong> Preset Switching Still Works<br>
+            1. Press <span class="key">1</span>, <span class="key">2</span>, or <span class="key">3</span> keys<br>
+            2. <span class="expected">Expected:</span> Dashboard should switch between presets<br>
+            3. Click preset buttons in sidebar to verify they work too<br>
+            <span class="status pending">PENDING</span>
+        </div>
+    </div>
+
+    <div class="validation-section">
+        <h2>✅ Pass Criteria</h2>
+        <ul>
+            <li><strong>All 3 layout control buttons</strong> in left sidebar must function correctly</li>
+            <li><strong>Edit mode toggle</strong> must work via both button click and <span class="key">E</span> key</li>
+            <li><strong>Save layout</strong> must persist changes and download config file</li>
+            <li><strong>Reset layout</strong> must restore default widget positions</li>
+            <li><strong>Navigation toggle</strong> must work via both button click and <span class="key">N</span> key</li>
+            <li><strong>Preset switching</strong> must work via both button clicks and number keys</li>
+            <li><strong>No console errors</strong> during button interactions</li>
+        </ul>
+    </div>
+
+    <div class="validation-section">
+        <h2>🔍 Technical Details</h2>
+        <h3>Before Fix:</h3>
+        <ul>
+            <li>Layout control buttons captured stale <code>editMode</code> values</li>
+            <li>Dual registration systems caused confusion</li>
+            <li>Functional state updates not used consistently</li>
+        </ul>
+
+        <h3>After Fix:</h3>
+        <ul>
+            <li>Single registration system via <code>registerLayoutControls</code></li>
+            <li>Stable callback functions prevent stale closures</li>
+            <li>Keyboard shortcuts use same handlers as buttons</li>
+            <li>Functional state updates ensure current values</li>
+        </ul>
+
+        <h3>Key Technical Changes:</h3>
+        <ul>
+            <li><code>onToggleEditMode: toggleEditMode</code> instead of inline arrow function</li>
+            <li>Removed <code>registerEditModeToggle</code> and <code>editModeToggleRef</code></li>
+            <li>Keyboard 'e' handler uses <code>layoutControlsRef.current.onToggleEditMode</code></li>
+            <li>Navigation toggle uses <code>setLeftRailCollapsed(prev => !prev)</code></li>
+        </ul>
+    </div>
+
+    <script>
+        // Auto-refresh status indicators based on user testing
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🧪 T-070 Layout Control Buttons Fix Validation Environment Ready');
+            console.log('📝 Test all buttons and keyboard shortcuts to verify the fix');
+        });
+    </script>
+</body>
+</html>

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import LeftRail from '../components/layout/LeftRail';
 import MainCanvas from '../components/layout/MainCanvas';
+import { PresetProvider, usePreset } from '../stores/PresetContext';
 
 const DashboardContainer = styled.div`
   flex: 1;
@@ -9,21 +10,38 @@ const DashboardContainer = styled.div`
   overflow: hidden;
   position: relative;
   z-index: 1;
-  
-  /* Professional content container with subtle depth */
-  background: linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.02) 50%, transparent 100%);
+  background: transparent;
 `;
 
-export default function DashboardPage() {
+function DashboardContent() {
   const [leftRailCollapsed, setLeftRailCollapsed] = useState(false);
+  const { registerNavigationToggle } = usePreset();
+
+  const toggleNavigation = useCallback(() => {
+    setLeftRailCollapsed(prev => !prev);
+  }, []);
+
+  useEffect(() => {
+    registerNavigationToggle(toggleNavigation);
+  }, [registerNavigationToggle, toggleNavigation]);
 
   return (
-    <DashboardContainer>
+    <>
       <LeftRail 
         collapsed={leftRailCollapsed}
         onToggleCollapsed={() => setLeftRailCollapsed(!leftRailCollapsed)}
       />
       <MainCanvas />
+    </>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <DashboardContainer>
+      <PresetProvider>
+        <DashboardContent />
+      </PresetProvider>
     </DashboardContainer>
   );
 }

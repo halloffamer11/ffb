@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-072: Complete League Settings - HITL Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #0f0f0f;
+            color: #e1e1e1;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #4ade80;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        h2 {
+            color: #60a5fa;
+            border-bottom: 2px solid #374151;
+            padding-bottom: 10px;
+            margin: 30px 0 20px 0;
+        }
+        h3 {
+            color: #fbbf24;
+            margin: 20px 0 10px 0;
+        }
+        .section {
+            background: #262626;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4ade80;
+        }
+        .test-steps {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .test-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .test-steps li {
+            margin: 8px 0;
+            color: #cbd5e1;
+        }
+        .expected {
+            background: #065f46;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #10b981;
+        }
+        .expected h4 {
+            margin: 0 0 10px 0;
+            color: #86efac;
+        }
+        .warning {
+            background: #92400e;
+            color: #fcd34d;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #f59e0b;
+        }
+        .info {
+            background: #1e3a8a;
+            color: #93c5fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .code {
+            background: #111827;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Consolas', monospace;
+            border: 1px solid #374151;
+            overflow-x: auto;
+        }
+        .files-changed {
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .files-changed h4 {
+            color: #f3f4f6;
+            margin: 0 0 10px 0;
+        }
+        .files-changed ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .files-changed li {
+            color: #9ca3af;
+            margin: 5px 0;
+        }
+        .validation-checklist {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 2px solid #1e40af;
+        }
+        .validation-checklist h3 {
+            color: #60a5fa;
+            margin-top: 0;
+        }
+        .validation-checklist ul {
+            list-style: none;
+            padding: 0;
+        }
+        .validation-checklist li {
+            margin: 10px 0;
+            padding: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            border-left: 3px solid #3b82f6;
+        }
+        .validation-checklist li::before {
+            content: "□ ";
+            font-size: 1.2em;
+            margin-right: 8px;
+            color: #60a5fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 T-072: Complete League Settings - HITL Validation</h1>
+
+        <div class="section">
+            <h2>📋 Implementation Summary</h2>
+            <p><strong>Purpose:</strong> Complete overhaul of League Settings page with unified store integration, teams management, keepers system, and draft locking.</p>
+            
+            <p><strong>Code Added:</strong></p>
+            <ul>
+                <li>Enhanced data contracts with Team, ScoringSystem, and updated LeagueSettings interfaces</li>
+                <li>Extended unified store with TEAMS_UPDATE, KEEPER_ASSIGN, KEEPER_REMOVE, DRAFT_START actions</li>
+                <li>Completely refactored LeagueSettingsPage with drag-and-drop teams, keeper assignment, and draft controls</li>
+                <li>Added scoring presets (Standard, Half PPR, PPR, Custom) with real values</li>
+                <li>Implemented draft state locking to prevent changes after draft starts</li>
+            </ul>
+            
+            <p><strong>Integration:</strong> All data flows through unified store following UNIFIED DATA ARCHITECTURE principles. Legacy storage adapters completely removed.</p>
+        </div>
+
+        <div class="info">
+            <strong>⚠️ Critical Requirement:</strong> This validation requires player data to be loaded for the keeper assignment functionality to work properly.
+        </div>
+
+        <div class="section">
+            <h2>🧪 Validation Instructions</h2>
+            
+            <h3>Setup Steps</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Start the development server: <code>npm run dev</code></li>
+                    <li>Open http://localhost:5173</li>
+                    <li>Navigate to League Settings page (gear icon or /league-settings)</li>
+                    <li>If no player data exists, load sample data via Data Management page first</li>
+                </ol>
+            </div>
+
+            <h3>Test 1: Basic League Configuration</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Change League Name to "Test League 2025"</li>
+                    <li>Modify Team Count from 12 to 10 teams</li>
+                    <li>Adjust Auction Budget from $200 to $300</li>
+                    <li>Change Scoring Format from PPR to Half PPR</li>
+                    <li>Modify roster positions (e.g., add 1 more FLEX spot)</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>All changes should be immediately reflected in the unified store</li>
+                    <li>Team count change should adjust the teams list below</li>
+                    <li>Roster position changes should update the total count display</li>
+                    <li>Budget changes should affect team budgets in the teams section</li>
+                </ul>
+            </div>
+
+            <h3>Test 2: Teams Management & Draft Order</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Edit team names to meaningful names (e.g., "Hawks", "Eagles")</li>
+                    <li>Edit owner names to real names</li>
+                    <li>Try to drag teams to reorder the draft sequence</li>
+                    <li>Select your team using the radio button</li>
+                    <li>Verify team budgets update correctly when auction budget changes</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>Drag and drop should reorder teams smoothly</li>
+                    <li>Team IDs should update to match draft order (position 1 = team ID 1)</li>
+                    <li>Radio button selection should work with only one team selectable</li>
+                    <li>Budget displays should show remaining budget after keepers</li>
+                </ul>
+            </div>
+
+            <h3>Test 3: Keepers Assignment System</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>In the player search box, type a partial player name (e.g., "Josh")</li>
+                    <li>Select a player from the dropdown results</li>
+                    <li>Choose a team from the dropdown</li>
+                    <li>Set a keeper cost (e.g., $25)</li>
+                    <li>Click "Add Keeper"</li>
+                    <li>Repeat for multiple players and teams</li>
+                    <li>Try to assign a keeper that would exceed a team's budget</li>
+                    <li>Remove a keeper using the ✕ button</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>Player search should show filtered results with position and team</li>
+                    <li>Successfully assigned keepers should appear in the table</li>
+                    <li>Team budgets should decrease by keeper costs</li>
+                    <li>Budget validation should prevent over-budget assignments</li>
+                    <li>Removing keepers should restore team budgets</li>
+                    <li>Players with assigned keepers should not appear in search results</li>
+                </ul>
+            </div>
+
+            <h3>Test 4: Scoring System Presets</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Change scoring from Half PPR to Standard</li>
+                    <li>Verify reception points change to 0</li>
+                    <li>Switch to Full PPR, verify receptions = 1</li>
+                    <li>Select "Custom" to reveal detailed scoring options</li>
+                    <li>Modify custom scoring values (e.g., passing TDs to 6 points)</li>
+                    <li>Switch back to a preset and verify custom values are preserved</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>Preset changes should instantly update scoring values</li>
+                    <li>Custom section should only appear when "Custom" is selected</li>
+                    <li>Custom modifications should persist when switching back to custom</li>
+                    <li>All scoring changes should be stored in unified store</li>
+                </ul>
+            </div>
+
+            <h3>Test 5: Draft State Locking</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>With all settings configured, click "Start Draft"</li>
+                    <li>Confirm the warning dialog</li>
+                    <li>Verify lock icon appears in header</li>
+                    <li>Try to modify any setting (team names, scoring, keepers)</li>
+                    <li>Verify all form elements are disabled</li>
+                    <li>Check that drag-and-drop is disabled</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>Warning dialog should clearly explain consequences</li>
+                    <li>🔒 Lock icon should appear in header and warning banner</li>
+                    <li>All inputs should be visually disabled and non-interactive</li>
+                    <li>Drag handles should not work</li>
+                    <li>Keeper management section should be hidden</li>
+                    <li>"Draft is active" message should replace action buttons</li>
+                </ul>
+            </div>
+
+            <h3>Test 6: Data Persistence</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Make several changes to league settings</li>
+                    <li>Add some keepers</li>
+                    <li>Refresh the page or navigate away and back</li>
+                    <li>Verify all changes persist correctly</li>
+                    <li>Check browser dev tools localStorage for unified store data</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>All settings should persist across page reloads</li>
+                    <li>Keepers should maintain team assignments and costs</li>
+                    <li>User team selection should be remembered</li>
+                    <li>Draft started status should persist if set</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="validation-checklist">
+            <h3>✅ Pass Criteria Checklist</h3>
+            <ul>
+                <li>Basic league settings (name, teams, budget, scoring) work correctly</li>
+                <li>Teams can be reordered via drag-and-drop with proper ID updates</li>
+                <li>User team selection works with radio buttons</li>
+                <li>Keeper search finds players and allows assignment to teams</li>
+                <li>Keeper costs properly deduct from team budgets</li>
+                <li>Budget validation prevents over-spending on keepers</li>
+                <li>Scoring presets change values correctly, custom section works</li>
+                <li>Draft start locks all settings with proper visual feedback</li>
+                <li>All data persists correctly in unified store</li>
+                <li>No console errors or TypeScript warnings</li>
+                <li>UI is responsive and accessible</li>
+            </ul>
+        </div>
+
+        <div class="files-changed">
+            <h4>📁 Files Modified/Created:</h4>
+            <ul>
+                <li><code>src/types/data-contracts.ts</code> - Added Team, ScoringSystem interfaces, enhanced LeagueSettings</li>
+                <li><code>src/stores/unified-store.ts</code> - Added team management and keeper assignment actions</li>
+                <li><code>src/utils/state-validation.ts</code> - Updated initial state with new structure</li>
+                <li><code>src/pages/LeagueSettingsPage.tsx</code> - Complete rewrite with unified store integration</li>
+                <li><code>demos/ui/T-072_league_settings_complete_validation.html</code> - This validation page</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>🔥 CRITICAL:</strong> This implementation completely removes the legacy storage adapter system and migrates all league settings to the unified store, following the UNIFIED DATA ARCHITECTURE commandments. The old separate namespace storage system has been eliminated.
+        </div>
+
+        <div class="info">
+            <strong>📝 Note:</strong> If validation passes, this completes the League Settings enhancement with all requested features: teams management, draft order control, keepers system with budget validation, scoring presets, and draft state locking.
+        </div>
+
+        <p style="text-align: center; margin-top: 40px; color: #6b7280;">
+            <strong>Please confirm validation results before I proceed to the next task.</strong>
+        </p>
+    </div>
+</body>
+</html>

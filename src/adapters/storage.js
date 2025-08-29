@@ -1,6 +1,6 @@
 /**
- * Storage adapter: localStorage wrapper with error handling, quota awareness,
- * lightweight versioning, and export/import helpers.
+ * Enhanced Storage adapter: localStorage wrapper with error handling, quota awareness,
+ * lightweight versioning, namespace migration, and export/import helpers.
  *
  * Design notes:
  * - Pure core-like interface exposed as functions operating on an injected driver
@@ -8,6 +8,8 @@
  * - In browsers, pass `window.localStorage` as the driver. If omitted and a DOM
  *   is present, the adapter attempts to use `window.localStorage`.
  * - Namespacing prevents key collisions and enables scoped export/import.
+ * - Automatic migration from legacy namespaces to unified workspace namespace.
+ * - Enhanced error handling with retry logic and corruption detection.
  * - Size checks are best-effort by summing JSON string lengths of namespaced keys.
  */
 
@@ -270,6 +272,254 @@ function isQuotaError(err) {
   const name = err.name || '';
   const message = String(err.message || '');
   return name === 'QuotaExceededError' || /quota/i.test(message);
+}
+
+/**
+ * Migrate data from legacy namespaces to unified workspace namespace
+ * This helps fix the fragmented storage issue identified in analysis
+ */
+export function migrateStorageNamespaces(newAdapter, legacyNamespaces = ['workspace', 'layout-presets', 'ffb']) {
+  if (!newAdapter.isAvailable()) {
+    return { ok: false, error: 'Storage not available' };
+  }
+
+  const migrationLog = [];
+  let totalMigrated = 0;
+
+  try {
+    const driver = resolveDriver();
+    if (!driver) return { ok: false, error: 'Driver not available' };
+
+    // Scan for legacy data
+    for (let i = 0; i < driver.length; i++) {
+      const key = driver.key(i);
+      if (!key) continue;
+
+      // Check if key belongs to legacy namespace
+      for (const legacyNs of legacyNamespaces) {
+        if (key.startsWith(`${legacyNs}::`)) {
+          try {
+            const value = driver.getItem(key);
+            if (value) {
+              // Extract the data key (remove namespace prefix)
+              const dataKey = key.substring(legacyNs.length + 2);
+              
+              // Skip meta keys and backups from migration
+              if (dataKey.startsWith('__')) continue;
+              
+              // Migrate to new namespace
+              const result = newAdapter.set(dataKey, JSON.parse(value));
+              if (result.ok) {
+                migrationLog.push(`Migrated: ${key} -> ${newAdapter.namespace}::${dataKey}`);
+                totalMigrated++;
+              } else {
+                migrationLog.push(`Failed to migrate: ${key} - ${result.error}`);
+              }
+            }
+          } catch (error) {
+            migrationLog.push(`Error migrating ${key}: ${error.message}`);
+          }
+        }
+      }
+    }
+
+    // Clean up legacy data after successful migration
+    if (totalMigrated > 0) {
+      for (let i = 0; i < driver.length; i++) {
+        const key = driver.key(i);
+        if (!key) continue;
+
+        for (const legacyNs of legacyNamespaces) {
+          if (key.startsWith(`${legacyNs}::`) && legacyNs !== newAdapter.namespace.split('::')[0]) {
+            try {
+              driver.removeItem(key);
+              migrationLog.push(`Cleaned up legacy key: ${key}`);
+            } catch (error) {
+              migrationLog.push(`Failed to clean up ${key}: ${error.message}`);
+            }
+          }
+        }
+      }
+    }
+
+    return {
+      ok: true,
+      migrated: totalMigrated,
+      log: migrationLog
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error.message,
+      log: migrationLog
+    };
+  }
+}
+
+/**
+ * Enhanced storage operations with retry logic and corruption detection
+ */
+export function createEnhancedStorageAdapter(options = {}) {
+  const baseAdapter = createStorageAdapter({
+    ...options,
+    namespace: options.namespace || 'ffb-workspace' // Use unified namespace
+  });
+
+  const maxRetries = options.maxRetries || 3;
+  const retryDelay = options.retryDelay || 100;
+
+  // Storage operation metrics
+  const metrics = {
+    operations: 0,
+    failures: 0,
+    retries: 0,
+    lastError: null,
+    corruptionDetected: 0
+  };
+
+  function wait(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function retryOperation(operation, operationName) {
+    metrics.operations++;
+    
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const result = await operation();
+        if (result && typeof result === 'object' && result.ok === false) {
+          throw new Error(result.error || 'Operation failed');
+        }
+        return result;
+      } catch (error) {
+        metrics.lastError = error.message;
+        
+        if (attempt === maxRetries) {
+          metrics.failures++;
+          console.error(`Storage operation '${operationName}' failed after ${maxRetries} retries:`, error);
+          throw error;
+        }
+        
+        metrics.retries++;
+        await wait(retryDelay * (attempt + 1)); // Exponential backoff
+      }
+    }
+  }
+
+  function validateData(key, data) {
+    try {
+      if (typeof data === 'string') {
+        JSON.parse(data);
+      }
+      return true;
+    } catch (error) {
+      metrics.corruptionDetected++;
+      console.warn(`Data corruption detected for key '${key}':`, error);
+      return false;
+    }
+  }
+
+  return {
+    ...baseAdapter,
+
+    // Enhanced get with corruption detection
+    get: (key) => {
+      return retryOperation(async () => {
+        const data = baseAdapter.get(key);
+        if (data && !validateData(key, data)) {
+          // Data corrupted, return null and log
+          console.warn(`Returning null for corrupted data at key: ${key}`);
+          return null;
+        }
+        return data;
+      }, `get:${key}`).catch(() => null);
+    },
+
+    // Enhanced set with retry logic
+    set: (key, value) => {
+      return retryOperation(async () => {
+        return baseAdapter.set(key, value);
+      }, `set:${key}`).catch((error) => ({
+        ok: false,
+        error: error.message
+      }));
+    },
+
+    // Enhanced batch operations
+    setBatch: async (entries) => {
+      const results = [];
+      for (const [key, value] of entries) {
+        const result = await baseAdapter.set(key, value);
+        results.push({ key, result });
+        if (!result.ok) break; // Stop on first failure
+      }
+      return results;
+    },
+
+    // Data integrity check
+    checkIntegrity: () => {
+      const report = {
+        totalKeys: 0,
+        corruptedKeys: [],
+        totalSize: 0,
+        healthy: true
+      };
+
+      const keys = baseAdapter.keys();
+      report.totalKeys = keys.length;
+      report.totalSize = baseAdapter.bytesUsed();
+
+      for (const key of keys) {
+        try {
+          const data = baseAdapter.get(key);
+          if (data && !validateData(key, data)) {
+            report.corruptedKeys.push(key);
+            report.healthy = false;
+          }
+        } catch (error) {
+          report.corruptedKeys.push(key);
+          report.healthy = false;
+        }
+      }
+
+      return report;
+    },
+
+    // Auto-repair corrupted data
+    repair: () => {
+      const report = baseAdapter.checkIntegrity();
+      let repairedCount = 0;
+
+      for (const corruptedKey of report.corruptedKeys) {
+        try {
+          baseAdapter.remove(corruptedKey);
+          repairedCount++;
+        } catch (error) {
+          console.error(`Failed to repair corrupted key ${corruptedKey}:`, error);
+        }
+      }
+
+      return {
+        corruptedKeys: report.corruptedKeys.length,
+        repairedKeys: repairedCount,
+        healthy: repairedCount === report.corruptedKeys.length
+      };
+    },
+
+    // Get storage metrics
+    getMetrics: () => ({ ...metrics }),
+
+    // Reset metrics
+    resetMetrics: () => {
+      Object.assign(metrics, {
+        operations: 0,
+        failures: 0,
+        retries: 0,
+        lastError: null,
+        corruptionDetected: 0
+      });
+    }
+  };
 }
 
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { theme } from "../../utils/styledHelpers";
 import WidgetContainer from './WidgetContainer';
-import { useDraftStore, legacyStore } from '../../stores/draftStore';
+import { useUnifiedStore } from '../../stores/unified-store';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 
@@ -37,10 +37,18 @@ const TeamInfo = styled.div`
 
 const PositionGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: ${props => theme('spacing.sm')};
   flex: 1;
   overflow-y: auto;
+  min-height: 0; /* Allow shrinking in flex container */
+  
+  /* Adaptive layout based on available space:
+   * 12 cols (720px+) → 6×1 horizontal
+   * 6 cols (420px)   → 3×2 grid (default)
+   * 4 cols (280px)   → 2×3 grid  
+   * 2 cols (140px)   → 1×6 vertical
+   */
 `;
 
 const PositionCard = styled.div`
@@ -251,8 +259,9 @@ interface RosterPanelWidgetProps {
   onRemove?: () => void;
 }
 
-export default function RosterPanelWidget({ editMode = false, onRemove }: RosterPanelWidgetProps) {
-  const { settings, players, picks } = useDraftStore();
+const RosterPanelWidget = React.memo<RosterPanelWidgetProps>(function RosterPanelWidget({ editMode = false, onRemove }) {
+  const store = useUnifiedStore();
+  const { settings, players, picks } = store;
   const [lastRemoved, setLastRemoved] = useState<any>(null);
   const [refreshKey, setRefreshKey] = useState(0);
   
@@ -301,11 +310,11 @@ export default function RosterPanelWidget({ editMode = false, onRemove }: Roster
       // Store for undo
       setLastRemoved(pickToRemove);
       
-      // Use legacy store to remove pick
-      legacyStore.dispatch({
-        type: 'REMOVE_PICK',
-        payload: { playerId, teamId }
-      });
+      // Use unified store to undraft player
+      const pickIndex = picks.findIndex(p => p.player?.id === playerId && p.teamId === teamId);
+      if (pickIndex >= 0) {
+        store.undraftPlayer(pickIndex);
+      }
       
     } catch (error) {
       console.error('Failed to remove pick:', error);
@@ -317,10 +326,9 @@ export default function RosterPanelWidget({ editMode = false, onRemove }: Roster
     if (!lastRemoved) return;
     
     try {
-      legacyStore.dispatch({
-        type: 'DRAFT_PLAYER',
-        payload: lastRemoved
-      });
+      // Re-draft the player using unified store
+      const player = lastRemoved.player || lastRemoved;
+      store.draftPlayer(player, lastRemoved.teamId, lastRemoved.price);
       
       setLastRemoved(null);
     } catch (error) {
@@ -409,4 +417,6 @@ export default function RosterPanelWidget({ editMode = false, onRemove }: Roster
       </RosterContainer>
     </WidgetContainer>
   );
-}
+});
+
+export default RosterPanelWidget;

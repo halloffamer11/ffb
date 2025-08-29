@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-068: Position Filter Checkboxes Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .validation-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .test-step {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .test-expected {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .test-action {
+            color: #007bff;
+            font-weight: 600;
+        }
+        .file-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .feature-demo {
+            background: #e8f4f8;
+            border: 1px solid #b8e6ff;
+            color: #0066cc;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+        h3 { color: #3498db; }
+        code { 
+            background: #f1f3f4; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-family: 'Monaco', monospace; 
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <h1>☑️ HITL Validation Required for T-068: Position Filter Checkboxes</h1>
+        <p><span class="status-indicator status-pending">Validation Pending</span></p>
+    </div>
+
+    <div class="validation-container">
+        <h2>📋 Implementation Summary</h2>
+        <p><strong>Purpose:</strong> Replace position dropdown with checkbox filters in PlayerSearchWidget. Add ALL toggle that disables individual checkboxes when active.</p>
+        <p><strong>Code Added:</strong> New checkbox-based position filtering with toggle logic and styled components for better UX</p>
+        <p><strong>Integration:</strong> Filters only affect PlayerSearchWidget table display, not global search</p>
+    </div>
+
+    <div class="validation-container">
+        <h2>🧪 Validation Instructions</h2>
+        
+        <h3>1. Setup</h3>
+        <div class="test-step">
+            <div class="test-action">Action:</div>
+            <p>Ensure dev server is running: <code>npm run dev</code></p>
+            <p>Navigate to: <code>http://localhost:5173</code></p>
+            <p>Locate the <strong>Player Search Widget</strong> on the dashboard</p>
+        </div>
+
+        <div class="feature-demo">
+            <h4>📋 New Position Filter Interface</h4>
+            <p>The dropdown has been replaced with:</p>
+            <ul>
+                <li><strong>ALL Toggle</strong>: Shows all positions when checked</li>
+                <li><strong>Individual Checkboxes</strong>: QB, RB, WR, TE, K, DEF</li>
+                <li><strong>Exclusive Logic</strong>: ALL disables individual boxes, selecting any individual box turns OFF ALL</li>
+            </ul>
+        </div>
+
+        <h3>2. Test ALL Toggle Switch Behavior</h3>
+        <div class="test-step">
+            <div class="test-action">Step 1:</div> Observe the Player Search Widget position filters
+            <div class="test-expected">Expected:</div> ALL toggle is checked by default, individual checkboxes are disabled/grayed out
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 2:</div> Verify table shows all positions (QB, RB, WR, TE, K, DEF players)
+            <div class="test-expected">Expected:</div> Player table displays all position types mixed together
+        </div>
+
+        <h3>3. Test Individual Position Selection</h3>
+        <div class="test-step">
+            <div class="test-action">Step 3:</div> Click the QB checkbox
+            <div class="test-expected">Expected:</div> 
+            - ALL toggle turns OFF automatically
+            - QB checkbox becomes checked and highlighted
+            - Table shows ONLY QB players
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 4:</div> Click the RB checkbox (while QB is still checked)
+            <div class="test-expected">Expected:</div>
+            - Both QB and RB checkboxes are checked
+            - Table shows ONLY QB and RB players (no WR, TE, K, DEF)
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 5:</div> Click WR and TE checkboxes
+            <div class="test-expected">Expected:</div>
+            - QB, RB, WR, TE all checked
+            - Table shows only those 4 position types
+        </div>
+
+        <h3>4. Test Returning to ALL</h3>
+        <div class="test-step">
+            <div class="test-action">Step 6:</div> Uncheck all individual position boxes one by one
+            <div class="test-expected">Expected:</div> When the last individual checkbox is unchecked, ALL toggle should turn back ON automatically
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 7:</div> Check some positions, then click the ALL toggle directly
+            <div class="test-expected">Expected:</div>
+            - ALL toggle becomes checked
+            - All individual checkboxes become unchecked and disabled
+            - Table shows all positions again
+        </div>
+
+        <h3>5. Test Filter Scope</h3>
+        <div class="test-step">
+            <div class="test-action">Step 8:</div> Set position filter to QB only, then use global search for any player
+            <div class="test-expected">Expected:</div>
+            - Global search still finds ALL players regardless of position
+            - PlayerSearchWidget table still shows only QBs
+            - Position filter only affects the widget table, not global search
+        </div>
+
+        <h3>6. Test UI and Interaction</h3>
+        <div class="test-step">
+            <div class="test-action">Step 9:</div> Test checkbox accessibility and visual feedback
+            <div class="test-expected">Expected:</div>
+            - Checkboxes highlight on hover
+            - Checked boxes have visual distinction (color/background)
+            - Disabled checkboxes (when ALL is on) are clearly disabled
+        </div>
+
+        <h3>7. Pass Criteria</h3>
+        <div class="test-step">
+            ✅ ALL toggle is checked by default, shows all positions<br>
+            ✅ Checking individual positions automatically turns OFF ALL toggle<br>
+            ✅ Multiple positions can be selected simultaneously<br>
+            ✅ Unchecking all individuals automatically turns ALL back ON<br>
+            ✅ Clicking ALL toggle clears individual selections and shows all positions<br>
+            ✅ Filters only affect PlayerSearchWidget table, not global search<br>
+            ✅ Visual feedback for checked/unchecked/disabled states is clear<br>
+            ✅ Filter updates are immediate (no delay/lag)
+        </div>
+    </div>
+
+    <div class="validation-container">
+        <h2>📁 Files Changed</h2>
+        <div class="file-list">
+<strong>Modified Files:</strong>
+• src/components/widgets/PlayerSearchWidget.tsx - Replaced dropdown with checkbox filters
+
+<strong>New Components Added:</strong>
+• PositionFiltersContainer - Container for checkbox filter groups
+• ToggleSwitch - Styled ALL toggle switch
+• PositionCheckbox - Individual position checkboxes
+• PositionFilterGroup - Groups related filter elements
+
+<strong>Logic Changes:</strong>
+• Replaced positionFilter (string) with positionFilters (Set&lt;string&gt;) and showAllPositions (boolean)
+• Added handleAllPositionsToggle and handlePositionToggle functions
+• Updated filtering logic to work with Set-based selection
+• Added exclusive toggle behavior (ALL vs individual selections)
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <strong>⚠️ Important Testing Notes:</strong>
+        <ul>
+            <li>Test the exclusive logic carefully - ALL should disable individuals, individuals should disable ALL</li>
+            <li>Verify position filters work with search terms (e.g., search "johnson" + filter QB)</li>
+            <li>Check that global search is unaffected by position filters</li>
+            <li>Test edge cases like checking/unchecking the same box repeatedly</li>
+            <li>Ensure filter state is preserved when switching between widgets</li>
+            <li>Verify accessibility with keyboard navigation</li>
+        </ul>
+    </div>
+
+    <div class="validation-container">
+        <h2>✋ Validation Checkpoint</h2>
+        <p><strong>Please test all functionality above and confirm validation results before I proceed with the next phase.</strong></p>
+        <p>Reply with: <strong>"HITL validation passed"</strong> to continue to Phase 5 (Header Refinements & Developer Page)</p>
+    </div>
+</body>
+</html>

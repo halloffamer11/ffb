@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-054: React Grid Layout Migration - Phase 1 Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            margin: 40px;
+            line-height: 1.6;
+            color: #333;
+            background: #f8f9fa;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c5aa0;
+            border-bottom: 3px solid #2c5aa0;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #00d2d3;
+            margin-top: 30px;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .pass {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .fail {
+            background: #fecaca;
+            color: #991b1b;
+        }
+        .test-step {
+            background: #f1f5f9;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            border-left: 4px solid #00d2d3;
+        }
+        .expected {
+            background: #ecfdf5;
+            padding: 10px;
+            border-radius: 6px;
+            margin: 8px 0;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+        }
+        .launch-button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #00d2d3, #2c5aa0);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: transform 0.2s ease;
+        }
+        .launch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,210,211,0.3);
+        }
+        .warning {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .checklist {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .checklist input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+        .checklist label {
+            margin-bottom: 8px;
+            display: block;
+            cursor: pointer;
+        }
+        .file-list {
+            background: #1f2937;
+            color: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            margin: 15px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HITL Validation Required for T-054: React Grid Layout Migration - Phase 1</h1>
+        <span class="status pending">AWAITING VALIDATION</span>
+
+        <h2>Implementation Summary</h2>
+        <p><strong>Purpose:</strong> Migrate the React widget grid system from a complex 24-column layout to a simplified showcase-style grid system to eliminate collision jumping and improve drag performance.</p>
+        
+        <p><strong>Key Changes Made:</strong></p>
+        <ul>
+            <li><strong>Grid Configuration:</strong> Simplified from 24/20/16 columns to 12/10/6 columns (lg/md/sm breakpoints)</li>
+            <li><strong>Compaction Fix:</strong> Set <code>compactType="vertical"</code> permanently to eliminate large jumps during drag</li>
+            <li><strong>Row Height:</strong> Increased from 30px to 50px for better drag target handling</li>
+            <li><strong>Performance:</strong> Added React.memo to widget components and debounced localStorage saves</li>
+            <li><strong>Widget Sizing:</strong> Recalibrated all widget dimensions for new column counts</li>
+        </ul>
+
+        <p><strong>Integration:</strong> Changes integrate with existing preset system and widget management while maintaining all functionality.</p>
+
+        <div class="file-list">Files Changed:
+- src/components/widgets/WidgetGrid.tsx (grid config + performance)
+- src/utils/widgetSizing.ts (column count adjustments)
+- src/components/widgets/PlayerAnalysisWidget.tsx (React.memo)
+- src/components/widgets/DraftEntryWidget.tsx (React.memo)
+- src/components/widgets/RosterPanelWidget.tsx (React.memo)</div>
+
+        <h2>Validation Instructions</h2>
+        
+        <div class="test-step">
+            <strong>1. Setup:</strong>
+            <p>Start dev server: <code>npm run dev</code></p>
+            <p>✅ Dev server should be running on http://localhost:5173</p>
+        </div>
+
+        <div class="test-step">
+            <strong>2. Access Application:</strong>
+            <p>Open <a href="http://localhost:5173" target="_blank" class="launch-button">http://localhost:5173</a></p>
+        </div>
+
+        <div class="test-step">
+            <strong>3. Test Basic Layout (Non-Edit Mode):</strong>
+            <div class="expected">Expected: All 7 widgets should be visible in a clean, well-spaced layout with no gaps or overlaps. Layout should use vertical compaction.</div>
+            <div class="checklist">
+                <label><input type="checkbox"> All 7 widgets render correctly</label>
+                <label><input type="checkbox"> No gaps or empty spaces in layout</label>
+                <label><input type="checkbox"> Widgets are properly sized for content</label>
+                <label><input type="checkbox"> Vertical compaction works (widgets stack neatly)</label>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <strong>4. Test Edit Mode Activation:</strong>
+            <div class="expected">Expected: Clicking "Edit Layout" should enable dragging without layout jumping or stuttering.</div>
+            <p>Click the "Edit Layout" button in the top-right area</p>
+            <div class="checklist">
+                <label><input type="checkbox"> Edit mode activates smoothly</label>
+                <label><input type="checkbox"> Widget add menu appears</label>
+                <label><input type="checkbox"> Grid height increases to accommodate dragging</label>
+                <label><input type="checkbox"> All widgets show resize handles</label>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <strong>5. Test Smooth Drag Performance:</strong>
+            <div class="expected">Expected: Dragging widgets should be smooth with no large jumps or collision stuttering.</div>
+            <p>Drag different widgets around the layout:</p>
+            <div class="checklist">
+                <label><input type="checkbox"> Player Search widget drags smoothly</label>
+                <label><input type="checkbox"> VBD Scatter widget drags smoothly</label>
+                <label><input type="checkbox"> Draft Entry widget drags smoothly</label>
+                <label><input type="checkbox"> No large jumps when widgets collide</label>
+                <label><input type="checkbox"> Other widgets adjust positions smoothly</label>
+                <label><input type="checkbox"> Vertical compaction works during drag</label>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <strong>6. Test Responsive Breakpoints:</strong>
+            <div class="expected">Expected: Resizing browser window should smoothly transition between breakpoints without layout breaking.</div>
+            <p>Test different screen sizes by resizing browser window:</p>
+            <div class="checklist">
+                <label><input type="checkbox"> Large screens (>1200px): 12-column layout works</label>
+                <label><input type="checkbox"> Medium screens (996-1200px): 10-column layout works</label>
+                <label><input type="checkbox"> Small screens (768-996px): 6-column layout works</label>
+                <label><input type="checkbox"> Breakpoint transitions are smooth</label>
+                <label><input type="checkbox"> No widgets disappear or overlap during resize</label>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <strong>7. Test Widget Add/Remove:</strong>
+            <div class="expected">Expected: Adding and removing widgets should work without layout corruption.</div>
+            <p>In edit mode, test widget management:</p>
+            <div class="checklist">
+                <label><input type="checkbox"> Remove a widget using × button works</label>
+                <label><input type="checkbox"> Add widget back using "Add Widget" button works</label>
+                <label><input type="checkbox"> Layout adjusts properly after add/remove</label>
+                <label><input type="checkbox"> No console errors during widget operations</label>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <strong>8. Test Performance:</strong>
+            <div class="expected">Expected: Layout operations should be responsive with no lag or memory issues.</div>
+            <p>Open browser dev tools → Performance tab during testing:</p>
+            <div class="checklist">
+                <label><input type="checkbox"> Drag operations feel responsive (&lt;100ms)</label>
+                <label><input type="checkbox"> No excessive re-renders in React DevTools</label>
+                <label><input type="checkbox"> localStorage writes are debounced (check Network tab)</label>
+                <label><input type="checkbox"> Memory usage stays stable during extended use</label>
+            </div>
+        </div>
+
+        <div class="test-step">
+            <strong>9. Test Layout Persistence:</strong>
+            <div class="expected">Expected: Layout changes should save automatically and persist after page refresh.</div>
+            <p>Test layout persistence:</p>
+            <div class="checklist">
+                <label><input type="checkbox"> Move widgets around in edit mode</label>
+                <label><input type="checkbox"> Exit edit mode</label>
+                <label><input type="checkbox"> Refresh page - layout should be preserved</label>
+                <label><input type="checkbox"> Reset Layout button restores default layout</label>
+            </div>
+        </div>
+
+        <h2>Pass Criteria</h2>
+        <div class="checklist">
+            <label><input type="checkbox"> <strong>No collision jumping:</strong> Widgets move smoothly during drag without large position jumps</label>
+            <label><input type="checkbox"> <strong>Performance improvement:</strong> Drag operations are noticeably smoother than before</label>
+            <label><input type="checkbox"> <strong>Responsive design:</strong> All breakpoints work correctly with new column counts</label>
+            <label><input type="checkbox"> <strong>Functionality preserved:</strong> All existing widget features work unchanged</label>
+            <label><input type="checkbox"> <strong>No regressions:</strong> No new bugs or broken features introduced</label>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> If any widgets appear too small, overlap, or if dragging still shows jumping behavior, this indicates the migration needs adjustment before proceeding to Phase 2.
+        </div>
+
+        <h2>Browser Testing</h2>
+        <p>Test on multiple browsers to ensure compatibility:</p>
+        <div class="checklist">
+            <label><input type="checkbox"> Chrome/Chromium - Layout works correctly</label>
+            <label><input type="checkbox"> Firefox - Layout works correctly</label>
+            <label><input type="checkbox"> Safari (if available) - Layout works correctly</label>
+        </div>
+
+        <hr style="margin: 40px 0; border: 1px solid #e5e7eb;">
+
+        <p><strong>Please confirm validation results before I proceed to Phase 2 of the migration.</strong></p>
+        
+        <div style="text-align: center; margin: 30px 0;">
+            <p style="font-size: 18px; color: #6b7280;">
+                ✅ <strong>Validation Status:</strong> <span class="status pending">PENDING USER CONFIRMATION</span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // Auto-save checkbox state to localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"]');
+            
+            // Load saved states
+            checkboxes.forEach((checkbox, index) => {
+                const saved = localStorage.getItem(`t054_checkbox_${index}`);
+                if (saved === 'true') {
+                    checkbox.checked = true;
+                }
+            });
+            
+            // Save state on change
+            checkboxes.forEach((checkbox, index) => {
+                checkbox.addEventListener('change', function() {
+                    localStorage.setItem(`t054_checkbox_${index}`, this.checked);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

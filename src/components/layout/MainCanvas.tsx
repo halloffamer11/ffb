@@ -5,8 +5,8 @@ import WidgetGrid from '../widgets/WidgetGrid';
 
 const CanvasContainer = styled.main`
   flex: 1;
-  background: ${props => theme('colors.bg')};
-  padding: ${props => theme('spacing.xl')};
+  background: ${theme('colors.bg')};
+  padding: ${theme('spacing.xl')};
   overflow: auto;
   position: relative;
   
@@ -30,33 +30,29 @@ const CanvasContainer = styled.main`
   }
   
   &::-webkit-scrollbar-thumb {
-    background: ${props => theme('colors.border2')};
+    background: ${theme('colors.border2')};
     border-radius: 4px;
     
     &:hover {
-      background: ${props => theme('colors.textMuted')};
+      background: ${theme('colors.textMuted')};
     }
   }
 `;
 
 const GridContainer = styled.div`
   height: auto;
-  min-height: calc(100vh - ${props => theme('layout.headerHeight')} - ${props => theme('spacing.xl')} * 2);
+  min-height: calc(100vh - ${theme('layout.headerHeight')} - ${theme('spacing.xl')} * 2);
   position: relative;
   z-index: 1;
   
   /* Professional grid backdrop */
   background-image: 
-    radial-gradient(circle at 20px 20px, ${props => theme('colors.border1')}40 1px, transparent 1px);
-  background-size: ${props => theme('layout.grid.gap')} ${props => theme('layout.grid.gap')};
-  background-position: ${props => theme('spacing.xs')} ${props => theme('spacing.xs')};
-  
-  /* Fade out grid pattern at edges */
-  mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);
-  -webkit-mask-image: radial-gradient(ellipse at center, black 60%, transparent 100%);
+    radial-gradient(circle at 20px 20px, ${theme('colors.border1')}40 1px, transparent 1px);
+  background-size: ${theme('layout.grid.gap')} ${theme('layout.grid.gap')};
+  background-position: ${theme('spacing.xs')} ${theme('spacing.xs')};
   
   /* Animation for smooth layout changes */
-  transition: all ${props => theme('transitions.layout')};
+  transition: all ${theme('transitions.layout')};
 `;
 
 interface MainCanvasProps {

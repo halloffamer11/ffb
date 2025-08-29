@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { theme } from '../utils/styledHelpers';
-import { createStorageAdapter } from '../adapters/storage';
 import { Button } from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
+import { useUnifiedStore } from '../stores/unified-store';
+import { Team, Keeper, Player, ScoringSystem } from '../types/data-contracts';
 
 const PageContainer = styled.div`
   height: 100vh;
@@ -68,7 +69,7 @@ const ContentArea = styled.div`
 const SettingsGrid = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: ${props => theme('spacing.xl')};
+  gap: ${props => theme('spacing.lg')};
   max-width: 1200px;
   margin: 0 auto;
   
@@ -194,136 +195,357 @@ const StatusMessage = styled.div<{ $type: 'success' | 'error' }>`
   `}
 `;
 
-interface LeagueSettings {
-  leagueSize: number;
-  auctionBudget: number;
-  scoringFormat: 'standard' | 'ppr' | 'halfppr' | 'custom';
-  roster: {
-    qb: number;
-    rb: number;
-    wr: number;
-    te: number;
-    k: number;
-    dst: number;
-    flex: number;
-    bench: number;
-  };
-  customScoring?: {
-    passingYards: number;
-    passingTDs: number;
-    interceptions: number;
-    rushingYards: number;
-    rushingTDs: number;
-    receivingYards: number;
-    receivingTDs: number;
-    receptions: number;
-  };
-}
-
-const defaultSettings: LeagueSettings = {
-  leagueSize: 12,
-  auctionBudget: 200,
-  scoringFormat: 'ppr',
-  roster: {
-    qb: 1,
-    rb: 2,
-    wr: 2,
-    te: 1,
-    k: 1,
-    dst: 1,
-    flex: 1,
-    bench: 6
-  },
-  customScoring: {
-    passingYards: 0.04,
-    passingTDs: 4,
-    interceptions: -2,
-    rushingYards: 0.1,
-    rushingTDs: 6,
-    receivingYards: 0.1,
-    receivingTDs: 6,
-    receptions: 1
+const TeamItem = styled.div<{ $isDragOver?: boolean; $isUserTeam?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: ${props => theme('spacing.sm')};
+  padding: ${props => theme('spacing.sm')};
+  background: ${props => {
+    if (props.$isUserTeam) return theme('colors.accentAlpha');
+    if (props.$isDragOver) return theme('colors.surface3');
+    return theme('colors.surface2');
+  }};
+  border: 1px solid ${props => {
+    if (props.$isUserTeam) return theme('colors.accent');
+    return theme('colors.border1');
+  }};
+  border-radius: ${props => theme('borderRadius.base')};
+  margin-bottom: ${props => theme('spacing.xs')};
+  transition: ${props => theme('transitions.fast')};
+  position: relative;
+  
+  &:hover {
+    background: ${props => props.$isUserTeam ? theme('colors.accentAlpha') : theme('colors.surface3')};
+    border-color: ${props => props.$isUserTeam ? theme('colors.accent') : theme('colors.border2')};
   }
-};
+  
+  ${props => props.$isUserTeam && `
+    &::after {
+      content: '⭐';
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      font-size: 14px;
+      opacity: 0.8;
+    }
+  `}
+`;
+
+const DragHandle = styled.div`
+  color: ${props => theme('colors.text3')};
+  font-size: 18px;
+  cursor: grab;
+  user-select: none;
+  
+  &:active {
+    cursor: grabbing;
+  }
+`;
+
+const TeamInfo = styled.div`
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr 80px 60px;
+  gap: ${props => theme('spacing.sm')};
+  align-items: center;
+`;
+
+const RadioButton = styled.input`
+  margin: 0;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+`;
+
+const KeeperTable = styled.div`
+  border: 1px solid ${props => theme('colors.border1')};
+  border-radius: ${props => theme('borderRadius.base')};
+  overflow: hidden;
+`;
+
+const KeeperRow = styled.div<{ $isHeader?: boolean }>`
+  display: grid;
+  grid-template-columns: 1fr 150px 80px 120px 40px;
+  gap: ${props => theme('spacing.md')};
+  padding: ${props => theme('spacing.md')};
+  border-bottom: 1px solid ${props => theme('colors.border1')};
+  background: ${props => props.$isHeader ? theme('colors.surface3') : 'transparent'};
+  font-weight: ${props => props.$isHeader ? theme('typography.fontWeight.semibold') : 'normal'};
+  align-items: center;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const SearchInput = styled.input`
+  width: 100%;
+  padding: ${props => theme('spacing.sm')};
+  background: ${props => theme('colors.surface1')};
+  border: 1px solid ${props => theme('colors.border1')};
+  border-radius: ${props => theme('borderRadius.base')};
+  color: ${props => theme('colors.text1')};
+  font-size: ${props => theme('typography.fontSize.sm')};
+`;
+
+const SearchResults = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: ${props => theme('colors.surface1')};
+  border: 1px solid ${props => theme('colors.border1')};
+  border-top: none;
+  border-radius: 0 0 ${props => theme('borderRadius.base')} ${props => theme('borderRadius.base')};
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 100;
+`;
+
+const SearchResultItem = styled.div`
+  padding: ${props => theme('spacing.sm')} ${props => theme('spacing.md')};
+  cursor: pointer;
+  border-bottom: 1px solid ${props => theme('colors.border1')};
+  
+  &:hover {
+    background: ${props => theme('colors.surface2')};
+  }
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const SearchContainer = styled.div`
+  position: relative;
+`;
+
+const LockIcon = styled.div`
+  color: ${props => theme('colors.warning')};
+  font-size: 18px;
+  margin-right: ${props => theme('spacing.sm')};
+`;
+
+const LockNotice = styled.div`
+  background: ${props => theme('colors.warningAlpha')};
+  color: ${props => theme('colors.warning')};
+  padding: ${props => theme('spacing.md')};
+  border-radius: ${props => theme('borderRadius.base')};
+  margin-bottom: ${props => theme('spacing.lg')};
+  display: flex;
+  align-items: center;
+  gap: ${props => theme('spacing.sm')};
+  font-size: ${props => theme('typography.fontSize.sm')};
+  font-weight: ${props => theme('typography.fontWeight.medium')};
+`;
 
 export default function LeagueSettingsPage() {
   const navigate = useNavigate();
-  const [settings, setSettings] = useState<LeagueSettings>(defaultSettings);
+  const { 
+    settings, 
+    keepers, 
+    players, 
+    updateSettings, 
+    updateTeams, 
+    assignKeeper, 
+    removeKeeper, 
+    startDraft,
+    resetDraft,
+    undo,
+    canUndo
+  } = useUnifiedStore();
+  
   const [statusMessage, setStatusMessage] = useState<{type: 'success' | 'error', message: string} | null>(null);
   const [loading, setLoading] = useState(false);
-  
-  // Initialize storage adapter
-  const storage = createStorageAdapter({ 
-    namespace: 'ffb_league_settings',
-    version: '1.0.0'
-  });
+  const [newKeeperSearch, setNewKeeperSearch] = useState('');
+  const [searchResults, setSearchResults] = useState<Player[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [selectedTeamId, setSelectedTeamId] = useState<number>(1);
+  const [keeperCost, setKeeperCost] = useState<number | string>(1);
+  const [keeperCostError, setKeeperCostError] = useState<string>('');
+  const [draggedTeamIndex, setDraggedTeamIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [scoringExpanded, setScoringExpanded] = useState<boolean>(false);
 
-  // Load saved settings on mount
+  // Search for players when typing
   useEffect(() => {
-    if (storage.isAvailable()) {
-      const saved = storage.get('settings');
-      if (saved) {
-        setSettings(prev => ({ ...prev, ...saved }));
-      }
+    if (newKeeperSearch.length >= 2) {
+      const filteredPlayers = players.filter(player => 
+        player.name.toLowerCase().includes(newKeeperSearch.toLowerCase()) &&
+        !keepers.some(k => k.player.id === player.id) &&
+        !player.drafted
+      ).slice(0, 10);
+      setSearchResults(filteredPlayers);
+      setShowSearchResults(true);
+    } else {
+      setSearchResults([]);
+      setShowSearchResults(false);
     }
-  }, []);
+  }, [newKeeperSearch, players, keepers]);
 
-  const handleInputChange = (field: keyof LeagueSettings, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      [field]: value
-    }));
-    setStatusMessage(null);
+  // Update team budgets when auction budget changes
+  useEffect(() => {
+    const updatedTeams = settings.teams.map(team => {
+      // Calculate keeper costs for this team
+      const teamKeeperCost = keepers
+        .filter(k => k.teamId === team.id)
+        .reduce((sum, k) => sum + k.cost, 0);
+      
+      return {
+        ...team,
+        budget: settings.budget - teamKeeperCost
+      };
+    });
+    
+    // Only update if budgets actually changed
+    const budgetsChanged = updatedTeams.some((team, index) => 
+      team.budget !== settings.teams[index]?.budget
+    );
+    
+    if (budgetsChanged) {
+      updateTeams(updatedTeams);
+    }
+  }, [settings.budget, keepers, updateTeams]);
+
+  const handleScoringPresetChange = (preset: ScoringSystem['preset']) => {
+    const presetValues = {
+      standard: { ...settings.scoring.values, receptions: 0 },
+      halfppr: { ...settings.scoring.values, receptions: 0.5 },
+      ppr: { ...settings.scoring.values, receptions: 1 },
+      custom: settings.scoring.values
+    };
+    
+    updateSettings({
+      scoring: {
+        preset,
+        values: presetValues[preset]
+      }
+    });
   };
 
-  const handleRosterChange = (position: keyof LeagueSettings['roster'], value: number) => {
-    setSettings(prev => ({
-      ...prev,
-      roster: {
-        ...prev.roster,
-        [position]: value
+  const handleScoringValueChange = (field: keyof ScoringSystem['values'], value: number) => {
+    updateSettings({
+      scoring: {
+        preset: 'custom', // Automatically switch to custom when values are changed
+        values: { ...settings.scoring.values, [field]: value }
       }
-    }));
-    setStatusMessage(null);
+    });
   };
 
-  const handleCustomScoringChange = (field: keyof NonNullable<LeagueSettings['customScoring']>, value: number) => {
-    setSettings(prev => ({
-      ...prev,
-      customScoring: {
-        ...prev.customScoring!,
-        [field]: value
-      }
-    }));
-    setStatusMessage(null);
+  const handleTeamChange = (teamId: number, field: keyof Team, value: any) => {
+    const updatedTeams = settings.teams.map(team => 
+      team.id === teamId ? { ...team, [field]: value } : team
+    );
+    updateTeams(updatedTeams);
   };
 
-  const handleSave = async () => {
-    setLoading(true);
-    try {
-      if (storage.isAvailable()) {
-        const result = storage.set('settings', settings);
-        if (result.ok) {
-          setStatusMessage({ type: 'success', message: 'League settings saved successfully!' });
-        } else {
-          setStatusMessage({ type: 'error', message: `Failed to save settings: ${result.error}` });
-        }
-      } else {
-        setStatusMessage({ type: 'error', message: 'Storage not available' });
-      }
-    } catch (error) {
-      setStatusMessage({ type: 'error', message: 'An unexpected error occurred' });
-    } finally {
-      setLoading(false);
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    if (settings.isDraftStarted) {
+      e.preventDefault();
+      return;
+    }
+    setDraggedTeamIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/html', '');
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (settings.isDraftStarted || draggedTeamIndex === null) return;
+    setDragOverIndex(index);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
+    e.preventDefault();
+    if (settings.isDraftStarted || draggedTeamIndex === null) return;
+    
+    const items = [...settings.teams];
+    const [reorderedItem] = items.splice(draggedTeamIndex, 1);
+    items.splice(dropIndex, 0, reorderedItem);
+    
+    // Track which team was the user's team before reordering
+    const userTeam = settings.teams.find(t => t.id === settings.userTeamId);
+    
+    // Update team IDs to match new order (draft order)
+    const reorderedTeams = items.map((team, index) => ({
+      ...team,
+      id: index + 1
+    }));
+    
+    // Find the new ID of the user's team after reordering
+    const newUserTeamId = userTeam ? 
+      reorderedTeams.find(t => t.teamName === userTeam.teamName && t.ownerName === userTeam.ownerName)?.id 
+      : null;
+    
+    updateTeams(reorderedTeams);
+    
+    // Update user team selection to the new ID
+    if (newUserTeamId && newUserTeamId !== settings.userTeamId) {
+      updateSettings({ userTeamId: newUserTeamId });
+    }
+    
+    setDraggedTeamIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleAddKeeper = () => {
+    if (!selectedPlayer) return;
+    
+    // Validate cost
+    const costValue = typeof keeperCost === 'string' ? parseInt(keeperCost) : keeperCost;
+    if (isNaN(costValue) || costValue < 1) {
+      setKeeperCostError('Keeper cost must be at least $1');
+      return;
+    }
+    
+    const team = settings.teams.find(t => t.id === selectedTeamId);
+    if (!team) return;
+    
+    // Check if team has enough budget
+    const teamKeeperCost = keepers
+      .filter(k => k.teamId === selectedTeamId)
+      .reduce((sum, k) => sum + k.cost, 0);
+    
+    if (teamKeeperCost + costValue > settings.budget) {
+      setKeeperCostError(`Team ${team.teamName} would exceed budget with this keeper`);
+      return;
+    }
+    
+    const newKeeper: Keeper = {
+      player: selectedPlayer,
+      teamId: selectedTeamId,
+      cost: costValue
+    };
+    
+    assignKeeper(newKeeper);
+    
+    // Reset form
+    setSelectedPlayer(null);
+    setNewKeeperSearch('');
+    setKeeperCost(1);
+    setKeeperCostError('');
+    setStatusMessage({ type: 'success', message: 'Keeper assigned successfully!' });
+  };
+
+  const handleRemoveKeeper = (keeper: Keeper) => {
+    const keeperId = `${keeper.player.id}-${keeper.teamId}`;
+    removeKeeper(keeperId);
+    setStatusMessage({ type: 'success', message: 'Keeper removed successfully!' });
+  };
+
+  const handleStartDraft = () => {
+    if (window.confirm('Are you sure you want to start the draft? This will lock all league settings.')) {
+      startDraft();
+      setStatusMessage({ type: 'success', message: 'Draft started! Settings are now locked.' });
     }
   };
 
-  const handleReset = () => {
-    setSettings(defaultSettings);
-    setStatusMessage(null);
-  };
-
-  const totalRosterSpots = Object.values(settings.roster).reduce((sum, count) => sum + count, 0);
+  const totalRosterSpots = Object.values(settings.positions).reduce((sum, count) => sum + count, 0);
 
   return (
     <PageContainer>
@@ -331,10 +553,20 @@ export default function LeagueSettingsPage() {
         <BackButton onClick={() => navigate('/')} aria-label="Back to dashboard">
           ← Back
         </BackButton>
-        <Title>League Settings</Title>
+        <Title>
+          {settings.isDraftStarted && <LockIcon>🔒</LockIcon>}
+          League Settings
+        </Title>
       </Header>
       
       <ContentArea>
+        {settings.isDraftStarted && (
+          <LockNotice>
+            <LockIcon>🔒</LockIcon>
+            Draft has started. Settings are locked to prevent changes that could affect draft integrity.
+          </LockNotice>
+        )}
+
         {statusMessage && (
           <StatusMessage $type={statusMessage.type}>
             {statusMessage.message}
@@ -342,17 +574,46 @@ export default function LeagueSettingsPage() {
         )}
         
         <SettingsGrid>
-          <SettingsCard>
+          {/* Left Column: Basic Settings + Roster */}
+          <div>
+            {/* Basic Settings */}
+            <SettingsCard style={{ marginBottom: '16px' }}>
             <CardTitle>
               ⚙️ Basic League Configuration
             </CardTitle>
             
             <FormGroup>
-              <Label htmlFor="leagueSize">League Size</Label>
+              <Label htmlFor="leagueName">League Name</Label>
+              <Input
+                id="leagueName"
+                type="text"
+                value={settings.leagueName}
+                disabled={settings.isDraftStarted}
+                onChange={(e) => updateSettings({ leagueName: e.target.value })}
+              />
+            </FormGroup>
+
+            <FormGroup>
+              <Label htmlFor="teamCount">Team Count</Label>
               <Select
-                id="leagueSize"
-                value={settings.leagueSize}
-                onChange={(e) => handleInputChange('leagueSize', parseInt(e.target.value))}
+                id="teamCount"
+                value={settings.teamCount}
+                disabled={settings.isDraftStarted}
+                onChange={(e) => {
+                  const newCount = parseInt(e.target.value);
+                  const newTeams = [];
+                  for (let i = 0; i < newCount; i++) {
+                    const existingTeam = settings.teams[i];
+                    newTeams.push(existingTeam || {
+                      id: i + 1,
+                      teamName: `Team ${i + 1}`,
+                      ownerName: `Owner ${i + 1}`,
+                      budget: settings.budget
+                    });
+                  }
+                  updateSettings({ teamCount: newCount });
+                  updateTeams(newTeams);
+                }}
               >
                 <option value="8">8 Teams</option>
                 <option value="10">10 Teams</option>
@@ -363,15 +624,16 @@ export default function LeagueSettingsPage() {
             </FormGroup>
 
             <FormGroup>
-              <Label htmlFor="auctionBudget">Auction Budget ($)</Label>
+              <Label htmlFor="budget">Auction Budget ($)</Label>
               <Input
-                id="auctionBudget"
+                id="budget"
                 type="number"
                 min="100"
                 max="1000"
                 step="10"
-                value={settings.auctionBudget}
-                onChange={(e) => handleInputChange('auctionBudget', parseInt(e.target.value))}
+                value={settings.budget}
+                disabled={settings.isDraftStarted}
+                onChange={(e) => updateSettings({ budget: parseInt(e.target.value) })}
               />
             </FormGroup>
 
@@ -379,8 +641,9 @@ export default function LeagueSettingsPage() {
               <Label htmlFor="scoringFormat">Scoring Format</Label>
               <Select
                 id="scoringFormat"
-                value={settings.scoringFormat}
-                onChange={(e) => handleInputChange('scoringFormat', e.target.value)}
+                value={settings.scoring.preset}
+                disabled={settings.isDraftStarted}
+                onChange={(e) => handleScoringPresetChange(e.target.value as ScoringSystem['preset'])}
               >
                 <option value="standard">Standard</option>
                 <option value="halfppr">Half PPR</option>
@@ -388,9 +651,123 @@ export default function LeagueSettingsPage() {
                 <option value="custom">Custom</option>
               </Select>
             </FormGroup>
+
+            {/* Scoring Summary and Controls */}
+            <div style={{ 
+              background: 'var(--color-surface-3)', 
+              padding: '12px', 
+              borderRadius: '6px', 
+              fontSize: '13px'
+            }}>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: scoringExpanded ? '12px' : '0'
+              }}>
+                <div style={{ color: 'var(--color-text-muted)' }}>
+                  <strong>Scoring:</strong> 
+                  {' '}PPR: {settings.scoring.values.receptions}
+                  {' '}| Pass TD: {settings.scoring.values.passingTDs}
+                  {' '}| Rush TD: {settings.scoring.values.rushingTDs}
+                  {' '}| Rec TD: {settings.scoring.values.receivingTDs}
+                </div>
+                <button
+                  onClick={() => setScoringExpanded(!scoringExpanded)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--color-accent)',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    padding: '2px 4px'
+                  }}
+                >
+                  {scoringExpanded ? '▲ Collapse' : '▼ Edit Values'}
+                </button>
+              </div>
+
+              {/* Expanded Scoring Section */}
+              {scoringExpanded && (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div>
+                    <FormGroup style={{ marginBottom: '8px' }}>
+                      <Label style={{ fontSize: '11px' }}>Passing Yards (per yard)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        style={{ padding: '4px 8px', fontSize: '12px' }}
+                        disabled={settings.isDraftStarted}
+                        value={settings.scoring.values.passingYards}
+                        onChange={(e) => handleScoringValueChange('passingYards', parseFloat(e.target.value))}
+                      />
+                    </FormGroup>
+                    <FormGroup style={{ marginBottom: '8px' }}>
+                      <Label style={{ fontSize: '11px' }}>Passing TDs</Label>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        style={{ padding: '4px 8px', fontSize: '12px' }}
+                        disabled={settings.isDraftStarted}
+                        value={settings.scoring.values.passingTDs}
+                        onChange={(e) => handleScoringValueChange('passingTDs', parseFloat(e.target.value))}
+                      />
+                    </FormGroup>
+                    <FormGroup style={{ marginBottom: '8px' }}>
+                      <Label style={{ fontSize: '11px' }}>Interceptions</Label>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        style={{ padding: '4px 8px', fontSize: '12px' }}
+                        disabled={settings.isDraftStarted}
+                        value={settings.scoring.values.interceptions}
+                        onChange={(e) => handleScoringValueChange('interceptions', parseFloat(e.target.value))}
+                      />
+                    </FormGroup>
+                  </div>
+
+                  <div>
+                    <FormGroup style={{ marginBottom: '8px' }}>
+                      <Label style={{ fontSize: '11px' }}>Rushing Yards (per yard)</Label>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        style={{ padding: '4px 8px', fontSize: '12px' }}
+                        disabled={settings.isDraftStarted}
+                        value={settings.scoring.values.rushingYards}
+                        onChange={(e) => handleScoringValueChange('rushingYards', parseFloat(e.target.value))}
+                      />
+                    </FormGroup>
+                    <FormGroup style={{ marginBottom: '8px' }}>
+                      <Label style={{ fontSize: '11px' }}>Rushing TDs</Label>
+                      <Input
+                        type="number"
+                        step="0.5"
+                        style={{ padding: '4px 8px', fontSize: '12px' }}
+                        disabled={settings.isDraftStarted}
+                        value={settings.scoring.values.rushingTDs}
+                        onChange={(e) => handleScoringValueChange('rushingTDs', parseFloat(e.target.value))}
+                      />
+                    </FormGroup>
+                    <FormGroup style={{ marginBottom: '8px' }}>
+                      <Label style={{ fontSize: '11px' }}>Receptions</Label>
+                      <Input
+                        type="number"
+                        step="0.1"
+                        style={{ padding: '4px 8px', fontSize: '12px' }}
+                        disabled={settings.isDraftStarted}
+                        value={settings.scoring.values.receptions}
+                        onChange={(e) => handleScoringValueChange('receptions', parseFloat(e.target.value))}
+                      />
+                    </FormGroup>
+                  </div>
+                </div>
+              )}
+            </div>
           </SettingsCard>
 
-          <SettingsCard>
+            {/* Roster Configuration */}
+            <SettingsCard>
             <CardTitle>
               👥 Roster Configuration
             </CardTitle>
@@ -399,222 +776,282 @@ export default function LeagueSettingsPage() {
             </p>
             
             <RosterGrid>
-              <FormGroup>
-                <Label htmlFor="qb">QB</Label>
-                <Input
-                  id="qb"
-                  type="number"
-                  min="0"
-                  max="3"
-                  value={settings.roster.qb}
-                  onChange={(e) => handleRosterChange('qb', parseInt(e.target.value))}
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="rb">RB</Label>
-                <Input
-                  id="rb"
-                  type="number"
-                  min="0"
-                  max="5"
-                  value={settings.roster.rb}
-                  onChange={(e) => handleRosterChange('rb', parseInt(e.target.value))}
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="wr">WR</Label>
-                <Input
-                  id="wr"
-                  type="number"
-                  min="0"
-                  max="5"
-                  value={settings.roster.wr}
-                  onChange={(e) => handleRosterChange('wr', parseInt(e.target.value))}
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="te">TE</Label>
-                <Input
-                  id="te"
-                  type="number"
-                  min="0"
-                  max="3"
-                  value={settings.roster.te}
-                  onChange={(e) => handleRosterChange('te', parseInt(e.target.value))}
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="k">K</Label>
-                <Input
-                  id="k"
-                  type="number"
-                  min="0"
-                  max="2"
-                  value={settings.roster.k}
-                  onChange={(e) => handleRosterChange('k', parseInt(e.target.value))}
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="dst">DST</Label>
-                <Input
-                  id="dst"
-                  type="number"
-                  min="0"
-                  max="2"
-                  value={settings.roster.dst}
-                  onChange={(e) => handleRosterChange('dst', parseInt(e.target.value))}
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="flex">FLEX</Label>
-                <Input
-                  id="flex"
-                  type="number"
-                  min="0"
-                  max="3"
-                  value={settings.roster.flex}
-                  onChange={(e) => handleRosterChange('flex', parseInt(e.target.value))}
-                />
-              </FormGroup>
-
-              <FormGroup>
-                <Label htmlFor="bench">Bench</Label>
-                <Input
-                  id="bench"
-                  type="number"
-                  min="3"
-                  max="12"
-                  value={settings.roster.bench}
-                  onChange={(e) => handleRosterChange('bench', parseInt(e.target.value))}
-                />
-              </FormGroup>
+              {Object.entries(settings.positions).map(([position, count]) => (
+                <FormGroup key={position}>
+                  <Label htmlFor={position}>{position}</Label>
+                  <Input
+                    id={position}
+                    type="number"
+                    min="0"
+                    max="5"
+                    value={count}
+                    disabled={settings.isDraftStarted}
+                    onChange={(e) => updateSettings({ 
+                      positions: { 
+                        ...settings.positions, 
+                        [position]: parseInt(e.target.value) 
+                      } 
+                    })}
+                  />
+                </FormGroup>
+              ))}
             </RosterGrid>
           </SettingsCard>
+          </div>
 
-          {settings.scoringFormat === 'custom' && settings.customScoring && (
-            <SettingsCard style={{ gridColumn: '1 / -1' }}>
-              <CardTitle>
-                📊 Custom Scoring Settings
-              </CardTitle>
-              
-              <SettingsGrid>
-                <div>
-                  <FormGroup>
-                    <Label htmlFor="passingYards">Passing Yards (per yard)</Label>
-                    <Input
-                      id="passingYards"
-                      type="number"
-                      step="0.01"
-                      value={settings.customScoring.passingYards}
-                      onChange={(e) => handleCustomScoringChange('passingYards', parseFloat(e.target.value))}
-                    />
-                  </FormGroup>
+          {/* Right Column: Teams Management */}
+          <SettingsCard>
+            <CardTitle>
+              🏆 Teams & Draft Order
+            </CardTitle>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+              Drag teams to reorder draft sequence. Select your team with the radio button.
+            </p>
 
-                  <FormGroup>
-                    <Label htmlFor="passingTDs">Passing TDs</Label>
+            <div>
+              {settings.teams.map((team, index) => (
+                <TeamItem
+                  key={team.id}
+                  draggable={!settings.isDraftStarted}
+                  $isDragOver={dragOverIndex === index}
+                  $isUserTeam={settings.userTeamId === team.id}
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragLeave={handleDragLeave}
+                  onDrop={(e) => handleDrop(e, index)}
+                >
+                  <DragHandle>⋮⋮</DragHandle>
+                  <TeamInfo>
                     <Input
-                      id="passingTDs"
-                      type="number"
-                      step="0.5"
-                      value={settings.customScoring.passingTDs}
-                      onChange={(e) => handleCustomScoringChange('passingTDs', parseFloat(e.target.value))}
+                      type="text"
+                      placeholder="Team Name"
+                      value={team.teamName}
+                      disabled={settings.isDraftStarted}
+                      onChange={(e) => handleTeamChange(team.id, 'teamName', e.target.value)}
                     />
-                  </FormGroup>
+                    <Input
+                      type="text"
+                      placeholder="Owner Name"
+                      value={team.ownerName}
+                      disabled={settings.isDraftStarted}
+                      onChange={(e) => handleTeamChange(team.id, 'ownerName', e.target.value)}
+                    />
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: '14px' }}>
+                      ${team.budget}
+                    </span>
+                    <RadioButton
+                      type="radio"
+                      name="userTeam"
+                      checked={settings.userTeamId === team.id}
+                      disabled={settings.isDraftStarted}
+                      onChange={() => updateSettings({ userTeamId: team.id })}
+                    />
+                  </TeamInfo>
+                </TeamItem>
+              ))}
+            </div>
+          </SettingsCard>
 
-                  <FormGroup>
-                    <Label htmlFor="interceptions">Interceptions</Label>
-                    <Input
-                      id="interceptions"
-                      type="number"
-                      step="0.5"
-                      value={settings.customScoring.interceptions}
-                      onChange={(e) => handleCustomScoringChange('interceptions', parseFloat(e.target.value))}
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label htmlFor="receptions">Receptions</Label>
-                    <Input
-                      id="receptions"
-                      type="number"
-                      step="0.1"
-                      value={settings.customScoring.receptions}
-                      onChange={(e) => handleCustomScoringChange('receptions', parseFloat(e.target.value))}
-                    />
-                  </FormGroup>
-                </div>
-
-                <div>
-                  <FormGroup>
-                    <Label htmlFor="rushingYards">Rushing Yards (per yard)</Label>
-                    <Input
-                      id="rushingYards"
-                      type="number"
-                      step="0.01"
-                      value={settings.customScoring.rushingYards}
-                      onChange={(e) => handleCustomScoringChange('rushingYards', parseFloat(e.target.value))}
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label htmlFor="rushingTDs">Rushing TDs</Label>
-                    <Input
-                      id="rushingTDs"
-                      type="number"
-                      step="0.5"
-                      value={settings.customScoring.rushingTDs}
-                      onChange={(e) => handleCustomScoringChange('rushingTDs', parseFloat(e.target.value))}
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label htmlFor="receivingYards">Receiving Yards (per yard)</Label>
-                    <Input
-                      id="receivingYards"
-                      type="number"
-                      step="0.01"
-                      value={settings.customScoring.receivingYards}
-                      onChange={(e) => handleCustomScoringChange('receivingYards', parseFloat(e.target.value))}
-                    />
-                  </FormGroup>
-
-                  <FormGroup>
-                    <Label htmlFor="receivingTDs">Receiving TDs</Label>
-                    <Input
-                      id="receivingTDs"
-                      type="number"
-                      step="0.5"
-                      value={settings.customScoring.receivingTDs}
-                      onChange={(e) => handleCustomScoringChange('receivingTDs', parseFloat(e.target.value))}
-                    />
-                  </FormGroup>
-                </div>
-              </SettingsGrid>
-            </SettingsCard>
-          )}
         </SettingsGrid>
 
+        {/* Keepers System - Full Width */}
+        <SettingsCard style={{ maxWidth: '1200px', margin: '20px auto' }}>
+            <CardTitle>
+              ⭐ Keepers Management
+            </CardTitle>
+            <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+              Assign keepers to teams. Keeper costs will be deducted from team budgets.
+            </p>
+
+            {/* Add Keeper Form */}
+            {!settings.isDraftStarted && (
+              <div style={{ marginBottom: '24px', padding: '16px', background: 'var(--color-surface-2)', borderRadius: '8px' }}>
+                <SettingsGrid>
+                  <FormGroup>
+                    <Label>Search Player</Label>
+                    <SearchContainer>
+                      <SearchInput
+                        type="text"
+                        placeholder="Type player name..."
+                        value={newKeeperSearch}
+                        onChange={(e) => setNewKeeperSearch(e.target.value)}
+                        onBlur={() => setTimeout(() => setShowSearchResults(false), 150)}
+                        onFocus={() => searchResults.length > 0 && setShowSearchResults(true)}
+                      />
+                      {showSearchResults && searchResults.length > 0 && (
+                        <SearchResults>
+                          {searchResults.map(player => (
+                            <SearchResultItem
+                              key={player.id}
+                              onClick={() => {
+                                setSelectedPlayer(player);
+                                setNewKeeperSearch(player.name);
+                                setShowSearchResults(false);
+                              }}
+                            >
+                              {player.name} ({player.position} - {player.team})
+                            </SearchResultItem>
+                          ))}
+                        </SearchResults>
+                      )}
+                    </SearchContainer>
+                  </FormGroup>
+
+                  <FormGroup>
+                    <Label>Team</Label>
+                    <Select
+                      value={selectedTeamId}
+                      onChange={(e) => setSelectedTeamId(parseInt(e.target.value))}
+                    >
+                      {settings.teams.map(team => (
+                        <option key={team.id} value={team.id}>
+                          {team.teamName} (${team.budget} available)
+                        </option>
+                      ))}
+                    </Select>
+                  </FormGroup>
+
+                  <FormGroup>
+                    <Label>Cost</Label>
+                    <Input
+                      type="number"
+                      min="1"
+                      max={settings.budget}
+                      value={keeperCost}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        setKeeperCost(value === '' ? '' : parseInt(value) || '');
+                        setKeeperCostError('');
+                      }}
+                    />
+                    {keeperCostError && (
+                      <div style={{ 
+                        color: 'var(--color-negative)', 
+                        fontSize: '12px', 
+                        marginTop: '4px' 
+                      }}>
+                        {keeperCostError}
+                      </div>
+                    )}
+                  </FormGroup>
+
+                  <div style={{ display: 'flex', alignItems: 'end' }}>
+                    <Button
+                      onClick={handleAddKeeper}
+                      disabled={!selectedPlayer}
+                    >
+                      Add Keeper
+                    </Button>
+                  </div>
+                </SettingsGrid>
+              </div>
+            )}
+
+            {/* Keepers Table */}
+            <KeeperTable>
+              <KeeperRow $isHeader>
+                <div>Player</div>
+                <div>Team</div>
+                <div>Cost</div>
+                <div>Position</div>
+                <div></div>
+              </KeeperRow>
+              
+              {keepers.length === 0 ? (
+                <KeeperRow>
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center', color: 'var(--color-text-muted)' }}>
+                    No keepers assigned yet
+                  </div>
+                </KeeperRow>
+              ) : (
+                keepers.map((keeper, index) => {
+                  const team = settings.teams.find(t => t.id === keeper.teamId);
+                  return (
+                    <KeeperRow key={index}>
+                      <div>{keeper.player.name}</div>
+                      <div>{team?.teamName || 'Unknown'}</div>
+                      <div>${keeper.cost}</div>
+                      <div>{keeper.player.position}</div>
+                      <div>
+                        {!settings.isDraftStarted && (
+                          <button
+                            onClick={() => handleRemoveKeeper(keeper)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: 'var(--color-negative)',
+                              cursor: 'pointer',
+                              fontSize: '16px'
+                            }}
+                            title="Remove keeper"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    </KeeperRow>
+                  );
+                })
+              )}
+            </KeeperTable>
+          </SettingsCard>
+
+        {/* Draft Control */}
         <SaveActions>
-          <Button
-            variant="secondary"
-            onClick={handleReset}
-            disabled={loading}
-          >
-            Reset to Defaults
-          </Button>
-          <Button
-            variant="primary"
-            onClick={handleSave}
-            disabled={loading}
-          >
-            {loading ? 'Saving...' : 'Save Settings'}
-          </Button>
+          {!settings.isDraftStarted ? (
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  if (window.confirm('Reset all settings to defaults?')) {
+                    // Reset implementation would go here
+                  }
+                }}
+                disabled={loading}
+              >
+                Reset to Defaults
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleStartDraft}
+                disabled={loading || settings.teams.length === 0}
+              >
+                Start Draft
+              </Button>
+              {canUndo() && (
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    undo();
+                    setStatusMessage({ type: 'success', message: 'Draft state restored.' });
+                  }}
+                  disabled={loading}
+                  style={{ fontSize: '13px', padding: '6px 12px' }}
+                >
+                  Undo Reset
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                Draft is active. Settings are locked.
+              </div>
+              <Button
+                variant="destructive"
+                onClick={() => {
+                  if (window.confirm('⚠️ This will reset the draft and unlock settings. All picks and nominations will be cleared. This action can be undone. Are you sure?')) {
+                    resetDraft();
+                    setStatusMessage({ type: 'success', message: 'Draft reset successfully. Use Undo to restore if needed.' });
+                  }
+                }}
+                disabled={loading}
+                style={{ fontSize: '13px', padding: '6px 12px' }}
+              >
+                Reset Draft
+              </Button>
+            </div>
+          )}
         </SaveActions>
       </ContentArea>
     </PageContainer>

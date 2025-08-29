@@ -2,7 +2,7 @@ import React, { useMemo, useRef, useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 import { theme } from "../../utils/styledHelpers";
 import WidgetContainer from './WidgetContainer';
-import { useDraftStore, useSelectedPlayer } from '../../stores/draftStore';
+import { useUnifiedStore } from '../../stores/unified-store';
 import { calculatePlayerVBD, calculateBaselines } from '../../core/vbd';
 import { calculateDraftableThresholds, getTopDraftablePlayers } from '../../core/draftable';
 import { useCanvas } from '../../hooks/useCanvas';
@@ -15,7 +15,7 @@ const ChartContainer = styled.div`
   padding: ${props => theme('spacing.lg')};
   display: flex;
   flex-direction: column;
-  background: ${props => theme('gradients.subtle')};
+  background: ${props => theme('colors.surface1')};
   position: relative;
 `;
 
@@ -25,7 +25,7 @@ const Controls = styled.div`
   margin-bottom: ${props => theme('spacing.lg')};
   align-items: center;
   flex-wrap: wrap;
-  background: ${props => theme('gradients.widget')};
+  background: ${props => theme('colors.surface1')};
   padding: ${props => theme('spacing.md')};
   border-radius: ${props => theme('borderRadius.lg')};
   border: 1px solid ${props => theme('colors.border1')};
@@ -153,8 +153,9 @@ interface VBDScatterWidgetProps {
 }
 
 const VBDScatterWidget = React.memo(({ editMode = false, onRemove }: VBDScatterWidgetProps) => {
-  const { players, picks, settings, setSelectedPlayer } = useDraftStore();
-  const selectedPlayer = useSelectedPlayer();
+  const store = useUnifiedStore();
+  const { players, picks, settings } = store;
+  const { selectedPlayer } = store.ui;
   const [selectedPositions, setSelectedPositions] = React.useState(['QB', 'RB', 'WR', 'TE']);
   const [hoveredPlayer, setHoveredPlayer] = React.useState<PlayerData | null>(null);
   const hoveredPlayerRef = useRef<PlayerData | null>(null);
@@ -566,7 +567,7 @@ const VBDScatterWidget = React.memo(({ editMode = false, onRemove }: VBDScatterW
       const distance = Math.sqrt((x - px) ** 2 + (y - py) ** 2);
       if (distance <= threshold) {
         console.debug(`[VBD] Player selected: ${player.name} (${player.position}) - VBD: ${player.vbd}`);
-        setSelectedPlayer(player);
+        store.selectPlayer(player);
         
         // Emit event for legacy widget compatibility
         window.dispatchEvent(new CustomEvent('player:selected', {
@@ -575,7 +576,7 @@ const VBDScatterWidget = React.memo(({ editMode = false, onRemove }: VBDScatterW
         break;
       }
     }
-  }, [chartData, scales, setSelectedPlayer]);
+  }, [chartData, scales, store]);
   
   const handleCanvasMouseMove = useCallback((event: React.MouseEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current;

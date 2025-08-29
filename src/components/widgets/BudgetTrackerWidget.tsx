@@ -2,7 +2,7 @@ import React, { useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, LineChart, Line, Tooltip } from 'recharts';
 import WidgetContainer from './WidgetContainer';
-import { useDraftStore } from '../../stores/draftStore';
+import { useUnifiedStore } from '../../stores/unified-store';
 import { useMemoizedCalculation, usePerformanceMonitor } from '../../hooks';
 import { WidgetErrorBoundary } from '../../components/ui';
 import { 
@@ -156,7 +156,8 @@ interface BudgetTrackerWidgetProps {
 }
 
 const BudgetTrackerWidget = React.memo(({ editMode = false, onRemove }: BudgetTrackerWidgetProps) => {
-  const { picks, settings, roster } = useDraftStore();
+  const store = useUnifiedStore();
+  const { picks, settings, players } = store;
   
   // Performance monitoring
   const renderCount = usePerformanceMonitor('BudgetTrackerWidget');
@@ -186,7 +187,7 @@ const BudgetTrackerWidget = React.memo(({ editMode = false, onRemove }: BudgetTr
       alerts,
       efficiency: spent > 0 ? (picks.filter(p => p.teamId === teamId).length / spent * 100) : 0
     };
-  }, [picks, settings, roster], 'Budget calculations');
+  }, [picks, settings], 'Budget calculations');
   
   // Calculate position spending breakdown
   const spendingByPosition = useMemo(() => {
@@ -198,8 +199,7 @@ const BudgetTrackerWidget = React.memo(({ editMode = false, onRemove }: BudgetTr
       // Get position from pick or find player in players array
       let position = pick.position;
       if (!position && pick.playerId) {
-        const player = roster.find(p => p.id === pick.playerId) || 
-                      (window as any).draftStore?.getState()?.players?.find((p: any) => p.id === pick.playerId);
+        const player = players.find(p => p.id === pick.playerId);
         position = player?.position;
       }
       position = position || 'UNKNOWN';
@@ -211,7 +211,7 @@ const BudgetTrackerWidget = React.memo(({ editMode = false, onRemove }: BudgetTr
       amount,
       color: POSITION_COLORS[position] || '#6b7280'
     })).sort((a, b) => b.amount - a.amount);
-  }, [picks, roster]);
+  }, [picks, players]);
   
   // Budget split chart data
   const remainingBudgetData = useMemo(() => [

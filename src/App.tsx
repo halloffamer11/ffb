@@ -7,6 +7,7 @@ import TopAppBar from './components/layout/TopAppBar';
 import DashboardPage from './pages/DashboardPage';
 import LeagueSettingsPage from './pages/LeagueSettingsPage';
 import DataManagementPage from './pages/DataManagementPage';
+import DeveloperPage from './pages/DeveloperPage';
 
 const AppContainer = styled.div`
   height: 100vh;
@@ -17,16 +18,6 @@ const AppContainer = styled.div`
   font-family: var(--fontFamily-base);
   overflow: hidden;
   position: relative;
-  
-  /* Professional app foundation */
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at top right, var(--color-surface1)20 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
 `;
 
 const ContentContainer = styled.div`
@@ -80,6 +71,7 @@ function App() {
             <Routes>
               <Route path="/settings" element={<LeagueSettingsPage />} />
               <Route path="/data-management" element={<DataManagementPage />} />
+              <Route path="/developer" element={<DeveloperPage />} />
               <Route path="/" element={
                 <>
                   <TopAppBar />

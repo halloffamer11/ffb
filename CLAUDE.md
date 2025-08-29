@@ -4,7 +4,85 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-FFB (Fantasy Football Bid) Draft Helper - A client-side web application for managing fantasy football auction drafts. Built using vanilla JavaScript with no framework dependencies, following USDAD (Unified Software Development and Delivery) methodology with three-layer context architecture.
+FFB (Fantasy Football Bid) Draft Helper - A client-side web application for managing fantasy football auction drafts. Built with React and TypeScript, following USDAD methodology with **UNIFIED DATA ARCHITECTURE** as the cornerstone principle.
+
+## 🔴 CRITICAL DATA COMMANDMENTS - VIOLATIONS WILL NOT BE TOLERATED
+
+**THE PRIME DIRECTIVE: UNIFIED DATA ARCHITECTURE**
+
+### 🔥 THE TEN COMMANDMENTS OF DATA MANAGEMENT
+
+1. **THOU SHALT USE ONLY THE UNIFIED STORE**
+   - Location: `src/stores/unified-store.ts`  
+   - Hook: `useUnifiedStore()`
+   - Namespace: `workspace::`
+   - **NO OTHER STORES SHALL EXIST**
+
+2. **THOU SHALT NOT CREATE SEPARATE STATE SYSTEMS**
+   - No React Context for shared data
+   - No useState for application data  
+   - No direct localStorage access
+   - **ALL DATA FLOWS THROUGH UNIFIED STORE**
+
+3. **THOU SHALT NOT SYNC BETWEEN STORES**
+   - There is **ONE** store and **ONE** store only
+   - If you find yourself syncing, **STOP IMMEDIATELY**
+   - Report legacy code for immediate removal
+
+4. **THOU SHALT NOT USE LEGACY PATTERNS**
+   - `src/stores/draftStore.ts` is for **COMPATIBILITY ONLY**
+   - Do not extend or modify legacy wrappers
+   - **NEW CODE MUST USE `useUnifiedStore()`**
+
+5. **THOU SHALT VALIDATE ALL DATA**
+   - Use TypeScript interfaces from `src/types/data-contracts.ts`
+   - Validate data with `src/utils/state-validation.ts`
+   - **NO UNTYPED DATA SHALL PASS**
+
+6. **THOU SHALT MAINTAIN SINGLE SOURCE OF TRUTH**
+   - Data exists in **ONE PLACE ONLY**
+   - UI state and application data are clearly separated
+   - **NO DUPLICATE DATA STORAGE**
+
+7. **THOU SHALT USE PROPER ERROR HANDLING**
+   - All storage operations must handle failures
+   - Corruption detection is **MANDATORY**
+   - **DATA INTEGRITY IS SACRED**
+
+8. **THOU SHALT FOLLOW THE UNIFIED NAMESPACE**
+   - All data uses `workspace::` namespace
+   - No fragmentation across namespaces
+   - **CONSISTENCY IS LAW**
+
+9. **THOU SHALT MONITOR DATA FLOW**
+   - Use developer tools to inspect state
+   - Performance monitoring is **REQUIRED**
+   - **VISIBILITY INTO ALL DATA OPERATIONS**
+
+10. **THOU SHALT DOCUMENT ALL DATA CHANGES**
+    - Update data contracts when modifying structure
+    - Add validation for new data types
+    - **NO UNDOCUMENTED DATA MUTATIONS**
+
+### 🚨 ENFORCEMENT
+
+**Violations of these commandments will result in:**
+- Immediate code review rejection
+- Mandatory refactoring to unified store
+- **ZERO TOLERANCE for dual store patterns**
+
+### 🎯 MIGRATION CHECKLIST
+
+**Before touching any data-related code:**
+- [ ] Am I using `useUnifiedStore()`?
+- [ ] Is my data properly typed?
+- [ ] Am I avoiding direct localStorage access?
+- [ ] Have I checked for legacy patterns?
+- [ ] Is error handling in place?
+
+**Remember: There is only ONE store. There is only ONE way.**
+
+---
 
 ## MANDATORY: HITL Validation Protocol
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import styled from 'styled-components';
 import WidgetContainer from './WidgetContainer';
-import { useDraftStore, draftActions, legacyStore } from '../../stores/draftStore';
+import { useUnifiedStore } from '../../stores/unified-store';
 import { Button } from '../ui/Button';
 import { useToast } from '../ui/Toast';
 import { theme } from '../../utils/styledHelpers';
@@ -207,9 +207,11 @@ interface DraftEntryWidgetProps {
   onRemove?: () => void;
 }
 
-export default function DraftEntryWidget({ editMode = false, onRemove }: DraftEntryWidgetProps) {
-  // State from Zustand store
-  const { selectedPlayer, settings, players, picks, dispatch } = useDraftStore();
+const DraftEntryWidget = React.memo<DraftEntryWidgetProps>(function DraftEntryWidget({ editMode = false, onRemove }) {
+  // State from unified store
+  const store = useUnifiedStore();
+  const { selectedPlayer } = store.ui;
+  const { settings, players, picks } = store;
   
   // Toast notifications
   const { showToast } = useToast();
@@ -250,7 +252,7 @@ export default function DraftEntryWidget({ editMode = false, onRemove }: DraftEn
         }
         
         if (fullPlayer) {
-          dispatch({ type: 'SET_SELECTED_PLAYER', payload: fullPlayer });
+          store.selectPlayer(fullPlayer);
           setMessage('');
         }
       }
@@ -276,7 +278,7 @@ export default function DraftEntryWidget({ editMode = false, onRemove }: DraftEn
       }
       
       if (player) {
-        dispatch({ type: 'SET_SELECTED_PLAYER', payload: player });
+        store.selectPlayer(player);
         setMessage('');
       }
     }
@@ -287,11 +289,11 @@ export default function DraftEntryWidget({ editMode = false, onRemove }: DraftEn
       window.removeEventListener('player:selected', handlePlayerSelection);
       window.removeEventListener('message', handleMessage);
     };
-  }, [players, dispatch]);
+  }, [players, store]);
   
   // Clear selected player
   const clearSelection = () => {
-    dispatch({ type: 'SET_SELECTED_PLAYER', payload: null });
+    store.selectPlayer(null);
   };
   
   // Get team owners/names
@@ -362,8 +364,8 @@ export default function DraftEntryWidget({ editMode = false, onRemove }: DraftEn
     };
     
     try {
-      // Use legacy store for consistency with existing system
-      legacyStore.dispatch({ type: 'DRAFT_PLAYER', payload: pick });
+      // Use unified store
+      store.draftPlayer(selectedPlayer, Number(teamId), draftPrice);
       
       // Add to draft log
       const teams = settings?.teams || owners.length || 12;
@@ -409,10 +411,9 @@ export default function DraftEntryWidget({ editMode = false, onRemove }: DraftEn
     };
     
     try {
-      legacyStore.dispatch({ 
-        type: 'EDIT_PICK', 
-        payload: { pickIndex: pickIndex - 1, update } // Convert to 0-based
-      });
+      // Use unified store - undraft and redraft with new data
+      store.undraftPlayer(pickIndex - 1);
+      store.draftPlayer(selectedPlayer, teamId, draftPrice);
       
       showToast(`Edited pick #${pickIndex}`, 'success', 1500);
       clearSelection();
@@ -539,4 +540,6 @@ export default function DraftEntryWidget({ editMode = false, onRemove }: DraftEn
       </DraftContainer>
     </WidgetContainer>
   );
-}
+});
+
+export default DraftEntryWidget;

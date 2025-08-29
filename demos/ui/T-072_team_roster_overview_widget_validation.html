@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-072: Team Roster Overview Widget Validation</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+            background: #1a1a2e;
+            color: #eee;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h1 {
+            margin: 0 0 10px 0;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .header p {
+            margin: 0;
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .validation-section {
+            background: #2d2d44;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            border: 1px solid #444;
+        }
+
+        .validation-section h2 {
+            color: #00d2d3;
+            margin: 0 0 20px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #00d2d3;
+            font-size: 1.5em;
+        }
+
+        .test-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .test-steps li {
+            background: #3a3a5c;
+            margin: 15px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #00d2d3;
+            position: relative;
+        }
+
+        .test-steps li::before {
+            content: "✓";
+            position: absolute;
+            left: -15px;
+            top: 20px;
+            background: #00d2d3;
+            color: #1a1a2e;
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        .step-description {
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+
+        .step-expected {
+            color: #a8e6a3;
+            font-style: italic;
+            font-size: 0.9em;
+        }
+
+        .app-link {
+            display: inline-block;
+            background: linear-gradient(45deg, #00d2d3, #667eea);
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px 10px 10px 0;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .app-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 210, 211, 0.3);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 25px 0;
+        }
+
+        .feature-card {
+            background: #3a3a5c;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #555;
+        }
+
+        .feature-card h3 {
+            color: #00d2d3;
+            margin: 0 0 15px 0;
+            font-size: 1.2em;
+        }
+
+        .feature-card p {
+            margin: 0;
+            color: #ccc;
+            line-height: 1.5;
+        }
+
+        .warning {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #ff4757;
+        }
+
+        .success {
+            background: linear-gradient(135deg, #51cf66, #40c057);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #37b24d;
+        }
+
+        code {
+            background: #000;
+            color: #00d2d3;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+
+        .mock-widget-preview {
+            background: #2d2d44;
+            border: 1px solid #555;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .mock-team-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 2px;
+            margin: 15px 0;
+        }
+
+        .mock-team {
+            background: #3a3a5c;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 10px;
+            text-align: center;
+            font-size: 0.8em;
+        }
+
+        .mock-team.user-team {
+            background: #00d2d3;
+            color: #1a1a2e;
+        }
+
+        .mock-slots {
+            display: flex;
+            justify-content: center;
+            gap: 2px;
+            margin: 8px 0;
+        }
+
+        .mock-slot {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: #666;
+        }
+
+        .mock-slot.filled {
+            background: #51cf66;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏈 T-072: Team Roster Overview Widget</h1>
+            <p>Validation Testing for Horizontal Team Overview Display</p>
+        </div>
+
+        <div class="validation-section">
+            <h2>🎯 Implementation Summary</h2>
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>Purpose</h3>
+                    <p>Provides a compact horizontal view showing roster fill status for all teams in the draft, with collapsible detailed position breakdowns.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Code Added</h3>
+                    <p>Created <code>TeamRosterOverviewWidget.tsx</code>, integrated into WidgetGrid system, configured as full-width non-resizable widget.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>Integration</h3>
+                    <p>Added to widget sizing system with full-width constraint, integrated into unified store data flow, included in layout presets.</p>
+                </div>
+            </div>
+
+            <div class="mock-widget-preview">
+                <h3>Expected Widget Appearance</h3>
+                <div style="font-size: 0.9em; color: #aaa; margin-bottom: 10px;">Team Roster Overview</div>
+                <div class="mock-team-grid">
+                    <div class="mock-team user-team">
+                        <div><strong>Team 1</strong></div>
+                        <div>User Name</div>
+                        <div style="font-size: 0.7em; margin: 5px 0;">8/15 (53%)</div>
+                        <div class="mock-slots">
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                        </div>
+                    </div>
+                    <div class="mock-team">
+                        <div><strong>Team 2</strong></div>
+                        <div>Opponent</div>
+                        <div style="font-size: 0.7em; margin: 5px 0;">12/15 (80%)</div>
+                        <div class="mock-slots">
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                        </div>
+                    </div>
+                    <div class="mock-team">
+                        <div><strong>Team 3</strong></div>
+                        <div>Another User</div>
+                        <div style="font-size: 0.7em; margin: 5px 0;">5/15 (33%)</div>
+                        <div class="mock-slots">
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                            <div class="mock-slot"></div>
+                        </div>
+                    </div>
+                    <div class="mock-team">
+                        <div><strong>Team 4</strong></div>
+                        <div>League Mate</div>
+                        <div style="font-size: 0.7em; margin: 5px 0;">15/15 (100%)</div>
+                        <div class="mock-slots">
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                            <div class="mock-slot filled"></div>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.7em; color: #aaa; text-align: center; margin-top: 10px;">
+                    Click "Details ▼" on any team to expand position-specific breakdowns
+                </div>
+            </div>
+        </div>
+
+        <div class="validation-section">
+            <h2>🚀 Setup Instructions</h2>
+            <div class="warning">
+                <strong>⚠️ Prerequisites:</strong> Ensure you have league settings configured with team owners and roster requirements in the app.
+            </div>
+            
+            <ol class="test-steps">
+                <li>
+                    <div class="step-title">Start Development Server</div>
+                    <div class="step-description">Open terminal and run: <code>npm run dev</code></div>
+                    <div class="step-expected">→ Expected: Dev server starts on http://localhost:5175 (or next available port)</div>
+                </li>
+                <li>
+                    <div class="step-title">Access Main Application</div>
+                    <div class="step-description">Navigate to the main dashboard</div>
+                    <div class="step-expected">→ Expected: Dashboard loads with existing widgets</div>
+                </li>
+            </ol>
+
+            <a href="http://localhost:5175" class="app-link" target="_blank">🎯 Open FFB Dashboard</a>
+        </div>
+
+        <div class="validation-section">
+            <h2>✅ Validation Test Steps</h2>
+            
+            <ol class="test-steps">
+                <li>
+                    <div class="step-title">Enable Edit Mode</div>
+                    <div class="step-description">Click "Edit Layout" button in the left sidebar</div>
+                    <div class="step-expected">→ Expected: Grid enters edit mode, widgets show drag handles and remove buttons</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Add Team Overview Widget</div>
+                    <div class="step-description">In edit mode, look for "Add widgets" section and click "+ Team Overview"</div>
+                    <div class="step-expected">→ Expected: New full-width widget appears at bottom of layout</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Verify Full-Width Behavior</div>
+                    <div class="step-description">Check that the Team Overview widget spans the full width of the grid</div>
+                    <div class="step-expected">→ Expected: Widget spans entire grid width (24/20/16 columns depending on screen size)</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Test Movement Capability</div>
+                    <div class="step-description">Try to drag the Team Overview widget to a different vertical position</div>
+                    <div class="step-expected">→ Expected: Widget can be moved vertically but maintains full width</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Test Height Resizing</div>
+                    <div class="step-description">Try to resize the widget's height by dragging the bottom edge</div>
+                    <div class="step-expected">→ Expected: Widget height can be adjusted but width remains full grid width</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Exit Edit Mode</div>
+                    <div class="step-description">Click "Exit Edit Mode" button</div>
+                    <div class="step-expected">→ Expected: Layout locks, Team Overview widget displays team data</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Verify Team Data Display</div>
+                    <div class="step-description">Observe the horizontal team columns showing roster status</div>
+                    <div class="step-expected">→ Expected: Each team shows name, owner, fill percentage, and slot indicators</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Test Expansion Toggle</div>
+                    <div class="step-description">Click "Details ▼" button on any team column</div>
+                    <div class="step-expected">→ Expected: Column expands to show position-by-position breakdown (QB, RB, WR, etc.)</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Test Collapse Toggle</div>
+                    <div class="step-description">Click "Details ▲" button on the expanded team column</div>
+                    <div class="step-expected">→ Expected: Column collapses back to compact view with just slot indicators</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">User Team Highlighting</div>
+                    <div class="step-description">Locate your team in the overview (should have accent color)</div>
+                    <div class="step-expected">→ Expected: User's team stands out visually with accent background color</div>
+                </li>
+                
+                <li>
+                    <div class="step-title">Test Responsive Behavior</div>
+                    <div class="step-description">Resize browser window to test horizontal scrolling</div>
+                    <div class="step-expected">→ Expected: Widget maintains all teams in view with horizontal scroll if needed</div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="validation-section">
+            <h2>🎯 Pass Criteria</h2>
+            
+            <div class="success">
+                <strong>✅ Core Functionality</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Widget spans full grid width (24/20/16 columns by breakpoint)</li>
+                    <li>Widget can be moved vertically and resized in height</li>
+                    <li>Widget cannot be made narrower than full width</li>
+                    <li>All teams display horizontally with roster fill status</li>
+                    <li>User team is visually highlighted</li>
+                    <li>Details toggle works for expanding/collapsing position breakdowns</li>
+                </ul>
+            </div>
+
+            <div class="success">
+                <strong>✅ Visual Design</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Consistent with existing widget styling</li>
+                    <li>Compact team columns fit multiple teams on screen</li>
+                    <li>Slot indicators clearly show filled vs empty positions</li>
+                    <li>Typography and spacing match app design system</li>
+                </ul>
+            </div>
+
+            <div class="success">
+                <strong>✅ Integration</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>Widget integrates seamlessly into grid layout system</li>
+                    <li>Data updates reflect real roster changes</li>
+                    <li>Widget can be added/removed through edit mode</li>
+                    <li>Layout constraints are properly enforced</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="validation-section">
+            <h2>📁 Files Changed</h2>
+            <ul style="list-style-type: none; padding: 0;">
+                <li style="margin: 8px 0; padding: 8px; background: #3a3a5c; border-radius: 4px;">
+                    <code>src/components/widgets/TeamRosterOverviewWidget.tsx</code> - New widget component with collapsible team overview
+                </li>
+                <li style="margin: 8px 0; padding: 8px; background: #3a3a5c; border-radius: 4px;">
+                    <code>src/utils/widgetSizing.ts</code> - Added widget type and full-width sizing configuration
+                </li>
+                <li style="margin: 8px 0; padding: 8px; background: #3a3a5c; border-radius: 4px;">
+                    <code>src/components/widgets/WidgetGrid.tsx</code> - Integrated new widget into grid system
+                </li>
+                <li style="margin: 8px 0; padding: 8px; background: #3a3a5c; border-radius: 4px;">
+                    <code>demos/ui/T-072_team_roster_overview_widget_validation.html</code> - This validation page
+                </li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>🔍 Testing Notes:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>Widget requires league settings with configured teams to display data</li>
+                <li>Draft picks must exist for roster fill percentages to be meaningful</li>
+                <li>Widget is designed for active nomination layouts but works in any context</li>
+                <li>Static positioning prevents accidental layout disruption during drafts</li>
+            </ul>
+        </div>
+
+        <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #444; text-align: center; color: #888; font-size: 0.9em;">
+            <p>🔄 <strong>Please confirm validation results before proceeding.</strong></p>
+        </div>
+    </div>
+</body>
+</html>

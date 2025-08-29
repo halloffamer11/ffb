@@ -3,10 +3,11 @@ import styled from 'styled-components';
 import { theme } from "../../utils/styledHelpers";
 import { useLayoutPresets } from '../../hooks/useLayoutPresets';
 import { presetMetadata } from '../../utils/layoutPresets';
+import { usePreset } from '../../stores/PresetContext';
 
 const RailContainer = styled.aside<{ $collapsed: boolean }>`
   width: ${props => props.$collapsed ? theme('layout.leftRailWidth.collapsed') : theme('layout.leftRailWidth.expanded')};
-  background: ${props => theme('gradients.widget')};
+  background: ${props => theme('colors.surface1')};
   border-right: 1px solid ${props => theme('colors.border1')};
   transition: width ${props => theme('transitions.layout')}, box-shadow ${props => theme('transitions.fast')};
   overflow: hidden;
@@ -35,7 +36,7 @@ const RailHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: ${props => theme('gradients.subtle')};
+  background: ${props => theme('colors.surface1')};
   position: relative;
   
   /* Professional header shadow */
@@ -315,6 +316,10 @@ export default function LeftRail({ collapsed, onToggleCollapsed }: LeftRailProps
     isPresetActive
   } = useLayoutPresets();
 
+  // Get layout controls from context
+  const { getLayoutControls } = usePreset();
+  const layoutControls = getLayoutControls();
+
   const handlePresetClick = (presetId: string) => {
     console.log(`🎯 LeftRail: Preset clicked: ${presetId}`);
     if (presetId === 'pre-draft' || presetId === 'nomination' || presetId === 'player-analytics') {
@@ -329,8 +334,8 @@ export default function LeftRail({ collapsed, onToggleCollapsed }: LeftRailProps
     <RailContainer $collapsed={collapsed}>
       <RailHeader>
         {!collapsed && <RailTitle>Navigation</RailTitle>}
-        <CollapseButton onClick={onToggleCollapsed}>
-          {collapsed ? '→' : '←'}
+        <CollapseButton onClick={onToggleCollapsed} title={`${collapsed ? 'Expand' : 'Collapse'} Navigation (N)`}>
+          {collapsed ? '→ N' : '← N'}
         </CollapseButton>
       </RailHeader>
       
@@ -377,29 +382,40 @@ export default function LeftRail({ collapsed, onToggleCollapsed }: LeftRailProps
         </Section>
         
         <Section>
-          {!collapsed && <SectionHeader>Widget Links</SectionHeader>}
-          {!collapsed ? (
-            <div>
-              <LinkGroup>
-                <LinkDot color="var(--accent)" $active={true} />
-                <span style={{ fontSize: '12px', color: 'var(--text-2)' }}>Group A</span>
-              </LinkGroup>
-              <LinkGroup>
-                <LinkDot color="#3ddc84" $active={false} />
-                <span style={{ fontSize: '12px', color: 'var(--text-2)' }}>Group B</span>
-              </LinkGroup>
-              <LinkGroup>
-                <LinkDot color="#ff5a5f" $active={false} />
-                <span style={{ fontSize: '12px', color: 'var(--text-2)' }}>Group C</span>
-              </LinkGroup>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-              <LinkDot color="var(--accent)" $active={true} />
-              <LinkDot color="#3ddc84" $active={false} />
-              <LinkDot color="#ff5a5f" $active={false} />
-            </div>
-          )}
+          {!collapsed && <SectionHeader>Layout Controls</SectionHeader>}
+          
+          <MenuItem 
+            $collapsed={collapsed} 
+            $active={layoutControls?.editMode || false}
+            onClick={layoutControls?.onToggleEditMode}
+            title={collapsed ? `${layoutControls?.editMode ? 'Exit Edit Mode' : 'Edit Layout'} (E)` : undefined}
+          >
+            <MenuIcon>{layoutControls?.editMode ? '🔒' : '✏️'}</MenuIcon>
+            <MenuText $collapsed={collapsed}>
+              {layoutControls?.editMode ? 'Exit Edit Mode' : 'Edit Layout'}
+            </MenuText>
+            {!collapsed && (
+              <PresetShortcut $collapsed={collapsed}>E</PresetShortcut>
+            )}
+          </MenuItem>
+          
+          <MenuItem 
+            $collapsed={collapsed}
+            onClick={layoutControls?.onSaveLayout}
+            title={collapsed ? `Save to ${currentPreset.name}` : undefined}
+          >
+            <MenuIcon>💾</MenuIcon>
+            <MenuText $collapsed={collapsed}>Save to {currentPreset.name}</MenuText>
+          </MenuItem>
+          
+          <MenuItem 
+            $collapsed={collapsed}
+            onClick={layoutControls?.onResetLayout}
+            title={collapsed ? 'Reset to Default' : undefined}
+          >
+            <MenuIcon>🔄</MenuIcon>
+            <MenuText $collapsed={collapsed}>Reset to Default</MenuText>
+          </MenuItem>
         </Section>
       </RailContent>
     </RailContainer>

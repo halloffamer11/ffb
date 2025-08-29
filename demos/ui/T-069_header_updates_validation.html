@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-069: Header Updates & Developer Page Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .validation-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .test-step {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .test-expected {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .test-action {
+            color: #007bff;
+            font-weight: 600;
+        }
+        .file-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .feature-demo {
+            background: #e8f4f8;
+            border: 1px solid #b8e6ff;
+            color: #0066cc;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .success-box {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+        h3 { color: #3498db; }
+        code { 
+            background: #f1f3f4; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-family: 'Monaco', monospace; 
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <h1>🛠️ HITL Validation Required for T-069: Header Updates & Developer Page</h1>
+        <p><span class="status-indicator status-pending">Validation Pending</span></p>
+    </div>
+
+    <div class="validation-container">
+        <h2>📋 Implementation Summary</h2>
+        <p><strong>Purpose:</strong> Add Developer page with debugging tools and remove LIVE status indicator from header</p>
+        <p><strong>Code Added:</strong> Complete Developer page with test data management, draft simulation, and data inspection tools</p>
+        <p><strong>Integration:</strong> Added route, navigation button, and global search entry for Developer tools</p>
+    </div>
+
+    <div class="validation-container">
+        <h2>🧪 Validation Instructions</h2>
+        
+        <h3>1. Setup</h3>
+        <div class="test-step">
+            <div class="test-action">Action:</div>
+            <p>Ensure dev server is running: <code>npm run dev</code></p>
+            <p>Navigate to: <code>http://localhost:5173</code></p>
+        </div>
+
+        <div class="feature-demo">
+            <h4>🎯 Header Changes</h4>
+            <p><strong>Removed:</strong> LIVE status indicator (no more green dot and "LIVE" text)</p>
+            <p><strong>Added:</strong> Developer Tools button (🔧 wrench icon)</p>
+        </div>
+
+        <h3>2. Test Header Changes</h3>
+        <div class="test-step">
+            <div class="test-action">Step 1:</div> Examine the top header bar
+            <div class="test-expected">Expected:</div> LIVE status indicator is completely removed (no green dot, no "LIVE" text)
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 2:</div> Locate the Developer Tools button (🔧 wrench icon)
+            <div class="test-expected">Expected:</div> New button appears between Data Import (📊) and Notifications (🔔)
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 3:</div> Hover over the Developer button
+            <div class="test-expected">Expected:</div> Tooltip shows "Developer Tools"
+        </div>
+
+        <h3>3. Test Navigation to Developer Page</h3>
+        <div class="test-step">
+            <div class="test-action">Step 4:</div> Click the Developer Tools button (🔧), then test draft simulation
+            <div class="test-expected">Expected:</div> Developer page loads; "Simulate Draft" creates picks visible in "View Picks"; no console warnings
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 5:</div> Test the "Back to Dashboard" button
+            <div class="test-expected">Expected:</div> Returns to main dashboard
+        </div>
+
+        <h3>4. Test Global Search Integration</h3>
+        <div class="test-step">
+            <div class="test-action">Step 6:</div> In global search, type "developer"
+            <div class="test-expected">Expected:</div> Shows "Developer Tools" in Pages section with "Debug tools and test data" subtitle
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 7:</div> Click the Developer Tools result in global search
+            <div class="test-expected">Expected:</div> Navigates to Developer page
+        </div>
+
+        <h3>5. Test Developer Page Functionality</h3>
+        <div class="test-step">
+            <div class="test-action">Step 8:</div> On Developer page, click "Load Test Data"
+            <div class="test-expected">Expected:</div> 
+            - Success message appears
+            - Statistics show players loaded count
+            - Green status banner confirms data loaded
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 9:</div> Click "Simulate Draft"
+            <div class="test-expected">Expected:</div>
+            - Success message shows number of players drafted
+            - Picks count increases in statistics
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 10:</div> Click "View Players (10)" button
+            <div class="test-expected">Expected:</div>
+            - Data Output section appears with JSON data
+            - Shows player information in formatted view
+            - Close button works to hide data
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 11:</div> Test other View buttons (Picks, Settings, Full State)
+            <div class="test-expected">Expected:</div> Each shows relevant application data in JSON format
+        </div>
+
+        <h3>6. Test Clear Data Functionality</h3>
+        <div class="test-step">
+            <div class="test-action">Step 12:</div> Click "Clear All Data" (use caution!)
+            <div class="test-expected">Expected:</div>
+            - Confirmation dialog appears
+            - If confirmed, all data is cleared
+            - Statistics reset to zero
+        </div>
+
+        <h3>7. Pass Criteria</h3>
+        <div class="test-step">
+            ✅ LIVE status indicator completely removed from header<br>
+            ✅ Developer Tools button (🔧) appears in header<br>
+            ✅ Developer button navigates to professional Developer page<br>
+            ✅ Global search finds "Developer Tools"<br>
+            ✅ "Load Test Data" successfully imports demo players<br>
+            ✅ "Simulate Draft" creates test draft picks<br>
+            ✅ Data viewing tools display application state correctly<br>
+            ✅ "Clear All Data" resets application state<br>
+            ✅ Back navigation works properly<br>
+            ✅ All developer tools are functional and useful for debugging
+        </div>
+    </div>
+
+    <div class="validation-container">
+        <h2>📁 Files Changed</h2>
+        <div class="file-list">
+<strong>New Files:</strong>
+• src/pages/DeveloperPage.tsx - Complete developer tools page with test data management and debugging features
+
+<strong>Modified Files:</strong>
+• src/App.tsx - Added /developer route
+• src/components/layout/TopAppBar.tsx - Removed LIVE indicator, added Developer button (🔧)
+• src/hooks/useGlobalSearch.ts - Added Developer Tools to global search index
+
+<strong>Developer Features:</strong>
+• Load Test Data - Import demo CSV players for testing
+• Simulate Draft - Create test draft picks automatically  
+• View Data - Inspect players, picks, settings, and full application state
+• Clear Data - Reset all application data (with confirmation)
+• Statistics - Show current data counts
+• Professional UI - Styled consistently with main application
+        </div>
+    </div>
+
+    <div class="success-box">
+        <h4>🎉 Implementation Complete!</h4>
+        <p>This completes all the requested React UI improvements from sections 1 and 2:</p>
+        <ul>
+            <li>✅ Keyboard shortcuts for navigation (n) and edit mode (e)</li>
+            <li>✅ Global Spotlight-style search with player focus synchronization</li>
+            <li>✅ Position filter checkboxes with ALL toggle logic</li>
+            <li>✅ Developer page with comprehensive debugging tools</li>
+            <li>✅ Removed LIVE status indicator as requested</li>
+        </ul>
+    </div>
+
+    <div class="warning-box">
+        <strong>⚠️ Important Testing Notes:</strong>
+        <ul>
+            <li>Test the CSV data loading - it reads from /demos/data/top300_2024.csv</li>
+            <li>Verify the Developer page styling matches the main application theme</li>
+            <li>Test all data viewing functions to ensure JSON displays correctly</li>
+            <li>Be careful with "Clear All Data" - it will reset everything</li>
+            <li>Ensure the back navigation preserves any data you've loaded</li>
+            <li>Test that draft simulation updates the main dashboard widgets</li>
+        </ul>
+    </div>
+
+    <div class="validation-container">
+        <h2>✋ Final Validation Checkpoint</h2>
+        <p><strong>Please test all Developer page functionality and header changes above.</strong></p>
+        <p>Reply with: <strong>"HITL validation passed"</strong> to confirm the implementation is complete</p>
+    </div>
+</body>
+</html>

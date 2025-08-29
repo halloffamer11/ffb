@@ -4,7 +4,7 @@ import { theme } from '../utils/styledHelpers';
 import { Button } from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { createStorageAdapter } from '../adapters/storage';
-import { useDraftStore } from '../stores/draftStore';
+import { useUnifiedStore } from '../stores/unified-store';
 
 const PageContainer = styled.div`
   height: 100vh;
@@ -272,7 +272,7 @@ export default function DataManagementPage() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [status, setStatus] = useState<{type: 'success' | 'error' | 'warning', message: string} | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const draftStore = useDraftStore();
+  const store = useUnifiedStore();
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -431,26 +431,32 @@ export default function DataManagementPage() {
         return player;
       });
       
-      // Use the draft store to update players properly
-      // This will update the legacy store which will sync to React components
-      draftStore.dispatch({
-        type: 'IMPORT_PLAYERS',
-        payload: players
-      });
-      
-      // Trigger recalculation for VBD calculation
-      try {
-        const { recalcAll } = await import('../core/recalculation');
-        await recalcAll();
-        console.log('✅ VBD recalculation completed after import');
-      } catch (error) {
-        console.warn('VBD recalculation failed:', error);
-      }
+      // Use the unified store to import players
+      store.importPlayers(players);
       
       setStatus({ 
         type: 'success', 
-        message: `Successfully imported ${players.length} players! VBD calculations completed.` 
+        message: `Successfully imported ${players.length} players! Calculating VBD values...` 
       });
+      
+      // Trigger recalculation for VBD calculation in background (non-blocking)
+      setTimeout(async () => {
+        try {
+          const { recalcAll } = await import('../core/recalculation');
+          await recalcAll();
+          console.log('✅ VBD recalculation completed after import');
+          setStatus({ 
+            type: 'success', 
+            message: `Successfully imported ${players.length} players! VBD calculations completed.` 
+          });
+        } catch (error) {
+          console.warn('VBD recalculation failed:', error);
+          setStatus({ 
+            type: 'warning', 
+            message: `Imported ${players.length} players, but VBD calculation failed.` 
+          });
+        }
+      }, 100);
       
       console.log(`✅ Data Import: Imported ${players.length} players via draft store`);
       

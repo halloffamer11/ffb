@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-073: League Settings Final Tweaks - HITL Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #0f0f0f;
+            color: #e1e1e1;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            color: #4ade80;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.2em;
+        }
+        h2 {
+            color: #60a5fa;
+            border-bottom: 2px solid #374151;
+            padding-bottom: 10px;
+            margin: 30px 0 20px 0;
+        }
+        h3 {
+            color: #fbbf24;
+            margin: 20px 0 10px 0;
+        }
+        .section {
+            background: #262626;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #4ade80;
+        }
+        .test-steps {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        .test-steps ol {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .test-steps li {
+            margin: 8px 0;
+            color: #cbd5e1;
+        }
+        .expected {
+            background: #065f46;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 10px 0;
+            border-left: 4px solid #10b981;
+        }
+        .expected h4 {
+            margin: 0 0 10px 0;
+            color: #86efac;
+        }
+        .warning {
+            background: #92400e;
+            color: #fcd34d;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #f59e0b;
+        }
+        .info {
+            background: #1e3a8a;
+            color: #93c5fd;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+            border-left: 4px solid #3b82f6;
+        }
+        .validation-checklist {
+            background: #0f172a;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 2px solid #1e40af;
+        }
+        .validation-checklist h3 {
+            color: #60a5fa;
+            margin-top: 0;
+        }
+        .validation-checklist ul {
+            list-style: none;
+            padding: 0;
+        }
+        .validation-checklist li {
+            margin: 10px 0;
+            padding: 8px;
+            background: #1e293b;
+            border-radius: 4px;
+            border-left: 3px solid #3b82f6;
+        }
+        .validation-checklist li::before {
+            content: "□ ";
+            font-size: 1.2em;
+            margin-right: 8px;
+            color: #60a5fa;
+        }
+        .files-changed {
+            background: #1f2937;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .files-changed h4 {
+            color: #f3f4f6;
+            margin: 0 0 10px 0;
+        }
+        .files-changed ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .files-changed li {
+            color: #9ca3af;
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 T-073: League Settings Final Tweaks - HITL Validation</h1>
+
+        <div class="section">
+            <h2>📋 Implementation Summary</h2>
+            <p><strong>Purpose:</strong> Final improvements to League Settings page focusing on user team persistence, editable scoring values, draft reset functionality, and compact layout design.</p>
+            
+            <p><strong>Enhancements Added:</strong></p>
+            <ul>
+                <li><strong>User Team Selection Persistence:</strong> Fixed user team selection being lost during drag-and-drop team reordering</li>
+                <li><strong>Editable Scoring Values:</strong> Made all scoring presets editable with automatic switch to custom when values are modified</li>
+                <li><strong>Reset Draft Button:</strong> Added draft reset functionality with undo capability to clear picks while preserving settings</li>
+                <li><strong>Compact Layout:</strong> Redesigned page layout with left column (basic settings + roster) and right column (teams) for better space utilization</li>
+            </ul>
+            
+            <p><strong>Integration:</strong> All functionality continues to use the unified store with enhanced user experience and better data persistence.</p>
+        </div>
+
+        <div class="section">
+            <h2>🧪 Validation Instructions</h2>
+            
+            <h3>Setup Steps</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Start the development server: <code>npm run dev</code></li>
+                    <li>Open http://localhost:5173</li>
+                    <li>Navigate to League Settings page (gear icon or /league-settings)</li>
+                    <li>Ensure player data is loaded (via Data Management if needed)</li>
+                </ol>
+            </div>
+
+            <h3>Test 1: User Team Selection Persistence During Drag</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Select a team (e.g., Team 3) using the radio button</li>
+                    <li>Verify the selected team has visual highlighting</li>
+                    <li>Drag the selected team to a different position in the draft order</li>
+                    <li>Verify the team selection persists after the drag operation</li>
+                    <li>Check that the selected team maintains its visual highlighting</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>Selected team remains selected even after being dragged to new position</li>
+                    <li>Visual highlighting follows the team to its new position</li>
+                    <li>Radio button selection state is maintained correctly</li>
+                    <li>No loss of user team association during reordering</li>
+                </ul>
+            </div>
+
+            <h3>Test 2: Editable Scoring Values with Auto-Switch to Custom</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Set scoring format to "Standard" (receptions should be 0)</li>
+                    <li>Click the expand arrow to show scoring values</li>
+                    <li>Modify the "Receptions" value from 0 to 0.5</li>
+                    <li>Verify that the scoring format automatically switches to "Custom"</li>
+                    <li>Change to "PPR" preset and verify receptions become 1</li>
+                    <li>Modify "Pass TDs" from 4 to 6</li>
+                    <li>Verify automatic switch to Custom preset again</li>
+                    <li>Collapse and expand the scoring section to verify values persist</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>All scoring values are editable regardless of preset</li>
+                    <li>Modifying any value automatically switches preset to "Custom"</li>
+                    <li>Preset changes update values, but custom modifications are preserved</li>
+                    <li>Scoring section collapses/expands smoothly with current preset shown</li>
+                </ul>
+            </div>
+
+            <h3>Test 3: Draft Reset Button with Undo Functionality</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Add some keepers to different teams</li>
+                    <li>Click "Start Draft" to lock settings</li>
+                    <li>Verify all settings become locked and "Reset Draft" button appears</li>
+                    <li>Click "Reset Draft" and confirm the warning dialog</li>
+                    <li>Verify draft is unlocked and keepers/settings remain intact</li>
+                    <li>Check that "Undo Reset" button appears if undo is available</li>
+                    <li>Click "Undo Reset" to restore the draft started state</li>
+                    <li>Verify settings become locked again</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>Reset Draft button only appears when draft is started</li>
+                    <li>Reset clears draft state but preserves league settings and keepers</li>
+                    <li>Settings become editable again after reset</li>
+                    <li>Undo button appears when undo is available</li>
+                    <li>Undo restores exact previous state including draft lock</li>
+                    <li>Success messages appear for both reset and undo operations</li>
+                </ul>
+            </div>
+
+            <h3>Test 4: Compact Layout Design</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Observe the overall page layout structure</li>
+                    <li>Verify basic settings and roster configuration are in left column</li>
+                    <li>Verify teams management is in the right column</li>
+                    <li>Check that keepers system spans full width below the columns</li>
+                    <li>Resize browser window to test responsiveness</li>
+                    <li>Verify no excessive scrolling is needed to access all sections</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>Two-column layout with left (settings + roster) and right (teams)</li>
+                    <li>Keepers section spans full width below columns</li>
+                    <li>More compact design reduces vertical scrolling</li>
+                    <li>Layout remains functional on smaller screens</li>
+                    <li>Visual balance between sections is maintained</li>
+                </ul>
+            </div>
+
+            <h3>Test 5: Overall Integration and Data Persistence</h3>
+            <div class="test-steps">
+                <ol>
+                    <li>Make several changes using all the new features</li>
+                    <li>Select a user team, modify scoring, add keepers</li>
+                    <li>Start draft, then reset it, then undo the reset</li>
+                    <li>Refresh the page or navigate away and back</li>
+                    <li>Verify all changes and states persist correctly</li>
+                </ol>
+            </div>
+            <div class="expected">
+                <h4>Expected Results:</h4>
+                <ul>
+                    <li>All feature interactions work smoothly together</li>
+                    <li>Data persistence works correctly across page reloads</li>
+                    <li>No conflicts between different functionalities</li>
+                    <li>Unified store maintains data integrity</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="validation-checklist">
+            <h3>✅ Pass Criteria Checklist</h3>
+            <ul>
+                <li>User team selection persists through drag operations</li>
+                <li>Scoring values are editable for all presets with auto-switch to custom</li>
+                <li>Scoring section collapses/expands correctly showing current preset</li>
+                <li>Reset Draft button works with proper confirmation dialog</li>
+                <li>Draft reset clears draft data while preserving settings</li>
+                <li>Undo button appears and restores previous state correctly</li>
+                <li>New compact layout improves space utilization</li>
+                <li>Left column contains basic settings + roster configuration</li>
+                <li>Right column contains teams management</li>
+                <li>Keepers system spans full width below columns</li>
+                <li>All data persists correctly across page refreshes</li>
+                <li>No console errors or TypeScript warnings</li>
+                <li>UI remains responsive and accessible</li>
+            </ul>
+        </div>
+
+        <div class="files-changed">
+            <h4>📁 Files Modified:</h4>
+            <ul>
+                <li><code>src/stores/unified-store.ts</code> - Added resetDraft() action with undo support</li>
+                <li><code>src/pages/LeagueSettingsPage.tsx</code> - Enhanced with team selection persistence, editable scoring, reset functionality, and compact layout</li>
+                <li><code>demos/ui/T-073_league_settings_final_tweaks_validation.html</code> - This validation page</li>
+            </ul>
+        </div>
+
+        <div class="info">
+            <strong>📝 Note:</strong> These final tweaks complete the League Settings enhancement with improved user experience, better data persistence, and more efficient layout design. All functionality maintains compatibility with the unified data architecture.
+        </div>
+
+        <p style="text-align: center; margin-top: 40px; color: #6b7280;">
+            <strong>Please confirm validation results before proceeding.</strong>
+        </p>
+    </div>
+</body>
+</html>

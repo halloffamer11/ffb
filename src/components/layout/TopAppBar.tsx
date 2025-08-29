@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 import { theme } from '../../utils/styledHelpers';
+import { useGlobalSearch } from '../../hooks/useGlobalSearch';
+import GlobalSearchOverlay from '../ui/GlobalSearchOverlay';
 
 const AppBar = styled.header`
   height: ${props => theme('layout.headerHeight')};
-  background: ${props => theme('gradients.widget')};
+  background: ${props => theme('colors.surface1')};
   border-bottom: 1px solid ${props => theme('colors.border1')};
   backdrop-filter: blur(8px);
   display: flex;
@@ -64,6 +66,7 @@ const CenterSection = styled.div`
   justify-content: center;
   max-width: 600px;
   margin: 0 auto;
+  position: relative;
 `;
 
 const SearchInput = styled.input`
@@ -194,6 +197,48 @@ const IconButton = styled.button`
 
 export default function TopAppBar() {
   const navigate = useNavigate();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  
+  const {
+    searchTerm,
+    isSearchOpen,
+    searchCategories,
+    handleSearch,
+    clearSearch,
+    selectResult,
+    setIsSearchOpen
+  } = useGlobalSearch();
+
+  // Close search when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+        setIsFocused(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [setIsSearchOpen]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleSearch(e.target.value);
+  };
+
+  const handleInputFocus = () => {
+    setIsFocused(true);
+    if (searchTerm.length >= 2) {
+      setIsSearchOpen(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay to allow clicks on search results
+    setTimeout(() => setIsFocused(false), 200);
+  };
 
   return (
     <AppBar>
@@ -201,18 +246,28 @@ export default function TopAppBar() {
         <Logo>FFB</Logo>
       </LeftSection>
       
-      <CenterSection>
+      <CenterSection ref={searchContainerRef}>
         <SearchInput 
+          ref={searchInputRef}
           type="text"
-          placeholder="Search players, teams, or strategies..."
+          placeholder="Search players, pages, or filters..."
+          value={searchTerm}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+        />
+        <GlobalSearchOverlay
+          isOpen={isSearchOpen && isFocused}
+          categories={searchCategories}
+          onSelectResult={(result, nav) => selectResult(result, nav || navigate)}
+          onClose={clearSearch}
         />
       </CenterSection>
       
       <RightSection>
-        <StatusIndicator>
-          <LiveDot $active={true} />
-          LIVE
-        </StatusIndicator>
+        <IconButton title="Notifications" aria-label="Notifications">
+          🔔
+        </IconButton>
         
         <IconButton 
           title="Import Data" 
@@ -222,13 +277,9 @@ export default function TopAppBar() {
           📊
         </IconButton>
         
-        <IconButton title="Notifications" aria-label="Notifications">
-          🔔
-        </IconButton>
-        
         <IconButton 
-          title="Settings" 
-          aria-label="Settings"
+          title="League Settings" 
+          aria-label="League Settings"
           onClick={() => navigate('/settings')}
         >
           ⚙️
@@ -236,6 +287,14 @@ export default function TopAppBar() {
         
         <IconButton title="User Account" aria-label="User Account">
           👤
+        </IconButton>
+        
+        <IconButton 
+          title="Developer Options" 
+          aria-label="Developer Options"
+          onClick={() => navigate('/developer')}
+        >
+          🔧
         </IconButton>
       </RightSection>
     </AppBar>

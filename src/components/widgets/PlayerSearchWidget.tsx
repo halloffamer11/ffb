@@ -8,7 +8,7 @@ import {
   createColumnHelper,
   ColumnDef,
 } from '@tanstack/react-table';
-import { useDraftStore, useSelectedPlayer } from '../../stores/draftStore';
+import { useUnifiedStore } from '../../stores/unified-store';
 import { FuzzySearch } from '../../core/search';
 import WidgetContainer from './WidgetContainer';
 import { 
@@ -26,6 +26,7 @@ const SearchContainer = styled.div`
   flex-direction: column;
   background: var(--surface-1);
   font-family: ${props => theme('typography.fontFamily.base')};
+  color: ${props => theme('colors.text1')};
   
   /* Professional cell styling */
   .team-cell {
@@ -60,7 +61,7 @@ const SearchInput = styled.input`
   transition: all 0.15s ease;
   
   &::placeholder {
-    color: var(--text-muted);
+    color: ${props => theme('colors.text2')};
     font-weight: 400;
   }
   
@@ -106,8 +107,77 @@ const CheckboxContainer = styled.label`
   }
 `;
 
+const PositionFiltersContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: var(--surface-2);
+  border-radius: 6px;
+  border: 1px solid var(--border-1);
+`;
+
+const PositionFilterGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const ToggleSwitch = styled.label<{ $checked?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: ${props => props.$checked ? 'var(--accent)' : 'var(--text-2)'};
+  
+  input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--accent);
+  }
+  
+  &:hover {
+    color: var(--text-1);
+  }
+`;
+
+const PositionCheckbox = styled.label<{ $checked?: boolean; $allActive?: boolean }>`
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  font-size: 11px;
+  color: ${props => props.$allActive ? 'var(--text-muted)' : 'var(--text-2)'};
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+  opacity: ${props => props.$allActive ? '0.6' : '1'};
+  
+  input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    accent-color: var(--accent);
+  }
+  
+  &:hover {
+    color: var(--text-1);
+    background: var(--surface-3);
+    opacity: 1;
+  }
+  
+  ${props => props.$checked && !props.$allActive && `
+    background: var(--accent-alpha);
+    color: var(--accent);
+    font-weight: 500;
+  `}
+`;
+
 const ResultCount = styled.span`
-  color: var(--text-muted);
+  color: ${props => theme('colors.text2')};
   font-size: 11px;
   margin-left: auto;
 `;
@@ -153,7 +223,7 @@ const Table = styled.table`
 `;
 
 const TableHeader = styled.thead`
-  background: ${props => theme('gradients.widget')};
+  background: ${props => theme('colors.surface1')};
   position: sticky;
   top: 0;
   z-index: 2;
@@ -174,7 +244,7 @@ const HeaderCell = styled.th`
   text-align: left;
   padding: ${props => theme('spacing.sm')} ${props => theme('spacing.md')};
   font-weight: ${props => theme('typography.fontWeight.semibold')};
-  color: ${props => theme('colors.text2')};
+  color: ${props => theme('colors.text1')};
   font-size: ${props => theme('typography.fontSize.xs')};
   text-transform: uppercase;
   letter-spacing: ${props => theme('typography.letterSpacing.wider')};
@@ -362,7 +432,7 @@ const VBDValue = styled.span<{ $value: number }>`
 const EmptyState = styled.div`
   padding: ${props => theme('spacing')['5xl']} ${props => theme('spacing')['2xl']};
   text-align: center;
-  color: ${props => theme('colors.textMuted')};
+  color: ${props => theme('colors.text2')};
   font-size: ${props => theme('typography.fontSize.base')};
   
   .empty-icon {
@@ -374,11 +444,13 @@ const EmptyState = styled.div`
   .empty-title {
     font-weight: ${props => theme('typography.fontWeight.medium')};
     margin-bottom: ${props => theme('spacing.sm')};
+    color: ${props => theme('colors.text1')};
   }
   
   .empty-subtitle {
     font-size: ${props => theme('typography.fontSize.sm')};
-    opacity: 0.7;
+    opacity: 0.85;
+    color: ${props => theme('colors.text2')};
   }
 `;
 
@@ -458,15 +530,17 @@ interface PlayerSearchWidgetProps {
 // Memoized PlayerSearchWidget with performance optimizations
 const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSearchWidgetProps) => {
   // Store connections
-  const { players, dispatch } = useDraftStore();
-  const selectedPlayer = useSelectedPlayer();
+  const store = useUnifiedStore();
+  const { players } = store;
+  const selectedPlayer = store.ui.selectedPlayer;
   
   // Performance monitoring in development
   const renderCount = usePerformanceMonitor('PlayerSearchWidget');
   
   // Local state
   const [searchTerm, setSearchTerm] = useState('');
-  const [positionFilter, setPositionFilter] = useState('All');
+  const [positionFilters, setPositionFilters] = useState<Set<string>>(new Set());
+  const [showAllPositions, setShowAllPositions] = useState(true);
   const [showDrafted, setShowDrafted] = useState(false);
   const [keyboardIndex, setKeyboardIndex] = useState(-1);
   const [loading, setLoading] = useState(false);
@@ -495,9 +569,9 @@ const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSea
         ? searchEngine.search(debouncedSearchTerm, { drafted: 'all' })
         : players;
       
-      // Apply position filter
-      if (positionFilter !== 'All') {
-        results = results.filter((p: Player) => p.position === positionFilter);
+      // Apply position filter (if not showing all)
+      if (!showAllPositions && positionFilters.size > 0) {
+        results = results.filter((p: Player) => positionFilters.has(p.position));
       }
       
       // Apply drafted filter
@@ -521,7 +595,7 @@ const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSea
       // Limit results for performance (virtual scrolling would be better for large datasets)
       return results.slice(0, 100);
     },
-    [searchEngine, players, debouncedSearchTerm, positionFilter, showDrafted],
+    [searchEngine, players, debouncedSearchTerm, positionFilters, showAllPositions, showDrafted],
     'Player search and filtering'
   );
   
@@ -622,16 +696,42 @@ const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSea
   
   // Handle player selection
   const handlePlayerSelect = useCallback((player: Player) => {
-    dispatch({ 
-      type: 'SET_SELECTED_PLAYER', 
-      payload: player 
-    });
+    store.selectPlayer(player);
     
     // Emit event for cross-widget synchronization
     window.dispatchEvent(new CustomEvent('player:selected', { 
       detail: player 
     }));
-  }, [dispatch]);
+  }, [store]);
+
+  // Position filter handlers
+  const handleAllPositionsToggle = useCallback(() => {
+    if (showAllPositions) {
+      // Already showing all, do nothing (ALL should always be on when no specific positions selected)
+      return;
+    } else {
+      // Turn on ALL, clear individual selections
+      setShowAllPositions(true);
+      setPositionFilters(new Set());
+    }
+  }, [showAllPositions]);
+
+  const handlePositionToggle = useCallback((position: string) => {
+    setShowAllPositions(false);
+    setPositionFilters(prev => {
+      const newFilters = new Set(prev);
+      if (newFilters.has(position)) {
+        newFilters.delete(position);
+        // If no positions selected, turn ALL back on
+        if (newFilters.size === 0) {
+          setShowAllPositions(true);
+        }
+      } else {
+        newFilters.add(position);
+      }
+      return newFilters;
+    });
+  }, []);
   
   // Keyboard navigation
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -690,24 +790,40 @@ const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSea
           Use arrow keys to navigate results, Enter to select, Escape to clear focus
         </div>
         
+        <PositionFiltersContainer>
+          <PositionFilterGroup>
+            <span style={{ fontSize: '12px', color: 'var(--text-2)', fontWeight: '500' }}>Position:</span>
+            <ToggleSwitch $checked={showAllPositions}>
+              <input
+                type="checkbox"
+                checked={showAllPositions}
+                onChange={handleAllPositionsToggle}
+                aria-label="Show all positions"
+              />
+              ALL
+            </ToggleSwitch>
+          </PositionFilterGroup>
+          
+          <PositionFilterGroup>
+            {['QB', 'RB', 'WR', 'TE', 'K', 'DEF'].map(position => (
+              <PositionCheckbox 
+                key={position}
+                $checked={positionFilters.has(position)}
+                $allActive={showAllPositions}
+              >
+                <input
+                  type="checkbox"
+                  checked={positionFilters.has(position)}
+                  onChange={() => handlePositionToggle(position)}
+                  aria-label={`Filter by ${position}`}
+                />
+                {position}
+              </PositionCheckbox>
+            ))}
+          </PositionFilterGroup>
+        </PositionFiltersContainer>
+
         <FiltersRow>
-          <label htmlFor="position-filter">
-            Position:
-            <FilterSelect 
-              id="position-filter"
-              value={positionFilter} 
-              onChange={(e) => setPositionFilter(e.target.value)}
-              aria-label="Filter by position"
-            >
-              <option value="All">All</option>
-              <option value="QB">QB</option>
-              <option value="RB">RB</option>
-              <option value="WR">WR</option>
-              <option value="TE">TE</option>
-              <option value="K">K</option>
-              <option value="DST">DST</option>
-            </FilterSelect>
-          </label>
           
           <CheckboxContainer>
             <input

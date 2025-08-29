@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Layout Management Features Validation - T-071</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f7;
+            color: #1d1d1f;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #007aff;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        .status-testing {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        
+        .section {
+            margin: 25px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #007aff;
+        }
+        
+        .feature-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .feature-list li {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .feature-title {
+            font-weight: bold;
+            color: #007aff;
+            margin-bottom: 5px;
+        }
+        
+        .step-list {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .step-list li {
+            margin: 15px 0;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 3px solid #28a745;
+        }
+        
+        .step-number {
+            font-weight: bold;
+            color: #007aff;
+            margin-right: 10px;
+        }
+        
+        .expected {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #e8f5e8;
+            border-radius: 4px;
+            font-style: italic;
+        }
+        
+        .app-link {
+            display: inline-block;
+            background: linear-gradient(135deg, #007aff, #5856d6);
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: transform 0.2s;
+        }
+        
+        .app-link:hover {
+            transform: translateY(-2px);
+        }
+        
+        .criteria {
+            background-color: #f8f9fa;
+            border: 2px solid #28a745;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+        }
+        
+        .criteria h4 {
+            color: #28a745;
+            margin-top: 0;
+        }
+        
+        .file-format {
+            background-color: #f0f9ff;
+            border: 1px solid #91d5ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        
+        .code-block {
+            background-color: #2d3748;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Layout Management Features</h1>
+            <h2>T-071: Advanced Layout Persistence & Export</h2>
+            <div class="status-badge status-testing">HITL VALIDATION REQUIRED</div>
+        </div>
+
+        <div class="section">
+            <h3>✨ New Features Implemented</h3>
+            <ul class="feature-list">
+                <li>
+                    <div class="feature-title">Preset-Specific Layout Saving</div>
+                    Manual Save button now saves the current layout to the active preset, persisting across page refreshes and preset switches.
+                </li>
+                
+                <li>
+                    <div class="feature-title">Layout Configuration Export</div>
+                    Clicking Manual Save automatically downloads a JSON configuration file containing the complete layout setup.
+                </li>
+                
+                <li>
+                    <div class="feature-title">Enhanced Reset Functionality</div>
+                    Reset to Default button now properly resets to the original default layout for each preset, clearing all customizations.
+                </li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>📁 Export File Format</h3>
+            <div class="file-format">
+                <p><strong>Filename:</strong> <code>ffb-layout-{presetId}-{date}.json</code></p>
+                <p><strong>Contents:</strong> Complete layout configuration including widget positions, visibility, and metadata</p>
+                
+                <div class="code-block">{
+  "presetId": "pre-draft",
+  "presetName": "Pre-Draft Research",
+  "layouts": {
+    "lg": [...],
+    "md": [...],
+    "sm": [...]
+  },
+  "visibleWidgets": ["search", "vbd-scatter", ...],
+  "exportedAt": "2024-01-15T10:30:00.000Z",
+  "version": "1.0.0"
+}</div>
+                
+                <p><strong>Purpose:</strong> This file can be provided to developers to update default layouts in the codebase.</p>
+            </div>
+        </div>
+
+        <div class="section">
+            <h3>🧪 Validation Instructions</h3>
+            
+            <h4>Setup</h4>
+            <ul>
+                <li>Dev server should be running on: <a href="http://localhost:5174/" class="app-link" target="_blank">http://localhost:5174/</a></li>
+                <li>Clear browser localStorage if needed for clean testing</li>
+            </ul>
+
+            <h4>Test Scenarios</h4>
+            
+            <h5>Scenario 1: Preset-Specific Layout Saving</h5>
+            <ol class="step-list">
+                <li>
+                    <span class="step-number">1A:</span>
+                    Start with "Pre-Draft Research" preset (shortcut: 1)
+                    <div class="expected">Expected: Default Pre-Draft layout loads</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">1B:</span>
+                    Enter Edit Layout mode and customize the layout (move/resize widgets)
+                    <div class="expected">Expected: Layout changes are visible</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">1C:</span>
+                    Click "Save to Pre-Draft Research" button
+                    <div class="expected">Expected: Button shows current preset name, JSON file downloads automatically</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">1D:</span>
+                    Refresh the page (F5/Cmd+R)
+                    <div class="expected">Expected: Custom layout persists, not reverted to default</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">1E:</span>
+                    Switch to "Active Nomination" preset (shortcut: 2)
+                    <div class="expected">Expected: Different default layout for Nomination preset</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">1F:</span>
+                    Switch back to "Pre-Draft Research" preset (shortcut: 1)
+                    <div class="expected">Expected: Previously saved custom layout is restored</div>
+                </li>
+            </ol>
+            
+            <h5>Scenario 2: Layout Export Functionality</h5>
+            <ol class="step-list">
+                <li>
+                    <span class="step-number">2A:</span>
+                    Customize any preset layout and click "Save to [Preset Name]"
+                    <div class="expected">Expected: JSON file automatically downloads to Downloads folder</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">2B:</span>
+                    Open the downloaded JSON file in a text editor
+                    <div class="expected">Expected: File contains complete layout configuration with proper structure</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">2C:</span>
+                    Verify file contains: presetId, presetName, layouts (lg/md/sm), visibleWidgets, exportedAt
+                    <div class="expected">Expected: All required fields are present with correct data types</div>
+                </li>
+            </ol>
+            
+            <h5>Scenario 3: Enhanced Reset Functionality</h5>
+            <ol class="step-list">
+                <li>
+                    <span class="step-number">3A:</span>
+                    Customize a layout and save it to a preset
+                    <div class="expected">Expected: Layout is saved and persists</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">3B:</span>
+                    Remove some widgets using the × button in edit mode
+                    <div class="expected">Expected: Some widgets are hidden</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">3C:</span>
+                    Click "Reset to Default" button
+                    <div class="expected">Expected: Layout reverts to original preset default, all widgets visible</div>
+                </li>
+                
+                <li>
+                    <span class="step-number">3D:</span>
+                    Refresh the page
+                    <div class="expected">Expected: Default layout persists (custom layout was cleared)</div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="criteria">
+            <h4>✅ Pass Criteria</h4>
+            <ul>
+                <li>Each preset maintains its own saved layout independently</li>
+                <li>Manual Save button shows current preset name dynamically</li>
+                <li>JSON configuration file downloads automatically with correct filename format</li>
+                <li>Exported JSON contains all required fields with valid data</li>
+                <li>Saved layouts persist through page refreshes and preset switches</li>
+                <li>Reset to Default properly clears all customizations and restores original layout</li>
+                <li>All widgets become visible after reset (including previously hidden ones)</li>
+                <li>Console shows clear logging of save/load/reset operations</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h3>📋 Files Modified</h3>
+            <ul>
+                <li><code>src/components/widgets/WidgetGrid.tsx</code> - Enhanced manual save, preset-specific loading, improved reset functionality</li>
+            </ul>
+        </div>
+
+        <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e5e7;">
+            <p><strong>Please test all three scenarios and confirm validation results before proceeding.</strong></p>
+            <a href="http://localhost:5174/" class="app-link" target="_blank">Open FFB Application →</a>
+        </div>
+    </div>
+</body>
+</html>

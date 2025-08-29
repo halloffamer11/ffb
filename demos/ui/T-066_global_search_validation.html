@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-066: Global Search System Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .validation-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .test-step {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .test-expected {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .test-action {
+            color: #007bff;
+            font-weight: 600;
+        }
+        .file-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        .spotlight-demo {
+            background: #e8f4f8;
+            border: 1px solid #b8e6ff;
+            color: #0066cc;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+        h3 { color: #3498db; }
+        code { 
+            background: #f1f3f4; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-family: 'Monaco', monospace; 
+        }
+        kbd {
+            background: #f1f1f1;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 2px 6px;
+            font-family: monospace;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <h1>🔍 HITL Validation Required for T-066: Global Search System</h1>
+        <p><span class="status-indicator status-pending">Validation Pending</span></p>
+    </div>
+
+    <div class="validation-container">
+        <h2>📋 Implementation Summary</h2>
+        <p><strong>Purpose:</strong> Transform TopAppBar search into macOS Spotlight-style global search that finds players, pages, and position filters</p>
+        <p><strong>Code Added:</strong> New useGlobalSearch hook, GlobalSearchOverlay component, and integration with existing FuzzySearch engine</p>
+        <p><strong>Integration:</strong> Uses existing player data from draftStore and emits custom events for player selection and position filtering</p>
+    </div>
+
+    <div class="validation-container">
+        <h2>🧪 Validation Instructions</h2>
+        
+        <h3>1. Setup</h3>
+        <div class="test-step">
+            <div class="test-action">Action:</div>
+            <p>Ensure dev server is running: <code>npm run dev</code></p>
+            <p>Navigate to: <code>http://localhost:5173</code></p>
+        </div>
+
+        <div class="spotlight-demo">
+            <h4>🚀 Spotlight-Style Search Demo</h4>
+            <p>The global search works like macOS Spotlight - it searches across multiple categories and shows organized results with keyboard navigation.</p>
+        </div>
+
+        <h3>2. Test Basic Search Functionality</h3>
+        <div class="test-step">
+            <div class="test-action">Step 1:</div> Click in the global search bar (top center of page)
+            <div class="test-expected">Expected:</div> Search input is focused, placeholder shows "Search players, pages, or filters..."
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 2:</div> Type "mahomes" (or any player name from your data)
+            <div class="test-expected">Expected:</div> Dropdown appears showing player results under "Players" section with position and team info
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 3:</div> Type "settings"
+            <div class="test-expected">Expected:</div> Dropdown shows "League Settings" under "Pages" section
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 4:</div> Type "quarterback" or "qb"
+            <div class="test-expected">Expected:</div> Dropdown shows "Quarterback" under "Filters" section
+        </div>
+
+        <h3>3. Test Search Categories</h3>
+        <div class="test-step">
+            <div class="test-action">Step 5:</div> Type "data" 
+            <div class="test-expected">Expected:</div> Shows both "Data Management" (Pages) and any players with "data" in name
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 6:</div> Type a partial player name (e.g., "mahom")
+            <div class="test-expected">Expected:</div> FuzzySearch finds matching players even with partial/misspelled names
+        </div>
+
+        <h3>4. Test Keyboard Navigation</h3>
+        <div class="test-step">
+            <div class="test-action">Step 7:</div> Type any search term, then use <kbd>↓</kbd> and <kbd>↑</kbd> arrows
+            <div class="test-expected">Expected:</div> Selection moves through results, highlighting changes
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 8:</div> With a result selected, press <kbd>Enter</kbd>
+            <div class="test-expected">Expected:</div> 
+            - If page result: navigates to that page
+            - If player result: emits player:selected event
+            - If filter result: emits position:filter event
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 9:</div> Press <kbd>Escape</kbd> while search is open
+            <div class="test-expected">Expected:</div> Search closes and input clears
+        </div>
+
+        <h3>5. Test Click Navigation</h3>
+        <div class="test-step">
+            <div class="test-action">Step 10:</div> Search for "settings" and click the result
+            <div class="test-expected">Expected:</div> Navigates to League Settings page
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 11:</div> Go back to dashboard, search for "data" and click "Data Management"
+            <div class="test-expected">Expected:</div> Navigates to Data Management page
+        </div>
+
+        <h3>6. Test Focus Guarding Integration</h3>
+        <div class="test-step">
+            <div class="test-action">Step 12:</div> Click in search bar and type "n", "e", "1", "2", "3"
+            <div class="test-expected">Expected:</div> Characters appear in search, keyboard shortcuts DO NOT trigger
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 13:</div> Click outside search bar, then test shortcuts
+            <div class="test-expected">Expected:</div> Shortcuts work normally (n=navigation, e=edit, 1-3=layouts)
+        </div>
+
+        <h3>7. Pass Criteria</h3>
+        <div class="test-step">
+            ✅ Search finds players using FuzzySearch algorithm<br>
+            ✅ Search finds pages ("settings", "data management")<br>  
+            ✅ Search finds position filters ("QB", "RB", "WR", etc.)<br>
+            ✅ Results are organized in categories (Players, Pages, Filters)<br>
+            ✅ Keyboard navigation works (<kbd>↓</kbd>/<kbd>↑</kbd>, <kbd>Enter</kbd>, <kbd>Escape</kbd>)<br>
+            ✅ Clicking results performs correct actions<br>
+            ✅ Focus guarding prevents keyboard shortcuts when typing<br>
+            ✅ Search performance is <100ms for typical queries
+        </div>
+    </div>
+
+    <div class="validation-container">
+        <h2>📁 Files Changed</h2>
+        <div class="file-list">
+<strong>New Files:</strong>
+• src/hooks/useGlobalSearch.ts - Global search hook with FuzzySearch integration and static index
+• src/components/ui/GlobalSearchOverlay.tsx - Dropdown search results component with keyboard navigation
+
+<strong>Modified Files:</strong>
+• src/components/layout/TopAppBar.tsx - Integrated global search with overlay and focus handling
+
+<strong>Search Categories:</strong>
+• Players - Uses existing FuzzySearch engine from PlayerSearchWidget
+• Pages - Static index: "League Settings", "Data Management"  
+• Filters - Static index: QB, RB, WR, TE, K, DEF positions
+
+<strong>Actions:</strong>
+• Page results navigate using React Router
+• Player results emit 'player:selected' custom events
+• Filter results emit 'position:filter' custom events
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <strong>⚠️ Important Testing Notes:</strong>
+        <ul>
+            <li>Test with various player names to verify FuzzySearch integration</li>
+            <li>Verify search overlay appears/disappears correctly</li>
+            <li>Check that keyboard navigation highlights the correct items</li>
+            <li>Ensure page navigation works for both settings and data management</li>
+            <li>Confirm player and filter selections emit the expected events</li>
+            <li>Test performance with longer search terms</li>
+        </ul>
+    </div>
+
+    <div class="validation-container">
+        <h2>✋ Validation Checkpoint</h2>
+        <p><strong>Please test all functionality above and confirm validation results before I proceed with the next phase.</strong></p>
+        <p>Reply with: <strong>"HITL validation passed"</strong> to continue to Phase 3 (Player Focus Synchronization)</p>
+    </div>
+</body>
+</html>

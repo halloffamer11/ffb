@@ -14,7 +14,7 @@ const borderHighlight = keyframes`
 
 const Container = styled.div`
   height: 100%;
-  background: ${props => theme('gradients.widget')};
+  background: ${props => theme('colors.surface1')};
   border: 1px solid var(--border-1);
   border-radius: ${props => theme('borderRadius.lg')};
   display: flex;
@@ -39,7 +39,7 @@ const Container = styled.div`
   /* Clean hover state - border focus over shadows */
   &:hover {
     border-color: var(--border-2);
-    background: ${props => theme('gradients.widgetHover')};
+    background: ${props => theme('states.hover.background')};
     
     &::before {
       background: var(--accent);
@@ -57,7 +57,7 @@ const Container = styled.div`
   /* Subtle active state without transform */
   &:active {
     border-color: var(--border-2);
-    background: ${props => theme('gradients.widgetPressed')};
+    background: ${props => theme('states.active.background')};
   }
 `;
 
@@ -67,7 +67,7 @@ const TitleBar = styled.div<{ $isEditMode?: boolean }>`
   justify-content: space-between;
   padding: ${props => theme('spacing.xs')} ${props => theme('spacing.sm')};
   border-bottom: 1px solid var(--border-1);
-  background: ${props => theme('gradients.widgetHover')};
+  background: ${props => theme('colors.surface1')};
   position: relative;
   cursor: ${props => props.$isEditMode ? 'grab' : 'default'};
   
@@ -228,9 +228,8 @@ export default function WidgetContainer({
     >
       <TitleBar 
         $isEditMode={editMode}
-        className={editMode ? "widget-drag-handle" : ""}
       >
-        <TitleSection>
+        <TitleSection className={editMode ? "widget-drag-handle" : ""}>
           {editMode && (
             <div style={{ 
               color: 'var(--text-muted)', 
@@ -244,17 +243,13 @@ export default function WidgetContainer({
           <Title id={`widget-title-${widgetId}`}>{title}</Title>
         </TitleSection>
         
-        <Controls role="toolbar" aria-label="Widget controls">
+        <Controls role="toolbar" aria-label="Widget controls" className="widget-controls">
           {/* Non-edit mode: Only show popout button */}
           {!editMode && (
             <ControlButton 
               onClick={() => {
-                console.log(`🔧 WidgetContainer: PopOut button clicked for widget ${widgetId}`);
                 if (onPopOut) {
-                  console.log(`🔧 WidgetContainer: Calling onPopOut for widget ${widgetId}`);
                   onPopOut();
-                } else {
-                  console.log(`🔧 WidgetContainer: onPopOut is undefined for widget ${widgetId}`);
                 }
               }} 
               title="Pop out widget"
@@ -267,7 +262,12 @@ export default function WidgetContainer({
           {/* Edit mode: Show remove button */}
           {editMode && (
             <ControlButton 
-              onClick={onRemove || onClose} 
+              onClick={(e) => {
+                e.stopPropagation(); // Prevent event bubbling
+                if (onRemove || onClose) {
+                  (onRemove || onClose)();
+                }
+              }} 
               title="Remove widget"
               aria-label="Remove widget from layout"
             >

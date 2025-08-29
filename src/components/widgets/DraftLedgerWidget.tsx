@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import styled from 'styled-components';
 import { theme } from "../../utils/styledHelpers";
 import WidgetContainer from './WidgetContainer';
-import { useDraftStore, legacyStore } from '../../stores/draftStore';
+import { useUnifiedStore } from '../../stores/unified-store';
 import { Button } from '../ui/Button';
 
 // Styled components
@@ -136,6 +136,7 @@ interface LedgerRow {
   price: number;
   timestamp?: number;
   playerId?: any;
+  isKeeper?: boolean;
 }
 
 // Memoized DraftLedgerWidget for performance
@@ -145,13 +146,15 @@ interface DraftLedgerWidgetProps {
 }
 
 const DraftLedgerWidget = React.memo(({ editMode = false, onRemove }: DraftLedgerWidgetProps) => {
-  const { settings, picks, players, canUndo, canRedo, undo, redo } = useDraftStore();
+  const store = useUnifiedStore();
+  const { settings, picks, players } = store;
   const [refreshKey, setRefreshKey] = useState(0);
   
   // Memoized ledger rows calculation
   const ledgerRows = useMemo(() => {
     const owners = settings?.owners || [];
     const teams = Number(settings?.teams || owners.length || 12);
+    const keepers = store.keepers || [];
     
     // Build player id->name map
     const idToName = new Map();
@@ -161,7 +164,30 @@ const DraftLedgerWidget = React.memo(({ editMode = false, onRemove }: DraftLedge
       }
     }
     
-    const rows = picks.map((pick, idx) => {
+    const rows: LedgerRow[] = [];
+    
+    // Add keepers first (they appear before the draft)
+    keepers.forEach((keeper, idx) => {
+      const team = findOwnerName(owners, keeper.teamId);
+      const playerName = String(keeper.player?.name || '') || 
+                        idToName.get(String(keeper.player?.id)) || 
+                        `Player ${keeper.player?.id || ''}`;
+      
+      rows.push({
+        overall: -(idx + 1), // Negative numbers to distinguish keepers
+        round: 0, // Keepers are round 0
+        pickInRound: idx + 1,
+        team,
+        playerName: `${playerName} (K)`, // Add (K) suffix for keepers
+        price: keeper.cost,
+        timestamp: 0, // Keepers have timestamp 0
+        playerId: keeper.player?.id,
+        isKeeper: true
+      });
+    });
+    
+    // Add actual draft picks
+    picks.forEach((pick, idx) => {
       const overall = idx + 1;
       const { round, pickInRound } = computeRoundAndPick(overall, teams);
       const team = findOwnerName(owners, pick.teamId);
@@ -169,7 +195,7 @@ const DraftLedgerWidget = React.memo(({ editMode = false, onRemove }: DraftLedge
                         (pick.playerId != null ? idToName.get(String(pick.playerId)) : '') || 
                         `Player ${pick.playerId || ''}`;
       
-      return {
+      rows.push({
         overall,
         round,
         pickInRound,
@@ -177,12 +203,19 @@ const DraftLedgerWidget = React.memo(({ editMode = false, onRemove }: DraftLedge
         playerName,
         price: pick.price,
         timestamp: pick.timestamp,
-        playerId: pick.playerId
-      };
-    }).reverse(); // Latest first
+        playerId: pick.playerId,
+        isKeeper: false
+      });
+    });
     
-    return rows;
-  }, [picks, settings, players, refreshKey]);
+    // Sort: keepers first (by reverse overall), then picks (by reverse overall) 
+    return rows.sort((a, b) => {
+      if (a.isKeeper && !b.isKeeper) return -1; // Keepers first
+      if (!a.isKeeper && b.isKeeper) return 1;
+      return b.overall - a.overall; // Latest first within each group
+    });
+    
+  }, [picks, settings, players, refreshKey, store.keepers]);
   
   // Listen for state changes
   useEffect(() => {
@@ -217,40 +250,24 @@ const DraftLedgerWidget = React.memo(({ editMode = false, onRemove }: DraftLedge
     };
   }, []);
   
-  // Subscribe to legacy store changes for real-time updates
-  useEffect(() => {
-    function handleStoreChange() {
-      setRefreshKey(prev => prev + 1);
-    }
-    
-    // Subscribe to legacy store if available
-    if (legacyStore && typeof legacyStore.subscribe === 'function') {
-      legacyStore.subscribe('change', handleStoreChange);
-      
-      return () => {
-        if (legacyStore && typeof legacyStore.unsubscribe === 'function') {
-          legacyStore.unsubscribe('change', handleStoreChange);
-        }
-      };
-    }
-  }, []);
+  // Unified store automatically triggers re-renders, no manual subscription needed
   
   // Memoized event handlers for performance
   const handleUndo = useCallback(() => {
     try {
-      undo();
+      store.undo();
     } catch (error) {
       console.error('Failed to undo:', error);
     }
-  }, [undo]);
+  }, [store]);
   
   const handleRedo = useCallback(() => {
     try {
-      redo();
+      store.redo();
     } catch (error) {
       console.error('Failed to redo:', error);
     }
-  }, [redo]);
+  }, [store]);
   
   return (
     <WidgetContainer title="Draft Ledger" widgetId="draft-ledger" editMode={editMode} onRemove={onRemove}>
@@ -262,7 +279,7 @@ const DraftLedgerWidget = React.memo(({ editMode = false, onRemove }: DraftLedge
               size="sm"
               variant="outline"
               onClick={handleUndo}
-              disabled={!canUndo()}
+              disabled={!store.canUndo()}
               aria-describedby="undo-help"
             >
               Undo
@@ -274,7 +291,7 @@ const DraftLedgerWidget = React.memo(({ editMode = false, onRemove }: DraftLedge
               size="sm"
               variant="outline"
               onClick={handleRedo}
-              disabled={!canRedo()}
+              disabled={!store.canRedo()}
               aria-describedby="redo-help"
             >
               Redo
@@ -304,8 +321,12 @@ const DraftLedgerWidget = React.memo(({ editMode = false, onRemove }: DraftLedge
                 <div id={`pick-${row.overall}-desc`} className="sr-only">
                   Pick {row.overall}, Round {row.round} Pick {row.pickInRound}: {row.team} drafted {row.playerName} for ${row.price}
                 </div>
-                <PickNumber role="cell" aria-label="Pick number">#{row.overall}</PickNumber>
-                <RoundPick role="cell" aria-label="Round and pick">R{row.round} P{row.pickInRound}</RoundPick>
+                <PickNumber role="cell" aria-label="Pick number">
+                  {row.isKeeper ? 'K' : `#${row.overall}`}
+                </PickNumber>
+                <RoundPick role="cell" aria-label="Round and pick">
+                  {row.isKeeper ? `K${row.pickInRound}` : `R${row.round} P${row.pickInRound}`}
+                </RoundPick>
                 <TeamName role="cell" aria-label="Team name">{row.team}</TeamName>
                 <PlayerName role="cell" aria-label="Player name">{row.playerName}</PlayerName>
                 <Price role="cell" aria-label="Price">${row.price}</Price>

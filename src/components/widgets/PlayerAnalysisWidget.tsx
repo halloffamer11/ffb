@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { theme } from "../../utils/styledHelpers";
 import WidgetContainer from './WidgetContainer';
-import { useDraftStore } from '../../stores/draftStore';
+import { useUnifiedStore } from '../../stores/unified-store';
 import { Badge } from '../ui/Badge';
 import { Player, DraftPick, LeagueSettings } from '../../types';
 
@@ -63,7 +63,9 @@ const MetricCard = styled.div`
   }
 `;
 
-const VBDCard = styled(MetricCard)<{ vbdValue: number }>`
+const VBDCard = styled(MetricCard).withConfig({
+  shouldForwardProp: (prop) => prop !== 'vbdValue'
+})<{ vbdValue: number }>`
   .value {
     color: ${props => {
       const v = props.vbdValue;
@@ -258,8 +260,10 @@ interface PlayerAnalysisWidgetProps {
   onRemove?: () => void;
 }
 
-export default function PlayerAnalysisWidget({ editMode = false, onRemove }: PlayerAnalysisWidgetProps) {
-  const { selectedPlayer, players, settings, picks } = useDraftStore();
+const PlayerAnalysisWidget = React.memo<PlayerAnalysisWidgetProps>(function PlayerAnalysisWidget({ editMode = false, onRemove }) {
+  const store = useUnifiedStore();
+  const { selectedPlayer } = store.ui;
+  const { players, settings, picks } = store;
   const [playerViewModel, setPlayerViewModel] = useState<PlayerViewModel | null>(null);
   
   // Update analysis when selected player or data changes
@@ -405,4 +409,6 @@ export default function PlayerAnalysisWidget({ editMode = false, onRemove }: Pla
       </AnalysisContainer>
     </WidgetContainer>
   );
-}
+});
+
+export default PlayerAnalysisWidget;

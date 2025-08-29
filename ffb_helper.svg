@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>FFB — Futuristic Steampunk Quant Icon</title>
+  <defs>
+    <!-- Deep fintech purple background -->
+    <radialGradient id="bg" cx="35%" cy="30%" r="90%">
+      <stop offset="0%" stop-color="#8A5BFF"></stop>
+      <stop offset="55%" stop-color="#3B1F90"></stop>
+      <stop offset="100%" stop-color="#070512"></stop>
+    </radialGradient>
+
+    <!-- Neon quant green -->
+    <linearGradient id="neon" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00FFA7"></stop>
+      <stop offset="100%" stop-color="#00E676"></stop>
+    </linearGradient>
+
+    <!-- Brass for steampunk gear -->
+    <linearGradient id="brass" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFD27A"></stop>
+      <stop offset="55%" stop-color="#E4A84E"></stop>
+      <stop offset="100%" stop-color="#B67822"></stop>
+    </linearGradient>
+
+    <!-- Subtle glow for neon strokes -->
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="b"></feGaussianBlur>
+      <feColorMatrix in="b" type="matrix" values="0 0 0 0 0
+                0 1 0 0 0.45
+                0 0 0 0 0
+                0 0 0 1 0" result="g"></feColorMatrix>
+      <feMerge>
+        <feMergeNode in="g"></feMergeNode>
+        <feMergeNode in="SourceGraphic"></feMergeNode>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Rounded badge -->
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bg)"></rect>
+
+  <!-- Steampunk gear: ring + teeth + rivets -->
+  <!-- Teeth (12), sized to avoid covering chart area -->
+  <g fill="url(#brass)" opacity="0.95">
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(0 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(30 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(60 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(90 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(120 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(150 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(180 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(210 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(240 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(270 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(300 256 256)"></rect>
+    <rect x="242" y="40" width="28" height="58" rx="6" transform="rotate(330 256 256)"></rect>
+  </g>
+
+  <!-- Gear ring -->
+  <circle cx="256" cy="256" r="176" fill="none" stroke="url(#brass)" stroke-width="22"></circle>
+
+  <!-- Rivets (visible but not intrusive) -->
+  <g fill="#A76A1F">
+    <circle cx="256" cy="86" r="7"></circle><circle cx="256" cy="426" r="7"></circle>
+    <circle cx="86" cy="256" r="7"></circle><circle cx="426" cy="256" r="7"></circle>
+    <circle cx="384" cy="128" r="6"></circle><circle cx="128" cy="384" r="6"></circle>
+    <circle cx="384" cy="384" r="6"></circle><circle cx="128" cy="128" r="6"></circle>
+  </g>
+
+  <!-- Quant panel (card inset) -->
+  <rect x="140" y="188" width="232" height="164" rx="18" fill="rgba(10,10,18,0.55)" stroke="rgba(255,255,255,0.08)" stroke-width="2"></rect>
+
+  <!-- Grid lines -->
+  <g stroke="rgba(255,255,255,0.12)" stroke-width="2">
+    <path d="M172 188 V352 M204 188 V352 M236 188 V352 M268 188 V352 M300 188 V352 M332 188 V352"></path>
+    <path d="M140 220 H372 M140 252 H372 M140 284 H372 M140 316 H372"></path>
+  </g>
+
+  <!-- Confidence band under trendline -->
+  <path d="M148 318
+           C170 304, 192 288, 214 282
+           C236 276, 260 270, 284 264
+           C308 258, 332 246, 364 236
+           L364 248
+           C332 260, 308 272, 284 278
+           C260 284, 236 290, 214 296
+           C192 302, 170 312, 148 324 Z" fill="rgba(0,230,118,0.18)"></path>
+
+  <!-- Candlesticks -->
+  <g stroke="url(#neon)" stroke-width="6" filter="url(#glow)">
+    <!-- x positions: 164, 196, 228, 260, 292, 324 -->
+    <line x1="164" y1="310" x2="164" y2="240"></line>
+    <rect x="156" y="268" width="16" height="26" rx="3" fill="url(#neon)"></rect>
+    <line x1="196" y1="300" x2="196" y2="236"></line>
+    <rect x="188" y="256" width="16" height="30" rx="3" fill="url(#neon)"></rect>
+    <line x1="228" y1="294" x2="228" y2="228"></line>
+    <rect x="220" y="246" width="16" height="34" rx="3" fill="url(#neon)"></rect>
+    <line x1="260" y1="286" x2="260" y2="220"></line>
+    <rect x="252" y="236" width="16" height="36" rx="3" fill="url(#neon)"></rect>
+    <line x1="292" y1="274" x2="292" y2="212"></line>
+    <rect x="284" y="226" width="16" height="38" rx="3" fill="url(#neon)"></rect>
+    <line x1="324" y1="266" x2="324" y2="206"></line>
+    <rect x="316" y="218" width="16" height="40" rx="3" fill="url(#neon)"></rect>
+  </g>
+
+  <!-- Smooth trendline -->
+  <path d="M148 320
+           C184 296, 214 278, 244 270
+           C276 262, 304 244, 364 230" fill="none" stroke="url(#neon)" stroke-width="10" stroke-linecap="round" filter="url(#glow)"></path>
+
+  <!-- Minimal arrow tip that won't hide details -->
+  <circle cx="364" cy="230" r="7" fill="url(#neon)" filter="url(#glow)"></circle>
+
+  <!-- Tiny HUD stats badge (sigma for nerdy vibes) -->
+  <g transform="translate(352,188)">
+    <rect x="-28" y="-22" width="56" height="28" rx="8" fill="rgba(186,153,255,0.22)" stroke="rgba(255,255,255,0.18)" stroke-width="2"></rect>
+    <text x="0" y="-3" font-family="Inter, Roboto, Arial, sans-serif" font-size="18" text-anchor="middle" fill="#CDB7FF">σ²</text>
+  </g>
+</svg>

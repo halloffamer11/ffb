@@ -53,7 +53,7 @@ export const theme = (path: string, fallback?: string) => (props: any) => {
         'gradients.widgetHover': 'var(--surface-2)',
         'gradients.widgetPressed': 'var(--surface-3)',
         'gradients.subtle': 'var(--surface-1)',
-        'surfaces.widget': '#121214',
+        'surfaces.widget': 'var(--surface-1)',
         'states.hover.background': 'rgba(255, 255, 255, 0.04)',
         'states.active.background': 'rgba(255, 255, 255, 0.02)',
         'states.disabled.opacity': '0.4',

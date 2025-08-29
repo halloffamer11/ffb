@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-065: New Keyboard Shortcuts Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 900px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f5f7fa;
+        }
+        .validation-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .test-step {
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            padding: 16px;
+            margin: 12px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        .test-expected {
+            color: #28a745;
+            font-weight: 600;
+        }
+        .test-action {
+            color: #007bff;
+            font-weight: 600;
+        }
+        .file-list {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+        }
+        .warning-box {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 16px;
+            border-radius: 8px;
+            margin: 16px 0;
+        }
+        h1 { color: #2c3e50; }
+        h2 { color: #34495e; border-bottom: 2px solid #3498db; padding-bottom: 8px; }
+        h3 { color: #3498db; }
+        code { 
+            background: #f1f3f4; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            font-family: 'Monaco', monospace; 
+        }
+    </style>
+</head>
+<body>
+    <div class="validation-container">
+        <h1>🔥 HITL Validation Required for T-065: New Keyboard Shortcuts</h1>
+        <p><span class="status-indicator status-pending">Validation Pending</span></p>
+    </div>
+
+    <div class="validation-container">
+        <h2>📋 Implementation Summary</h2>
+        <p><strong>Purpose:</strong> Add "n" (navigation toggle) and "e" (edit mode toggle) keyboard shortcuts with focus guarding</p>
+        <p><strong>Code Added:</strong> Extended PresetContext with new shortcut handlers, connected to existing DashboardPage and WidgetGrid functionality</p>
+        <p><strong>Integration:</strong> Reuses existing focus guarding system that prevents shortcuts when typing in inputs</p>
+    </div>
+
+    <div class="validation-container">
+        <h2>🧪 Validation Instructions</h2>
+        
+        <h3>1. Setup</h3>
+        <div class="test-step">
+            <div class="test-action">Action:</div>
+            <p>Start dev server: <code>npm run dev</code></p>
+            <p>Navigate to: <code>http://localhost:5173</code></p>
+        </div>
+
+        <h3>2. Test Keyboard Shortcuts</h3>
+        <div class="test-step">
+            <div class="test-action">Step 1:</div> Press "<strong>n</strong>" key
+            <div class="test-expected">Expected:</div> Left navigation panel toggles collapse/expand
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 2:</div> Press "<strong>e</strong>" key  
+            <div class="test-expected">Expected:</div> Widget layout enters/exits edit mode (shows resize handles and remove buttons)
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 3:</div> Press "<strong>1</strong>", "<strong>2</strong>", "<strong>3</strong>" keys
+            <div class="test-expected">Expected:</div> Layout switches between pre-draft, nomination, player-analytics presets (existing functionality should still work)
+        </div>
+
+        <h3>3. Test Focus Guarding</h3>
+        <div class="test-step">
+            <div class="test-action">Step 4:</div> Click in the global search bar (top center)
+            <div class="test-expected">Expected:</div> Search input is focused and cursor appears
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 5:</div> While focused in search bar, press "n", "e", "1", "2", "3"
+            <div class="test-expected">Expected:</div> Characters should appear in search input, NO layout changes should occur
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 6:</div> Click outside search bar, then press shortcuts again
+            <div class="test-expected">Expected:</div> Shortcuts should work normally (navigation toggle, edit mode, layout switching)
+        </div>
+
+        <div class="test-step">
+            <div class="test-action">Step 7:</div> Test with Player Search Widget input field
+            <div class="test-expected">Expected:</div> Same focus guarding behavior - shortcuts disabled when typing in player search
+        </div>
+
+        <h3>4. Pass Criteria</h3>
+        <div class="test-step">
+            ✅ "n" key toggles navigation panel collapse/expand<br>
+            ✅ "e" key toggles widget edit mode on/off<br>
+            ✅ Existing layout shortcuts (1,2,3) continue to work<br>
+            ✅ All shortcuts are disabled when typing in any input field<br>
+            ✅ Focus guarding works for both global search and widget search inputs<br>
+            ✅ No conflicts with existing keyboard functionality
+        </div>
+    </div>
+
+    <div class="validation-container">
+        <h2>📁 Files Changed</h2>
+        <div class="file-list">
+<strong>Modified Files:</strong>
+• src/stores/PresetContext.tsx - Added registerNavigationToggle/registerEditModeToggle methods and "n"/"e" key handlers
+• src/pages/DashboardPage.tsx - Restructured to register navigation toggle callback with PresetContext
+• src/components/widgets/WidgetGrid.tsx - Added PresetContext integration to register edit mode toggle callback
+
+<strong>New Keyboard Shortcuts:</strong>
+• "n" - Toggle navigation panel (calls existing leftRailCollapsed state)
+• "e" - Toggle edit mode (calls existing editMode state)
+• Maintains existing "1", "2", "3" layout switching shortcuts
+        </div>
+    </div>
+
+    <div class="warning-box">
+        <strong>⚠️ Important Testing Notes:</strong>
+        <ul>
+            <li>Test shortcuts work from anywhere on the page when no input is focused</li>
+            <li>Verify shortcuts are completely disabled when typing in search inputs</li>
+            <li>Check that existing 1,2,3 shortcuts still function properly</li>
+            <li>Test edit mode shows/hides widget resize handles and remove buttons</li>
+            <li>Ensure navigation panel collapse/expand animation works smoothly</li>
+        </ul>
+    </div>
+
+    <div class="validation-container">
+        <h2>✋ Validation Checkpoint</h2>
+        <p><strong>Please test all functionality above and confirm validation results before I proceed with the next phase.</strong></p>
+        <p>Reply with: <strong>"HITL validation passed"</strong> to continue to Phase 2 (Global Search System)</p>
+    </div>
+</body>
+</html>

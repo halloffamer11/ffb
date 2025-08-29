@@ -73,48 +73,42 @@ const preDraftPreset: LayoutPreset = {
   workflow: 'Research-focused with prominent analysis tools',
   layouts: {
     lg: [
-      // Top row: PlayerSearch (prominent) + PlayerAnalysis
-      dimensionsToGridItem('search', { ...optimalSizes.search.lg, width: 16 }, { x: 0, y: 0 }),
-      dimensionsToGridItem('player-analysis', optimalSizes['player-analysis'].lg, { x: 16, y: 0 }),
+      // Top row: PlayerSearch (compact) + PlayerAnalysis + DraftEntry + Roster
+      { i: 'search', x: 0, y: 0, w: 6, h: 9, minW: 4, maxW: 12, minH: 6 },
+      { i: 'player-analysis', x: 6, y: 0, w: 4, h: 6, minW: 3, maxW: 6, minH: 5 },
+      { i: 'draft-entry', x: 10, y: 0, w: 6, h: 6, minW: 3, maxW: 12, minH: 4 },
+      { i: 'roster', x: 16, y: 0, w: 8, h: 6, minW: 4, maxW: 12, minH: 6 },
       
-      // Middle row: VBDScatter (dominant visualization)
-      dimensionsToGridItem('vbd-scatter', { ...optimalSizes['vbd-scatter'].lg, width: 18, height: 16 }, { x: 0, y: 12 }),
+      // Middle row: VBDScatter (center) + Budget (right)
+      { i: 'vbd-scatter', x: 6, y: 6, w: 12, h: 9, minW: 5, maxW: 12, minH: 6 },
+      { i: 'budget', x: 18, y: 6, w: 6, h: 9, minW: 3, maxW: 7, minH: 5 },
       
-      // Right column: BudgetTracker (compact preview)
-      dimensionsToGridItem('budget', { ...optimalSizes.budget.lg, width: 6, height: 8 }, { x: 18, y: 12 }),
-      
-      // Right column: RosterPanel (minimized)
-      dimensionsToGridItem('roster', { ...optimalSizes.roster.lg, width: 6, height: 8 }, { x: 18, y: 20 }),
-      
-      // Bottom: DraftEntry (compact) + DraftLedger (preview)
-      dimensionsToGridItem('draft-entry', { ...optimalSizes['draft-entry'].lg, width: 10, height: 8 }, { x: 0, y: 28 }),
-      dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].lg, width: 8, height: 8 }, { x: 10, y: 28 }),
+      // Bottom: DraftLedger
+      { i: 'draft-ledger', x: 0, y: 9, w: 6, h: 6, minW: 4, maxW: 12, minH: 4 },
     ],
     md: [
-      // Top row: PlayerSearch (prominent)
-      dimensionsToGridItem('search', { ...optimalSizes.search.md, width: 14 }, { x: 0, y: 0 }),
-      dimensionsToGridItem('player-analysis', { ...optimalSizes['player-analysis'].md, width: 6 }, { x: 14, y: 0 }),
+      // Top row: PlayerSearch + PlayerAnalysis
+      { i: 'search', x: 0, y: 0, w: 14, h: 8, minW: 3, maxW: 10, minH: 6 },
+      { i: 'player-analysis', x: 14, y: 0, w: 6, h: 10, minW: 2, maxW: 5, minH: 5 },
       
-      // VBDScatter (large)
-      dimensionsToGridItem('vbd-scatter', { ...optimalSizes['vbd-scatter'].md, width: 14, height: 14 }, { x: 0, y: 12 }),
+      // Middle: VBDScatter (large) + Budget/Roster (right column)
+      { i: 'vbd-scatter', x: 0, y: 12, w: 14, h: 14, minW: 4, maxW: 10, minH: 6 },
+      { i: 'budget', x: 14, y: 12, w: 6, h: 7, minW: 2, maxW: 5, minH: 5 },
+      { i: 'roster', x: 14, y: 19, w: 6, h: 7, minW: 3, maxW: 10, minH: 6 },
       
-      // Right column: Budget + Roster (stacked, compact)
-      dimensionsToGridItem('budget', { ...optimalSizes.budget.md, width: 6, height: 7 }, { x: 14, y: 12 }),
-      dimensionsToGridItem('roster', { ...optimalSizes.roster.md, width: 6, height: 7 }, { x: 14, y: 19 }),
-      
-      // Bottom row: Draft tools (compact)
-      dimensionsToGridItem('draft-entry', { ...optimalSizes['draft-entry'].md, width: 8, height: 6 }, { x: 0, y: 26 }),
-      dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].md, width: 6, height: 6 }, { x: 8, y: 26 }),
+      // Bottom row: Draft tools
+      { i: 'draft-entry', x: 0, y: 26, w: 8, h: 6, minW: 2, maxW: 10, minH: 4 },
+      { i: 'draft-ledger', x: 8, y: 26, w: 6, h: 6, minW: 3, maxW: 10, minH: 4 },
     ],
     sm: [
-      // Stacked mobile layout prioritizing analysis tools
-      dimensionsToGridItem('search', optimalSizes.search.sm, { x: 0, y: 0 }),
-      dimensionsToGridItem('vbd-scatter', { ...optimalSizes['vbd-scatter'].sm, height: 14 }, { x: 0, y: 12 }),
-      dimensionsToGridItem('player-analysis', optimalSizes['player-analysis'].sm, { x: 0, y: 26 }),
-      dimensionsToGridItem('budget', { ...optimalSizes.budget.sm, height: 6 }, { x: 0, y: 36 }),
-      dimensionsToGridItem('roster', { ...optimalSizes.roster.sm, height: 6 }, { x: 0, y: 42 }),
-      dimensionsToGridItem('draft-entry', { ...optimalSizes['draft-entry'].sm, height: 5 }, { x: 0, y: 48 }),
-      dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].sm, height: 5 }, { x: 0, y: 53 }),
+      // Stacked mobile layout
+      { i: 'search', x: 0, y: 0, w: 4, h: 8, minW: 2, maxW: 6, minH: 6 },
+      { i: 'vbd-scatter', x: 0, y: 12, w: 4, h: 14, minW: 3, maxW: 6, minH: 6 },
+      { i: 'player-analysis', x: 0, y: 26, w: 2, h: 10, minW: 2, maxW: 4, minH: 5 },
+      { i: 'budget', x: 0, y: 36, w: 2, h: 6, minW: 2, maxW: 4, minH: 5 },
+      { i: 'roster', x: 0, y: 42, w: 4, h: 6, minW: 2, maxW: 6, minH: 6 },
+      { i: 'draft-entry', x: 0, y: 48, w: 2, h: 5, minW: 2, maxW: 6, minH: 4 },
+      { i: 'draft-ledger', x: 0, y: 53, w: 3, h: 5, minW: 2, maxW: 6, minH: 4 },
     ]
   }
 };

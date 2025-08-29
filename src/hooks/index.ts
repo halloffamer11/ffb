@@ -1,5 +1,5 @@
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
-import { useDraftStore } from '../stores/draftStore';
+import { useUnifiedStore } from '../stores/unified-store';
 
 // ============================================================================
 // SHARED HOOK LIBRARY FOR WIDGET OPTIMIZATION
@@ -33,12 +33,13 @@ export function useOptimizedSelector<T>(
   selector: (state: any) => T,
   equalityFn?: (a: T, b: T) => boolean
 ) {
-  return useDraftStore(selector, equalityFn);
+  return useUnifiedStore(selector, equalityFn);
 }
 
 // Widget state management hook for common patterns
 export function useWidgetState(widgetId: string) {
-  const { players, picks, settings, roster } = useDraftStore();
+  const store = useUnifiedStore();
+  const { players, picks, settings } = store;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
@@ -63,7 +64,6 @@ export function useWidgetState(widgetId: string) {
     players,
     picks,
     settings,
-    roster,
     
     // State
     loading,
@@ -249,7 +249,8 @@ export function useSelection<T>(initialSelection?: T) {
 
 // Draft-specific hooks for common operations
 export function useDraftCalculations() {
-  const { picks, settings, players } = useDraftStore();
+  const store = useUnifiedStore();
+  const { picks, settings, players } = store;
   
   const budgetData = useMemoizedCalculation(
     () => {

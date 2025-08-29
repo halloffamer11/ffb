@@ -8,13 +8,13 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { 
   layoutPresets, 
-  getLayoutPreset, 
   getLayoutPresetByShortcut, 
   getDefaultPreset,
   type PresetId, 
   type LayoutPreset 
 } from '../utils/layoutPresets';
 import { createStorageAdapter } from '../adapters/storage.js';
+import { usePreset } from '../stores/PresetContext';
 
 // Storage for current preset selection
 const presetStorage = createStorageAdapter({
@@ -62,134 +62,39 @@ const isFocusGuarded = (): boolean => {
 export function useLayoutPresets(
   onPresetChange?: (preset: LayoutPreset) => void
 ): UseLayoutPresetsReturn {
-  // Load initial preset from storage or default
-  const [currentPresetId, setCurrentPresetId] = useState<PresetId>(() => {
-    if (presetStorage.isAvailable()) {
-      const saved = presetStorage.get('currentPreset');
-      if (saved && typeof saved === 'string' && saved in layoutPresets) {
-        return saved as PresetId;
-      }
-    }
-    return getDefaultPreset().id;
-  });
-  
-  const [presetSwitchHistory, setPresetSwitchHistory] = useState<PresetId[]>([currentPresetId]);
-  
-  // Track keyboard event listeners to prevent memory leaks
-  const keyboardListenerRef = useRef<((event: KeyboardEvent) => void) | null>(null);
-  
-  const currentPreset = layoutPresets[currentPresetId];
-  const allPresets = Object.values(layoutPresets);
+  // Delegate to shared context
+  const ctx = usePreset();
+  const { currentPreset, currentPresetId, allPresets } = ctx;
 
   /**
    * Switch to a specific preset with validation and persistence
    */
   const switchToPreset = useCallback((presetId: PresetId): boolean => {
-    if (!(presetId in layoutPresets)) {
-      console.warn(`Invalid preset ID: ${presetId}`);
-      return false;
-    }
-    
-    if (presetId === currentPresetId) {
-      return true; // Already active
-    }
-    
-    const preset = layoutPresets[presetId];
-    
-    console.log(`🎯 Switching to preset: ${preset.name} (${presetId})`);
-    
-    // Update state
-    setCurrentPresetId(presetId);
-    
-    // Update history (keep last 10 switches)
-    setPresetSwitchHistory(prev => {
-      const newHistory = [presetId, ...prev.filter(id => id !== presetId)].slice(0, 10);
-      return newHistory;
-    });
-    
-    // Persist to storage
-    if (presetStorage.isAvailable()) {
-      const saveResult = presetStorage.set('currentPreset', presetId);
-      if (!saveResult.ok) {
-        console.warn('Failed to save preset preference:', saveResult.error);
-      }
-    }
-    
-    // Notify parent component
-    if (onPresetChange) {
-      onPresetChange(preset);
-    }
-    
-    return true;
-  }, [currentPresetId, onPresetChange]);
+    const ok = ctx.switchToPreset(presetId);
+    if (ok && onPresetChange) onPresetChange(layoutPresets[presetId]);
+    return ok;
+  }, [ctx, onPresetChange]);
 
   /**
    * Switch preset by keyboard shortcut with focus guarding
    */
-  const switchToPresetByShortcut = useCallback((shortcut: string): boolean => {
-    // Focus guard: Don't activate shortcuts when user is typing
-    if (isFocusGuarded()) {
-      return false;
-    }
-    
-    const preset = getLayoutPresetByShortcut(shortcut);
-    if (!preset) {
-      return false;
-    }
-    
-    return switchToPreset(preset.id);
-  }, [switchToPreset]);
+  const switchToPresetByShortcut = useCallback((shortcut: string): boolean => ctx.switchToPresetByShortcut(shortcut), [ctx]);
 
   /**
    * Check if a preset is currently active
    */
-  const isPresetActive = useCallback((presetId: PresetId): boolean => {
-    return presetId === currentPresetId;
-  }, [currentPresetId]);
+  const isPresetActive = useCallback((presetId: PresetId): boolean => ctx.isPresetActive(presetId), [ctx]);
 
   /**
    * Set up keyboard event listeners for preset shortcuts (1, 2, 3)
    */
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle number keys 1, 2, 3
-      if (event.key >= '1' && event.key <= '3') {
-        // Only prevent default if we're actually going to handle the shortcut
-        // This allows character input in search fields while preventing shortcuts
-        if (!isFocusGuarded()) {
-          event.preventDefault();
-          
-          const switched = switchToPresetByShortcut(event.key);
-          if (switched) {
-            console.log(`🎯 Preset switched via keyboard shortcut: ${event.key}`);
-          }
-        }
-        // If focus is guarded (user is typing), don't preventDefault
-        // This allows the character to be typed normally in input fields
-      }
-    };
-    
-    // Store reference for cleanup
-    keyboardListenerRef.current = handleKeyDown;
-    
-    // Add event listener
-    document.addEventListener('keydown', handleKeyDown);
-    
-    // Cleanup function
-    return () => {
-      if (keyboardListenerRef.current) {
-        document.removeEventListener('keydown', keyboardListenerRef.current);
-        keyboardListenerRef.current = null;
-      }
-    };
-  }, [switchToPresetByShortcut]);
+  // Keyboard handling is done in provider; no-op here
 
   /**
    * Log preset change for debugging
    */
   useEffect(() => {
-    console.log(`🎯 Current preset: ${currentPreset.name} (${currentPresetId})`);
-    console.log(`🎯 Preset workflow: ${currentPreset.workflow}`);
+    // Preset change side-effects could be added here if needed in the future
   }, [currentPreset, currentPresetId]);
 
   return {
@@ -199,7 +104,7 @@ export function useLayoutPresets(
     switchToPreset,
     switchToPresetByShortcut,
     isPresetActive,
-    presetSwitchHistory,
+    presetSwitchHistory: ctx.presetSwitchHistory,
   };
 }
 

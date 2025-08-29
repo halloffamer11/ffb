@@ -1,0 +1,62 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Console Error Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a2e; color: #eee; }
+        .error { background: #ff4757; color: white; padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .warning { background: #ffa502; color: black; padding: 10px; margin: 5px 0; border-radius: 4px; }
+        .log { background: #2ed573; color: black; padding: 10px; margin: 5px 0; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>Console Error Detection</h1>
+    <div id="messages"></div>
+    <iframe src="http://localhost:5175" width="100%" height="600" style="border: 1px solid #ccc; margin-top: 20px;"></iframe>
+    
+    <script>
+        const messages = document.getElementById('messages');
+        
+        // Override console methods to capture messages
+        const originalError = console.error;
+        const originalWarn = console.warn;
+        const originalLog = console.log;
+        
+        function addMessage(type, text) {
+            const div = document.createElement('div');
+            div.className = type;
+            div.textContent = new Date().toLocaleTimeString() + ': ' + text;
+            messages.appendChild(div);
+        }
+        
+        console.error = function(...args) {
+            addMessage('error', args.join(' '));
+            originalError.apply(console, args);
+        };
+        
+        console.warn = function(...args) {
+            addMessage('warning', args.join(' '));
+            originalWarn.apply(console, args);
+        };
+        
+        console.log = function(...args) {
+            if (args.some(arg => typeof arg === 'string' && (arg.includes('🔧') || arg.includes('Error')))) {
+                addMessage('log', args.join(' '));
+            }
+            originalLog.apply(console, args);
+        };
+        
+        // Listen for iframe errors
+        window.addEventListener('message', function(event) {
+            if (event.data && event.data.type === 'error') {
+                addMessage('error', 'Iframe Error: ' + event.data.message);
+            }
+        });
+        
+        setTimeout(() => {
+            addMessage('log', 'Console error detection initialized. Check iframe above for the app.');
+        }, 1000);
+    </script>
+</body>
+</html>

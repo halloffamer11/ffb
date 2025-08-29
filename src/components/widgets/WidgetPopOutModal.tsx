@@ -30,7 +30,7 @@ const Backdrop = styled.div`
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.6);
   backdrop-filter: blur(8px);
   z-index: 1000;
   display: flex;
@@ -45,7 +45,7 @@ const Modal = styled.div`
   height: 100%;
   max-width: 100vw;
   max-height: 100vh;
-  background: ${props => theme('gradients.widget')};
+  background: ${props => theme('colors.surface1')};
   border: 1px solid var(--border-1);
   border-radius: ${props => theme('borderRadius.lg')};
   display: flex;
@@ -75,7 +75,7 @@ const Header = styled.div`
   justify-content: space-between;
   padding: ${props => theme('spacing.md')} ${props => theme('spacing.lg')};
   border-bottom: 1px solid var(--border-1);
-  background: ${props => theme('gradients.widgetHover')};
+  background: ${props => theme('colors.surface1')};
   flex-shrink: 0;
 `;
 
@@ -133,7 +133,7 @@ const CloseButton = styled.button`
 const Content = styled.div`
   flex: 1;
   overflow: auto;
-  background: ${props => theme('surfaces.widget')};
+  background: ${props => theme('colors.bg')};
   position: relative;
 `;
 
@@ -205,10 +205,7 @@ export default function WidgetPopOutModal({
     }
   }, [onClose]);
 
-  console.log(`🔧 WidgetPopOutModal: Rendering with isOpen=${isOpen}, widgetId=${widgetId}`);
-  
   if (!isOpen) {
-    console.log(`🔧 WidgetPopOutModal: Not rendering because isOpen is false`);
     return null;
   }
 
@@ -248,8 +245,5 @@ export default function WidgetPopOutModal({
   );
 
   // Use portal to render at document root for proper z-index layering
-  console.log(`🔧 WidgetPopOutModal: Creating portal to document.body`);
-  console.log(`🔧 WidgetPopOutModal: document.body exists:`, !!document.body);
-  
   return createPortal(modalContent, document.body);
 }

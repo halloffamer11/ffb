@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Greek medallion trophy with gravity grid">
+  <title>FFB — Greek Medallion Trophy (Flat Apple-style)</title>
+  <defs>
+    <style>
+      .terracotta { fill:#DA7F2C; }         /* warm vase orange */
+      .terracotta-dark { stroke:#9C4F16; }  /* subtle outline */
+      .espresso { fill:#120904; }           /* black-figure brown/black */
+      .gold { fill:#F0C35B; }               /* flat gold */
+      .gold-dark { stroke:#996A1E; }        /* gold outline */
+      .ring { stroke:#D9A14A; }             /* bronze ring */
+      .grid { stroke:#E9D8A6; }             /* pale gold grid */
+    </style>
+    <clipPath id="medal-clip">
+      <circle cx="256" cy="256" r="196"></circle>
+    </clipPath>
+  </defs>
+
+  <!-- Apple-style rounded square (flat) -->
+  <rect x="32" y="32" width="448" height="448" rx="112" class="terracotta terracotta-dark" stroke-width="6"></rect>
+
+  <!-- Medallion disc -->
+  <circle cx="256" cy="256" r="196" class="espresso"></circle>
+  <!-- Bronze outer ring and inner hairline (both flat) -->
+  <circle cx="256" cy="256" r="196" class="ring" fill="none" stroke-width="14"></circle>
+  <circle cx="256" cy="256" r="186" fill="none" stroke="#2E190C" stroke-width="3"></circle>
+
+  <!-- Gravity grid warped toward center “singularity” -->
+  <g clip-path="url(#medal-clip)" fill="none" class="grid" stroke-width="4.2" stroke-linecap="round">
+    <!-- verticals: top halves -->
+    <path d="M176 96 C160 170,170 210,214 214"></path>
+    <path d="M216 96 C210 170,224 206,246 214"></path>
+    <path d="M256 96 C256 172,256 204,256 214"></path>
+    <path d="M296 96 C302 170,288 206,266 214"></path>
+    <path d="M336 96 C352 170,342 210,298 214"></path>
+    <!-- verticals: bottom halves -->
+    <path d="M214 298 C170 302,160 342,176 416"></path>
+    <path d="M246 298 C224 306,210 342,216 416"></path>
+    <path d="M256 298 C256 308,256 352,256 416"></path>
+    <path d="M266 298 C288 306,302 342,296 416"></path>
+    <path d="M298 298 C342 302,352 342,336 416"></path>
+    <!-- horizontals: left halves -->
+    <path d="M96 176 C170 160,210 170,214 214"></path>
+    <path d="M96 216 C170 210,206 224,214 246"></path>
+    <path d="M96 256 C172 256,204 256,214 256"></path>
+    <path d="M96 296 C170 302,206 288,214 266"></path>
+    <path d="M96 336 C170 352,210 342,214 298"></path>
+    <!-- horizontals: right halves -->
+    <path d="M298 214 C302 170,342 160,416 176"></path>
+    <path d="M266 246 C274 224,342 210,416 216"></path>
+    <path d="M298 256 C308 256,340 256,416 256"></path>
+    <path d="M266 266 C274 288,342 302,416 296"></path>
+    <path d="M298 298 C302 342,342 352,416 336"></path>
+  </g>
+
+  <!-- subtle singularity ring (flat, low alpha) -->
+  <circle cx="256" cy="256" r="48" fill="none" stroke="#E9D8A6" stroke-width="3" opacity="0.4"></circle>
+
+  <!-- Center trophy (flat gold, slightly larger; clean outlines) -->
+  <g transform="translate(256,256) scale(1.16)">
+    <!-- cup -->
+    <path d="M-56,-32 H56
+             C56,8 36,30 14,44
+             C4,50 0,64 0,72
+             C0,64 -4,50 -14,44
+             C-36,30 -56,8 -56,-32 Z" class="gold gold-dark" stroke-width="4"></path>
+    <!-- rim -->
+    <rect x="-58" y="-34" width="116" height="10" rx="5" fill="#F8DEA1"></rect>
+    <!-- handles -->
+    <path d="M-56,-26 C-88,-26 -88,12 -60,18 C-48,20 -40,12 -40,2" fill="none" class="gold-dark" stroke-width="10"></path>
+    <path d="M56,-26 C88,-26 88,12 60,18 C48,20 40,12 40,2" fill="none" class="gold-dark" stroke-width="10"></path>
+    <!-- stem and base -->
+    <rect x="-10" y="72" width="20" height="28" rx="6" class="gold gold-dark" stroke-width="4"></rect>
+    <rect x="-44" y="100" width="88" height="18" rx="9" class="gold gold-dark" stroke-width="4"></rect>
+  </g>
+</svg>

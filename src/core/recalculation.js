@@ -15,20 +15,36 @@ const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' 
 export async function recalcAll() {
   const tStart = performance.now();
   try {
-    const league = storage.get('leagueSettings') || {};
-    const players = storage.get('players') || [];
+    // Get data from unified store first, then fallback to storage
+    let players = [];
+    let settings = {};
+    let picks = [];
     
-    // Get state from React store or fallback to storage
-    let state;
     try {
       // Try to get state from React store first
-      const { useDraftStore } = await import('../stores/draftStore.js');
-      const store = useDraftStore.getState();
-      state = { draft: { picks: store.picks || [] } };
+      const { useUnifiedStore } = await import('../stores/unified-store.ts');
+      const store = useUnifiedStore.getState();
+      players = store.players || [];
+      settings = store.settings || {};
+      picks = store.picks || [];
     } catch {
       // Fallback to storage
-      state = storage.get('state') || { draft: { picks: [] } };
+      const unifiedState = storage.get('state');
+      if (unifiedState) {
+        players = unifiedState.players || [];
+        settings = unifiedState.settings || {};
+        picks = unifiedState.picks || [];
+      } else {
+        // Legacy fallback
+        players = storage.get('players') || [];
+        settings = storage.get('leagueSettings') || {};
+        const draftData = storage.get('draft') || {};
+        picks = draftData.picks || [];
+      }
     }
+    
+    const league = settings;
+    const state = { draft: { picks } };
     
     if (!Array.isArray(players) || players.length === 0) return;
 
@@ -37,12 +53,13 @@ export async function recalcAll() {
     const t0 = performance.now();
     // Derive drafted flags from picks (keeps UI in sync after undo/redo)
     const draftedSet = new Set(
-      Array.isArray(state?.draft?.picks) ? state.draft.picks.map(p => String(p.playerId ?? p.playerName)) : []
+      Array.isArray(state?.draft?.picks) ? state.draft.picks.map(p => String(p.player?.id ?? p.playerId ?? p.playerName)) : []
     );
 
     const withPoints = players.map(p => ({
       ...p,
-      points: safeNumber(calculatePoints(p.projections?.stats || {}, scoring)),
+      // Preserve existing points if they exist, otherwise calculate from projections
+      points: p.points !== undefined && p.points !== null ? safeNumber(p.points) : safeNumber(calculatePoints(p.projections?.stats || {}, scoring)),
       drafted: draftedSet.has(String(p.id ?? p.name))
     }));
     const t1 = performance.now();
@@ -73,6 +90,17 @@ export async function recalcAll() {
     try {
       storage.set('players', withVbd);
       storage.set('tiers', serializeTiers(tiers));
+      
+      // CRITICAL: Also update the unified store with recalculated data
+      try {
+        const { useUnifiedStore } = await import('../stores/unified-store.ts');
+        const store = useUnifiedStore.getState();
+        store.importPlayers(withVbd); // This will trigger React re-renders
+        console.log('✅ Updated unified store with recalculated VBD data');
+      } catch (storeError) {
+        console.warn('Failed to update unified store:', storeError);
+      }
+      
       // Don't fire workspace:players-changed here to avoid infinite loop
       // Other UI components should listen to workspace:state-changed instead
     } catch {}

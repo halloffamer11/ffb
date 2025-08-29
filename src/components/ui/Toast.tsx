@@ -37,7 +37,7 @@ const ToastContainer = styled.div`
   pointer-events: none;
 `;
 
-const ToastItem = styled.div<{ variant: 'success' | 'error' | 'warning' | 'info'; isExiting: boolean }>`
+const ToastItem = styled.div<{ $variant: 'success' | 'error' | 'warning' | 'info'; $isExiting: boolean }>`
   padding: ${props => theme('spacing.sm')} ${props => theme('spacing.md')};
   border-radius: ${props => theme('radii.md')};
   font-size: ${props => theme('typography.fontSize.sm')};
@@ -47,10 +47,10 @@ const ToastItem = styled.div<{ variant: 'success' | 'error' | 'warning' | 'info'
   max-width: 400px;
   word-wrap: break-word;
   
-  animation: ${props => props.isExiting ? slideOutToRight : slideInFromRight} 0.3s ease-out forwards;
+  animation: ${props => props.$isExiting ? slideOutToRight : slideInFromRight} 0.3s ease-out forwards;
   
   background: ${props => {
-    switch (props.variant) {
+    switch (props.$variant) {
       case 'success':
         return theme('colors.success');
       case 'error':
@@ -65,7 +65,7 @@ const ToastItem = styled.div<{ variant: 'success' | 'error' | 'warning' | 'info'
   
   color: ${props => theme('colors.bg')};
   border: 1px solid ${props => {
-    switch (props.variant) {
+    switch (props.$variant) {
       case 'success':
         return `${theme('colors.success')}CC`;
       case 'error':
@@ -135,8 +135,8 @@ export default function Toast({ toasts, removeToast }: ToastProps) {
       {toasts.map(toast => (
         <ToastItem
           key={toast.id}
-          variant={toast.variant}
-          isExiting={exitingToasts.has(toast.id)}
+          $variant={toast.variant}
+          $isExiting={exitingToasts.has(toast.id)}
           onClick={() => handleToastExit(toast.id)}
         >
           {toast.message}

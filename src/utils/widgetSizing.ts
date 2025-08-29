@@ -34,10 +34,11 @@ export type WidgetType =
   | 'vbd-scatter'
   | 'budget'
   | 'roster'
-  | 'draft-ledger';
+  | 'draft-ledger'
+  | 'team-roster-overview';
 
 // Grid configuration constants
-const GRID_ROW_HEIGHT = 30; // pixels per grid unit (increased from 12px)
+const GRID_ROW_HEIGHT = 50; // pixels per grid unit (increased for better drag targets)
 const GRID_MARGIN = 8; // margin between grid items
 
 // Content sizing constants (in pixels)
@@ -56,18 +57,18 @@ const CONTENT_CONSTANTS = {
   scrollbarWidth: 12
 };
 
-// Breakpoint multipliers for responsive sizing
+// Breakpoint multipliers for responsive sizing (adjusted for 24/20/16 column grids)
 const BREAKPOINT_MULTIPLIERS: Record<BreakpointKey, number> = {
-  lg: 1.0,
-  md: 0.85,
-  sm: 0.7
+  lg: 2.0,  // 24 columns vs 12 baseline
+  md: 1.67, // 20 columns vs 12 baseline  
+  sm: 1.33  // 16 columns vs 12 baseline
 };
 
-// Maximum columns per breakpoint
+// Maximum columns per breakpoint (must match WidgetGrid cols configuration)
 const MAX_COLUMNS: Record<BreakpointKey, number> = {
-  lg: 24,
-  md: 20,
-  sm: 16
+  lg: 24, // Updated to match WidgetGrid configuration
+  md: 20, // Updated to match WidgetGrid configuration  
+  sm: 16  // Updated to match WidgetGrid configuration
 };
 
 /**
@@ -97,57 +98,61 @@ function calculateContentSize(
   
   switch (widgetType) {
     case 'search':
-      // PlayerSearch: Search input + filters + table (8-10 rows typically)
+      // PlayerSearch: Compact table view with 6 visible rows by default
+      // Table columns (480px total) fit comfortably in 6 columns on 12-col grid
       const searchHeight = 
         CONTENT_CONSTANTS.widgetHeaderHeight +
         CONTENT_CONSTANTS.searchInputHeight +
         CONTENT_CONSTANTS.filterRowHeight +
         CONTENT_CONSTANTS.tableHeaderHeight +
-        (customRequirements?.tableRows || 8) * CONTENT_CONSTANTS.tableRowHeight +
+        (customRequirements?.tableRows || 6) * CONTENT_CONSTANTS.tableRowHeight +
         CONTENT_CONSTANTS.widgetPadding +
         CONTENT_CONSTANTS.scrollbarWidth;
       
-      baseWidth = Math.floor(14 * multiplier);
+      baseWidth = Math.floor(6 * multiplier); // Compact: 8 → 6 columns
       baseHeight = pixelsToGridUnits(searchHeight);
-      minW = Math.floor(8 * multiplier);
+      minW = Math.floor(4 * multiplier);
       maxW = maxCols;
-      minH = pixelsToGridUnits(300); // Minimum useful height
+      minH = pixelsToGridUnits(280); // Reduced from 300
       break;
       
     case 'vbd-scatter':
-      // VBDScatter: Chart with axes, legend, and controls
+      // VBDScatter: Compact scatter plot with controls
+      // 6 columns provides adequate space for readable chart
       const chartHeight = 
         CONTENT_CONSTANTS.widgetHeaderHeight +
         CONTENT_CONSTANTS.formFieldHeight + // Controls
-        (customRequirements?.chartHeight || 320) +
+        (customRequirements?.chartHeight || 280) + // Reduced from 320
         CONTENT_CONSTANTS.chartAxisHeight +
         CONTENT_CONSTANTS.chartLegendHeight +
         CONTENT_CONSTANTS.widgetPadding;
       
-      baseWidth = Math.floor(16 * multiplier);
+      baseWidth = Math.floor(6 * multiplier); // Compact: 8 → 6 columns
       baseHeight = pixelsToGridUnits(chartHeight);
-      minW = Math.floor(12 * multiplier);
+      minW = Math.floor(5 * multiplier);
       maxW = maxCols;
-      minH = pixelsToGridUnits(280);
+      minH = pixelsToGridUnits(260); // Reduced from 280
       break;
       
     case 'budget':
-      // BudgetTracker: Statistics cards + chart
+      // BudgetTracker: Compact stat cards + chart
+      // Stat cards can be smaller, charts still readable at 4 columns
       const budgetHeight = 
         CONTENT_CONSTANTS.widgetHeaderHeight +
         (customRequirements?.statisticCards || 4) * CONTENT_CONSTANTS.statisticCardHeight +
-        200 + // Chart space
+        180 + // Reduced chart space from 200
         CONTENT_CONSTANTS.widgetPadding;
       
-      baseWidth = Math.floor(10 * multiplier);
+      baseWidth = Math.floor(4 * multiplier); // Compact: 5 → 4 columns
       baseHeight = pixelsToGridUnits(budgetHeight);
-      minW = Math.floor(8 * multiplier);
-      maxW = Math.floor(16 * multiplier);
-      minH = pixelsToGridUnits(240);
+      minW = Math.floor(3 * multiplier);
+      maxW = Math.floor(7 * multiplier);
+      minH = pixelsToGridUnits(220); // Reduced from 240
       break;
       
     case 'draft-entry':
-      // DraftEntry: Form fields + controls + recent picks
+      // DraftEntry: Ultra-compact form with stacked inputs
+      // Team selector, price, quick entry can fit in 4 columns
       const draftEntryHeight = 
         CONTENT_CONSTANTS.widgetHeaderHeight +
         (customRequirements?.formFields || 4) * CONTENT_CONSTANTS.formFieldHeight +
@@ -155,62 +160,89 @@ function calculateContentSize(
         3 * CONTENT_CONSTANTS.tableRowHeight + // Recent picks preview
         CONTENT_CONSTANTS.widgetPadding;
       
-      baseWidth = Math.floor(12 * multiplier);
+      baseWidth = Math.floor(4 * multiplier); // Compact: 5 → 4 columns
       baseHeight = pixelsToGridUnits(draftEntryHeight);
-      minW = Math.floor(8 * multiplier);
+      minW = Math.floor(3 * multiplier);
       maxW = maxCols;
       minH = pixelsToGridUnits(200);
       break;
       
     case 'roster':
-      // RosterPanel: All position slots (typically 15-16 positions)
+      // RosterPanel: Adaptive layout for 6 positions (QB, RB, WR, TE, K, DST)
+      // 6 cols = 3×2 grid (default), 12 cols = 6×1, 4 cols = 2×3, 2 cols = 1×6
       const rosterHeight = 
         CONTENT_CONSTANTS.widgetHeaderHeight +
         CONTENT_CONSTANTS.tableHeaderHeight +
-        16 * CONTENT_CONSTANTS.tableRowHeight + // All positions
+        12 * CONTENT_CONSTANTS.tableRowHeight + // Reduced from 16
         CONTENT_CONSTANTS.widgetPadding;
       
-      baseWidth = Math.floor(10 * multiplier);
+      baseWidth = Math.floor(6 * multiplier); // Compact: 12 → 6 columns (3×2 grid)
       baseHeight = pixelsToGridUnits(rosterHeight);
-      minW = Math.floor(8 * multiplier);
-      maxW = Math.floor(14 * multiplier);
-      minH = pixelsToGridUnits(300);
+      minW = Math.floor(4 * multiplier); // Can go down to 2×3
+      maxW = maxCols; // Can expand to 6×1
+      minH = pixelsToGridUnits(280); // Reduced from 300
       break;
       
     case 'draft-ledger':
-      // DraftLedger: Recent draft picks table
+      // DraftLedger: Compact picks table with tighter columns
       const ledgerHeight = 
         CONTENT_CONSTANTS.widgetHeaderHeight +
         CONTENT_CONSTANTS.tableHeaderHeight +
-        (customRequirements?.tableRows || 10) * CONTENT_CONSTANTS.tableRowHeight +
+        (customRequirements?.tableRows || 8) * CONTENT_CONSTANTS.tableRowHeight + // Reduced from 10
         CONTENT_CONSTANTS.widgetPadding;
       
-      baseWidth = Math.floor(14 * multiplier);
+      baseWidth = Math.floor(5 * multiplier); // Compact: 7 → 5 columns
       baseHeight = pixelsToGridUnits(ledgerHeight);
-      minW = Math.floor(10 * multiplier);
+      minW = Math.floor(4 * multiplier);
       maxW = maxCols;
-      minH = pixelsToGridUnits(200);
+      minH = pixelsToGridUnits(180); // Reduced from 200
       break;
       
     case 'player-analysis':
-      // PlayerAnalysis: Stats display and info
+      // PlayerAnalysis: Compact 2×2 metrics grid
+      // 4 columns provides adequate space for metric cards
       const analysisHeight = 
         CONTENT_CONSTANTS.widgetHeaderHeight +
-        6 * CONTENT_CONSTANTS.statisticCardHeight + // Various stats
+        5 * CONTENT_CONSTANTS.statisticCardHeight + // Reduced from 6
         CONTENT_CONSTANTS.widgetPadding;
       
-      baseWidth = Math.floor(10 * multiplier);
+      baseWidth = Math.floor(4 * multiplier); // Compact: 5 → 4 columns
       baseHeight = pixelsToGridUnits(analysisHeight);
-      minW = Math.floor(8 * multiplier);
-      maxW = Math.floor(14 * multiplier);
-      minH = pixelsToGridUnits(240);
+      minW = Math.floor(3 * multiplier);
+      maxW = Math.floor(6 * multiplier);
+      minH = pixelsToGridUnits(220); // Reduced from 240
+      break;
+      
+    case 'team-roster-overview':
+      // Team Roster Overview: Full-width horizontal widget showing all teams
+      // Widget spans full width but can be moved and height-resized
+      const overviewHeight = 
+        CONTENT_CONSTANTS.widgetHeaderHeight +
+        200 + // Base height for team columns (compact view)
+        CONTENT_CONSTANTS.widgetPadding;
+      
+      baseWidth = maxCols; // Always full width
+      baseHeight = pixelsToGridUnits(overviewHeight);
+      minW = maxCols; // Cannot be made narrower than full width
+      maxW = maxCols; // Cannot be made wider than full width
+      minH = pixelsToGridUnits(160); // Minimum compact height
+      
+      // Debug logging
+      console.log(`🔧 Team Overview Widget Sizing [${breakpoint}]:`, {
+        maxCols,
+        baseWidth,
+        baseHeight,
+        minW,
+        maxW,
+        minH
+      });
       break;
       
     default:
       // Fallback for unknown widget types
-      baseWidth = Math.floor(12 * multiplier);
+      baseWidth = Math.floor(6 * multiplier);
       baseHeight = pixelsToGridUnits(300);
-      minW = Math.floor(6 * multiplier);
+      minW = Math.floor(3 * multiplier);
       maxW = maxCols;
       minH = pixelsToGridUnits(200);
   }
@@ -249,7 +281,7 @@ export function calculateWidgetDimensions(
 export function getOptimalWidgetSizes(): Record<WidgetType, Record<BreakpointKey, WidgetDimensions>> {
   const widgetTypes: WidgetType[] = [
     'search', 'draft-entry', 'player-analysis', 'vbd-scatter', 
-    'budget', 'roster', 'draft-ledger'
+    'budget', 'roster', 'draft-ledger', 'team-roster-overview'
   ];
   
   const result = {} as Record<WidgetType, Record<BreakpointKey, WidgetDimensions>>;
@@ -278,6 +310,7 @@ export function dimensionsToGridItem(
     minW: dimensions.minWidth,
     maxW: dimensions.maxWidth,
     minH: dimensions.minHeight
+    // Removed static property - team-roster-overview can now be moved and height-resized
   };
 }
 
