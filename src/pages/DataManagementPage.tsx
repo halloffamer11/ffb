@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import { theme } from '../utils/styledHelpers';
 import { Button } from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
-import { createStorageAdapter } from '../adapters/storage';
 import { useUnifiedStore } from '../stores/unified-store';
+import { parseExcelFile, getExcelSheetInfo, validateExcelData, type ExcelParseResult, type SheetData } from '../utils/excel-parser';
 
 const PageContainer = styled.div`
   height: 100vh;
@@ -255,6 +255,14 @@ interface CSVData {
   fullRows?: string[][]; // Store all rows for import, separate from preview
 }
 
+interface ExcelData {
+  filename: string;
+  size: number;
+  fileType: 'FFA' | 'FPs' | 'unknown';
+  sheets: SheetData[];
+  parseResult: ExcelParseResult;
+}
+
 const DATA_SOURCES = [
   { id: 'fantasypros', name: 'FantasyPros', description: 'Rankings and projections' },
   { id: 'espn', name: 'ESPN', description: 'Player data export' },
@@ -269,6 +277,7 @@ export default function DataManagementPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedSource, setSelectedSource] = useState<string>('');
   const [csvData, setCsvData] = useState<CSVData | null>(null);
+  const [excelData, setExcelData] = useState<ExcelData | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [status, setStatus] = useState<{type: 'success' | 'error' | 'warning', message: string} | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -288,12 +297,17 @@ export default function DataManagementPage() {
     setIsDragOver(false);
     
     const files = Array.from(e.dataTransfer.files);
-    const csvFile = files.find(file => file.type === 'text/csv' || file.name.endsWith('.csv'));
+    const supportedFile = files.find(file => 
+      file.type === 'text/csv' || 
+      file.name.endsWith('.csv') ||
+      file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      file.name.endsWith('.xlsx')
+    );
     
-    if (csvFile) {
-      handleFileSelection(csvFile);
+    if (supportedFile) {
+      handleFileSelection(supportedFile);
     } else {
-      setStatus({ type: 'error', message: 'Please drop a CSV file' });
+      setStatus({ type: 'error', message: 'Please drop a CSV or Excel (.xlsx) file' });
     }
   };
 
@@ -311,34 +325,71 @@ export default function DataManagementPage() {
   const handleFileSelection = async (file: File) => {
     setIsProcessing(true);
     setStatus(null);
+    setCsvData(null);
+    setExcelData(null);
     
     try {
-      const text = await file.text();
-      const lines = text.trim().split('\n');
+      const isExcel = file.name.endsWith('.xlsx') || file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
       
-      if (lines.length < 2) {
-        throw new Error('CSV file must contain at least a header row and one data row');
+      if (isExcel) {
+        // Handle Excel file
+        const parseResult = await parseExcelFile(file);
+        const validation = validateExcelData(parseResult);
+        
+        if (!parseResult.success) {
+          throw new Error(parseResult.errors.join(', '));
+        }
+        
+        const sheetInfo = await getExcelSheetInfo(file);
+        
+        setExcelData({
+          filename: file.name,
+          size: file.size,
+          fileType: parseResult.fileType,
+          sheets: sheetInfo,
+          parseResult
+        });
+        
+        setCurrentStep(3);
+        
+        // Show status with warnings if any
+        const message = validation.warnings.length > 0
+          ? `Successfully loaded ${file.name} (${parseResult.fileType} format) - ${validation.warnings.join(', ')}`
+          : `Successfully loaded ${file.name} (${parseResult.fileType} format)`;
+        
+        setStatus({ 
+          type: validation.warnings.length > 0 ? 'warning' : 'success', 
+          message 
+        });
+      } else {
+        // Handle CSV file (existing logic)
+        const text = await file.text();
+        const lines = text.trim().split('\n');
+        
+        if (lines.length < 2) {
+          throw new Error('CSV file must contain at least a header row and one data row');
+        }
+        
+        // Parse CSV (simple implementation)
+        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+        const allRows = lines.slice(1).map(line => 
+          line.split(',').map(cell => cell.trim().replace(/"/g, ''))
+        );
+        const previewRows = allRows.slice(0, 10); // Show first 10 rows for preview
+        
+        setCsvData({
+          headers,
+          rows: previewRows,
+          fullRows: allRows, // Store all rows for import
+          filename: file.name,
+          size: file.size
+        });
+        
+        setCurrentStep(3);
+        setStatus({ type: 'success', message: `Successfully loaded ${file.name} with ${allRows.length} rows` });
       }
-      
-      // Parse CSV (simple implementation)
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      const allRows = lines.slice(1).map(line => 
-        line.split(',').map(cell => cell.trim().replace(/"/g, ''))
-      );
-      const previewRows = allRows.slice(0, 10); // Show first 10 rows for preview
-      
-      setCsvData({
-        headers,
-        rows: previewRows,
-        fullRows: allRows, // Store all rows for import
-        filename: file.name,
-        size: file.size
-      });
-      
-      setCurrentStep(3);
-      setStatus({ type: 'success', message: `Successfully loaded ${file.name} with ${allRows.length} rows` });
     } catch (error) {
-      setStatus({ type: 'error', message: `Failed to parse CSV: ${error instanceof Error ? error.message : 'Unknown error'}` });
+      setStatus({ type: 'error', message: `Failed to parse file: ${error instanceof Error ? error.message : 'Unknown error'}` });
     } finally {
       setIsProcessing(false);
     }
@@ -348,6 +399,41 @@ export default function DataManagementPage() {
     setSelectedSource(sourceId);
     setCurrentStep(2);
     setStatus(null);
+  };
+
+  const handlePurgeAllData = async () => {
+    if (!window.confirm('⚠️ Are you absolutely sure you want to delete ALL data?\n\nThis will permanently remove:\n• All players and their stats\n• All draft picks and keepers\n• All league settings\n\nThis action cannot be undone!')) {
+      return;
+    }
+
+    setIsProcessing(true);
+    setStatus({ type: 'warning', message: 'Purging all data...' });
+
+    try {
+      // Reset the entire store
+      store.reset();
+      
+      setStatus({ 
+        type: 'success', 
+        message: 'All data has been successfully purged. You can now import fresh data.' 
+      });
+      
+      // Reset local state
+      setCsvData(null);
+      setExcelData(null);
+      setCurrentStep(1);
+      setSelectedSource('');
+      
+      console.log('✅ All data purged successfully');
+    } catch (error) {
+      console.error('Failed to purge data:', error);
+      setStatus({ 
+        type: 'error', 
+        message: `Failed to purge data: ${error instanceof Error ? error.message : 'Unknown error'}` 
+      });
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleLoadDefaultData = async () => {
@@ -402,63 +488,140 @@ export default function DataManagementPage() {
   };
 
   const handleImport = async () => {
-    if (!csvData || !csvData.fullRows) {
+    if (!csvData && !excelData) {
       setStatus({ type: 'error', message: 'No data to import. Please select a file first.' });
       return;
     }
     
     setIsProcessing(true);
     try {
-      // Transform CSV data to player format
-      const players = csvData.fullRows.map((row, index) => {
-        const player = {
-          id: parseInt(row[0]) || index + 1,
-          name: row[1] || '',
-          team: row[2] || '',
-          position: row[3] || '',
-          points: parseFloat(row[6]) || 0,
-          adp: parseInt(row[7]) || 0,
-          injuryStatus: row[5] === 'NA' ? 0 : parseInt(row[5]) || 0,
-          drafted: false
-          // vbd will be calculated by recalculation system
-        };
-        
-        // Add byeWeek if available in CSV
-        if (csvData.headers.includes('byeWeek') && row[4]) {
-          player.byeWeek = parseInt(row[4]) || 0;
+      let importResult: any;
+      
+      if (excelData) {
+        // Handle Excel import using ProjectionImporter
+        if (excelData.fileType === 'FFA') {
+          // Import FFA data
+          const ffaData = excelData.parseResult.data as any[];
+          importResult = await store.importProjections(ffaData, new Map());
+        } else if (excelData.fileType === 'FPs') {
+          // Import FPs data
+          const fpsData = excelData.parseResult.data as Map<string, any[]>;
+          importResult = await store.importProjections([], fpsData);
+        } else {
+          throw new Error('Unknown Excel file type - please use FFA or FPs format');
         }
         
-        return player;
-      });
-      
-      // Use the unified store to import players
-      store.importPlayers(players);
-      
-      setStatus({ 
-        type: 'success', 
-        message: `Successfully imported ${players.length} players! Calculating VBD values...` 
-      });
-      
-      // Trigger recalculation for VBD calculation in background (non-blocking)
-      setTimeout(async () => {
-        try {
-          const { recalcAll } = await import('../core/recalculation');
-          await recalcAll();
-          console.log('✅ VBD recalculation completed after import');
+        if (importResult.success) {
           setStatus({ 
-            type: 'success', 
-            message: `Successfully imported ${players.length} players! VBD calculations completed.` 
+            type: importResult.warnings.length > 0 ? 'warning' : 'success',
+            message: `Successfully imported ${importResult.playersImported} players from Excel! Calculating VBD values...`
           });
-        } catch (error) {
-          console.warn('VBD recalculation failed:', error);
-          setStatus({ 
-            type: 'warning', 
-            message: `Imported ${players.length} players, but VBD calculation failed.` 
-          });
+          
+          // Trigger VBD recalculation after Excel import
+          setTimeout(async () => {
+            try {
+              store.updatePlayerProjections();
+              console.log('✅ VBD recalculation triggered after Excel import');
+              
+              // Also trigger the full recalculation system
+              const { recalcAll } = await import('../core/recalculation');
+              await recalcAll();
+              console.log('✅ Full VBD recalculation completed after Excel import');
+              
+              setStatus({ 
+                type: importResult.warnings.length > 0 ? 'warning' : 'success',
+                message: `Successfully imported ${importResult.playersImported} players from Excel! VBD calculations completed. ${importResult.warnings.join(', ')}`
+              });
+            } catch (error) {
+              console.warn('VBD recalculation failed after Excel import:', error);
+              setStatus({ 
+                type: 'warning', 
+                message: `Imported ${importResult.playersImported} players from Excel, but VBD calculation may be incomplete.` 
+              });
+            }
+          }, 100);
+        } else {
+          throw new Error(importResult.errors.join(', '));
         }
-      }, 100);
-      
-      console.log(`✅ Data Import: Imported ${players.length} players via draft store`);
+      } else if (csvData && csvData.fullRows) {
+        // Handle CSV import (legacy format)
+        const players = csvData.fullRows.map((row, index) => {
+          const player: any = {
+            id: parseInt(row[0]) || index + 1,
+            name: row[1] || '',
+            team: row[2] || '',
+            position: row[3] || '',
+            points: parseFloat(row[6]) || 0,
+            adp: parseInt(row[7]) || 0,
+            injuryStatus: row[5] === 'NA' ? 0 : parseInt(row[5]) || 0,
+            drafted: false,
+            vbd: 0, // Will be calculated
+            projections: {
+              points: parseFloat(row[6]) || 0,
+              source: 'csv' as const,
+              lastUpdated: Date.now()
+            },
+            stats: {
+              type: row[3] || 'QB',
+              // Default stats based on position - will be minimal
+              ...(row[3] === 'QB' ? {
+                passYds: 0, passAtt: 0, passCmp: 0, passTDs: 0, passInt: 0,
+                rushYds: 0, rushAtt: 0, rushTDs: 0, fumbles: 0
+              } : row[3] === 'RB' ? {
+                rushYds: 0, rushAtt: 0, rushTDs: 0,
+                rec: 0, recYds: 0, recTDs: 0, fumbles: 0
+              } : row[3] === 'WR' ? {
+                rec: 0, recYds: 0, recTDs: 0,
+                rushYds: 0, rushAtt: 0, rushTDs: 0, fumbles: 0
+              } : row[3] === 'TE' ? {
+                rec: 0, recYds: 0, recTDs: 0, fumbles: 0
+              } : row[3] === 'K' ? {
+                fg: 0, fga: 0, fg_0019: 0, fg_2029: 0, fg_3039: 0, fg_4049: 0, fg_50: 0, xp: 0
+              } : {
+                sacks: 0, int: 0, fumbleRec: 0, fumbleForced: 0, td: 0, safety: 0,
+                pointsAllowed: 0, yardsAllowed: 0
+              })
+            }
+            // vbd will be calculated by recalculation system
+          };
+          
+          // Add byeWeek if available in CSV
+          if (csvData.headers.includes('byeWeek') && row[4]) {
+            player.byeWeek = parseInt(row[4]) || 0;
+          }
+          
+          return player;
+        });
+        
+        // Use the unified store to import players
+        store.importPlayers(players);
+        
+        setStatus({ 
+          type: 'success', 
+          message: `Successfully imported ${players.length} players from CSV! Calculating VBD values...` 
+        });
+        
+        // Trigger recalculation for VBD calculation in background (non-blocking)
+        setTimeout(async () => {
+          try {
+            const { recalcAll } = await import('../core/recalculation');
+            await recalcAll();
+            console.log('✅ VBD recalculation completed after import');
+            setStatus({ 
+              type: 'success', 
+              message: `Successfully imported ${players.length} players! VBD calculations completed.` 
+            });
+          } catch (error) {
+            console.warn('VBD recalculation failed:', error);
+            setStatus({ 
+              type: 'warning', 
+              message: `Imported ${players.length} players, but VBD calculation failed.` 
+            });
+          }
+        }, 100);
+        
+        console.log(`✅ Data Import: Imported ${players.length} players via unified store`);
+      }
       
       // Navigate back after short delay
       setTimeout(() => {
@@ -494,6 +657,122 @@ export default function DataManagementPage() {
       
       <ContentArea>
         <StepsContainer>
+          {/* Current Data Status */}
+          <StepCard>
+            <StepHeader>
+              <div style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '16px',
+                background: 'var(--color-accent)',
+                color: 'white'
+              }}>
+                📊
+              </div>
+              <StepTitle>Current Data Status</StepTitle>
+            </StepHeader>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
+              <div style={{ 
+                padding: '16px', 
+                background: 'var(--color-surface2)', 
+                borderRadius: '8px',
+                border: '1px solid var(--color-border1)'
+              }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-accent)' }}>
+                  {store.players.length}
+                </div>
+                <div style={{ color: 'var(--color-text2)', fontSize: '14px' }}>Players Loaded</div>
+              </div>
+              
+              <div style={{ 
+                padding: '16px', 
+                background: 'var(--color-surface2)', 
+                borderRadius: '8px',
+                border: '1px solid var(--color-border1)'
+              }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-positive)' }}>
+                  {store.picks.length}
+                </div>
+                <div style={{ color: 'var(--color-text2)', fontSize: '14px' }}>Draft Picks</div>
+              </div>
+              
+              <div style={{ 
+                padding: '16px', 
+                background: 'var(--color-surface2)', 
+                borderRadius: '8px',
+                border: '1px solid var(--color-border1)'
+              }}>
+                <div style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--color-warning)' }}>
+                  {store.keepers.length}
+                </div>
+                <div style={{ color: 'var(--color-text2)', fontSize: '14px' }}>Keepers</div>
+              </div>
+              
+              <div style={{ 
+                padding: '16px', 
+                background: 'var(--color-surface2)', 
+                borderRadius: '8px',
+                border: '1px solid var(--color-border1)'
+              }}>
+                <div style={{ fontSize: '14px', fontWeight: 'bold' }}>
+                  Data Source
+                </div>
+                <div style={{ color: 'var(--color-text2)', fontSize: '12px' }}>
+                  {store.metadata.dataSource || 'Unknown'}
+                </div>
+                <div style={{ color: 'var(--color-text-muted)', fontSize: '10px', marginTop: '4px' }}>
+                  Last: {store.metadata.lastModified ? new Date(store.metadata.lastModified).toLocaleString() : 'Never'}
+                </div>
+              </div>
+            </div>
+
+            {store.players.length > 0 && (
+              <div style={{ marginTop: '16px', padding: '12px', background: 'var(--color-surface3)', borderRadius: '8px' }}>
+                <strong>Position Breakdown:</strong>
+                <div style={{ display: 'flex', gap: '16px', marginTop: '8px', flexWrap: 'wrap' }}>
+                  {Object.entries(
+                    store.players.reduce((acc, player) => {
+                      acc[player.position] = (acc[player.position] || 0) + 1;
+                      return acc;
+                    }, {} as Record<string, number>)
+                  ).map(([position, count]) => (
+                    <span key={position} style={{ fontSize: '12px' }}>
+                      <strong>{position}:</strong> {count}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {store.players.length > 0 && (
+              <div style={{ marginTop: '16px', padding: '16px', background: '#fee', borderRadius: '8px', border: '1px solid #fcc' }}>
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#d63384' }}>⚠️ Danger Zone</strong>
+                  <div style={{ fontSize: '14px', color: '#6f4e4e', marginTop: '4px' }}>
+                    This will permanently delete all imported data including players, picks, keepers, and settings.
+                  </div>
+                </div>
+                <Button
+                  variant="secondary"
+                  onClick={handlePurgeAllData}
+                  disabled={isProcessing}
+                  style={{
+                    background: '#dc3545',
+                    borderColor: '#dc3545',
+                    color: 'white'
+                  }}
+                >
+                  {isProcessing ? 'Purging...' : '🗑️ Purge All Data'}
+                </Button>
+              </div>
+            )}
+          </StepCard>
+
           {/* Step 1: Select Data Source */}
           <StepCard>
             <StepHeader>
@@ -573,27 +852,30 @@ export default function DataManagementPage() {
                   <div>
                     <div style={{ fontSize: '48px', marginBottom: '16px', opacity: 0.5 }}>📁</div>
                     <div style={{ marginBottom: '8px', fontWeight: '600' }}>
-                      {isProcessing ? 'Processing...' : 'Drop CSV file here or click to browse'}
+                      {isProcessing ? 'Processing...' : 'Drop CSV or Excel file here or click to browse'}
                     </div>
                     <div style={{ fontSize: '14px', color: 'var(--color-text-muted)' }}>
-                      Supports .csv files up to 10MB
+                      Supports .csv and .xlsx files up to 10MB
                     </div>
                   </div>
                 )}
               </DropZone>
               
-              {csvData && (
+              {(csvData || excelData) && (
                 <FileInfo>
                   <div>
-                    <strong>{csvData.filename}</strong>
+                    <strong>{csvData?.filename || excelData?.filename}</strong>
                     <div style={{ fontSize: '12px', color: 'var(--color-text-muted)' }}>
-                      {formatFileSize(csvData.size)} • {csvData.rows.length}+ rows
+                      {formatFileSize(csvData?.size || excelData?.size || 0)} • 
+                      {csvData ? ` ${csvData.rows.length}+ rows` : 
+                       excelData ? ` ${excelData.sheets.length} sheets (${excelData.fileType})` : ''}
                     </div>
                   </div>
                   <Button 
                     variant="secondary" 
                     onClick={() => {
                       setCsvData(null);
+                      setExcelData(null);
                       setCurrentStep(2);
                     }}
                   >
@@ -605,14 +887,14 @@ export default function DataManagementPage() {
               <HiddenInput
                 ref={fileInputRef}
                 type="file"
-                accept=".csv"
+                accept=".csv,.xlsx"
                 onChange={handleFileChange}
               />
             </StepCard>
           )}
 
           {/* Step 3: Preview & Import */}
-          {currentStep >= 3 && csvData && (
+          {currentStep >= 3 && (csvData || excelData) && (
             <StepCard>
               <StepHeader>
                 <StepNumber $active={currentStep === 3}>3</StepNumber>
@@ -623,24 +905,68 @@ export default function DataManagementPage() {
                 Review your data before importing:
               </p>
               
-              <PreviewTable>
-                <TableHeader>
-                  {csvData.headers.map((header, index) => (
-                    <TableCell key={index}>
-                      <strong>{header}</strong>
-                    </TableCell>
-                  ))}
-                </TableHeader>
-                {csvData.rows.map((row, rowIndex) => (
-                  <TableRow key={rowIndex}>
-                    {row.map((cell, cellIndex) => (
-                      <TableCell key={cellIndex} title={cell}>
-                        {cell}
+              {csvData && (
+                <PreviewTable>
+                  <TableHeader>
+                    {csvData.headers.map((header, index) => (
+                      <TableCell key={index}>
+                        <strong>{header}</strong>
                       </TableCell>
                     ))}
-                  </TableRow>
-                ))}
-              </PreviewTable>
+                  </TableHeader>
+                  {csvData.rows.map((row, rowIndex) => (
+                    <TableRow key={rowIndex}>
+                      {row.map((cell, cellIndex) => (
+                        <TableCell key={cellIndex} title={cell}>
+                          {cell}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </PreviewTable>
+              )}
+              
+              {excelData && (
+                <div>
+                  <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--color-surface2)', borderRadius: '8px' }}>
+                    <strong>Excel File Info:</strong>
+                    <br />
+                    <span style={{ color: 'var(--color-text2)' }}>
+                      File Type: {excelData.fileType} • Sheets: {excelData.sheets.length}
+                    </span>
+                  </div>
+                  
+                  {excelData.sheets.map((sheet, index) => (
+                    <div key={index} style={{ marginBottom: '16px' }}>
+                      <h4 style={{ margin: '8px 0', color: 'var(--color-text1)' }}>
+                        Sheet: {sheet.name} ({sheet.rowCount} rows)
+                      </h4>
+                      <PreviewTable>
+                        <TableHeader>
+                          {sheet.headers.slice(0, 8).map((header, headerIndex) => (
+                            <TableCell key={headerIndex}>
+                              <strong>{header}</strong>
+                            </TableCell>
+                          ))}
+                          {sheet.headers.length > 8 && (
+                            <TableCell><strong>...</strong></TableCell>
+                          )}
+                        </TableHeader>
+                        <TableRow>
+                          <TableCell style={{ 
+                            textAlign: 'center', 
+                            fontStyle: 'italic', 
+                            color: 'var(--color-text-muted)',
+                            gridColumn: `1 / ${Math.min(sheet.headers.length, 9) + 1}`
+                          }}>
+                            Preview available after import
+                          </TableCell>
+                        </TableRow>
+                      </PreviewTable>
+                    </div>
+                  ))}
+                </div>
+              )}
               
               <ActionButtons>
                 <Button
@@ -648,6 +974,7 @@ export default function DataManagementPage() {
                   onClick={() => {
                     setCurrentStep(2);
                     setCsvData(null);
+                    setExcelData(null);
                   }}
                   disabled={isProcessing}
                 >

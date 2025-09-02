@@ -10,6 +10,7 @@ import RosterPanelWidget from './RosterPanelWidget';
 import PlayerAnalysisWidget from './PlayerAnalysisWidget';
 import DraftLedgerWidget from './DraftLedgerWidget';
 import TeamRosterOverviewWidget from './TeamRosterOverviewWidget';
+import BeerSheetWidget from './BeerSheetWidget';
 import WidgetPopOutModal from './WidgetPopOutModal';
 import { createStorageAdapter } from '../../adapters/storage.js';
 import { getOptimalWidgetSizes, dimensionsToGridItem, getGridRowHeight, type WidgetType } from '../../utils/widgetSizing';
@@ -200,7 +201,10 @@ const generateDefaultLayouts = (): GridLayouts => {
       { id: 'draft-ledger', x: 0, y: 40 },   // 5 cols: 0-4 (compact table)
       
       // Row 5: Team Overview (full width) - positioned in middle for testing
-      { id: 'team-roster-overview', x: 0, y: 30 } // Full width: 0-23 (24 cols)
+      { id: 'team-roster-overview', x: 0, y: 30 }, // Full width: 0-23 (24 cols)
+      
+      // Row 6: Beer Sheet (wide widget for 5-column cheat sheet)
+      { id: 'beer-sheet', x: 0, y: 50 }     // Wide: 0-11 (12 cols for 5-column layout)
     ],
     md: [
       // Optimized for 10-column grid
@@ -211,7 +215,8 @@ const generateDefaultLayouts = (): GridLayouts => {
       { id: 'budget', x: 0, y: 26 },          // ~3 cols
       { id: 'player-analysis', x: 3, y: 26 }, // ~3 cols (6/10 total)
       { id: 'draft-ledger', x: 0, y: 40 },   // ~4 cols
-      { id: 'team-roster-overview', x: 0, y: 30 } // Full width: 0-19 (20 cols)
+      { id: 'team-roster-overview', x: 0, y: 30 }, // Full width: 0-19 (20 cols)
+      { id: 'beer-sheet', x: 0, y: 50 }       // Wide: ~10 cols for 5-column layout
     ],
     sm: [
       // Stack vertically on 6-column grid
@@ -222,7 +227,8 @@ const generateDefaultLayouts = (): GridLayouts => {
       { id: 'budget', x: 0, y: 50 },
       { id: 'player-analysis', x: 0, y: 62 },
       { id: 'draft-ledger', x: 0, y: 74 },
-      { id: 'team-roster-overview', x: 0, y: 30 } // Full width: 0-15 (16 cols)
+      { id: 'team-roster-overview', x: 0, y: 30 }, // Full width: 0-15 (16 cols)
+      { id: 'beer-sheet', x: 0, y: 86 }         // Full width: ~8 cols minimum for readability
     ]
   };
   
@@ -273,7 +279,8 @@ const ALL_WIDGETS: WidgetType[] = [
   'budget',
   'roster',
   'draft-ledger',
-  'team-roster-overview'
+  'team-roster-overview',
+  'beer-sheet'
 ];
 
 interface WidgetGridProps {
@@ -342,7 +349,40 @@ const WidgetGrid = React.memo(({ onSaveLayout, onResetLayout, onToggleEditMode, 
       md: currentPreset.layouts.md,
       sm: currentPreset.layouts.sm
     };
-    setLayouts(presetLayouts);
+    
+    // Ensure all visible widgets have layout positions - add missing widgets with optimal sizing
+    const optimalSizes = getOptimalWidgetSizes();
+    const enhancedLayouts: GridLayouts = { ...presetLayouts };
+    
+    visibleWidgets.forEach(widgetId => {
+      const hasLgLayout = enhancedLayouts.lg.some(item => item.i === widgetId);
+      const hasMdLayout = enhancedLayouts.md.some(item => item.i === widgetId);
+      const hasSmLayout = enhancedLayouts.sm.some(item => item.i === widgetId);
+      
+      if (!hasLgLayout || !hasMdLayout || !hasSmLayout) {
+        console.log(`🔧 WidgetGrid: Adding missing layout for widget ${widgetId} in preset ${currentPreset.name}`);
+        const widgetType = widgetId as WidgetType;
+        
+        // Find bottom position for each breakpoint
+        (['lg', 'md', 'sm'] as const).forEach(breakpoint => {
+          const hasLayout = enhancedLayouts[breakpoint].some(item => item.i === widgetId);
+          if (!hasLayout) {
+            let maxY = 0;
+            enhancedLayouts[breakpoint].forEach(item => {
+              const bottom = item.y + item.h;
+              if (bottom > maxY) maxY = bottom;
+            });
+            
+            const yPosition = Math.max(maxY + 2, 0);
+            const dimensions = optimalSizes[widgetType][breakpoint];
+            const newItem = dimensionsToGridItem(widgetId, dimensions, { x: 0, y: yPosition });
+            enhancedLayouts[breakpoint] = [...enhancedLayouts[breakpoint], newItem];
+          }
+        });
+      }
+    });
+    
+    setLayouts(enhancedLayouts);
     
     // Clear custom layout flag when using default preset layout
     if (layoutStorage.isAvailable()) {
@@ -730,6 +770,7 @@ const WidgetGrid = React.memo(({ onSaveLayout, onResetLayout, onToggleEditMode, 
       case 'roster': return 'Roster Panel';
       case 'draft-ledger': return 'Draft Ledger';
       case 'team-roster-overview': return 'Team Roster Overview';
+      case 'beer-sheet': return 'Beer Sheet';
       default: return 'Unknown Widget';
     }
   }, []);
@@ -755,6 +796,8 @@ const WidgetGrid = React.memo(({ onSaveLayout, onResetLayout, onToggleEditMode, 
         return <DraftLedgerWidget {...baseProps} />;
       case 'team-roster-overview':
         return <TeamRosterOverviewWidget {...baseProps} />;
+      case 'beer-sheet':
+        return <BeerSheetWidget {...baseProps} />;
       default:
         return <div>Widget not found</div>;
     }
@@ -796,6 +839,8 @@ const WidgetGrid = React.memo(({ onSaveLayout, onResetLayout, onToggleEditMode, 
         return <DraftLedgerWidget {...baseProps} />;
       case 'team-roster-overview':
         return <TeamRosterOverviewWidget {...baseProps} />;
+      case 'beer-sheet':
+        return <BeerSheetWidget {...baseProps} />;
       default:
         return (
           <WidgetContainer title="Unknown Widget" widgetId={widgetId} editMode={editMode} onRemove={editMode ? () => removeWidget(widgetId) : undefined}>
@@ -891,7 +936,8 @@ const WidgetGrid = React.memo(({ onSaveLayout, onResetLayout, onToggleEditMode, 
                   'budget': 'Budget Tracker',
                   'roster': 'Roster Panel',
                   'draft-ledger': 'Draft Ledger',
-                  'team-roster-overview': 'Team Overview'
+                  'team-roster-overview': 'Team Overview',
+                  'beer-sheet': 'Beer Sheet'
                 };
                 const displayName = widgetNames[widgetId as keyof typeof widgetNames] || widgetId;
                 

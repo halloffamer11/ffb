@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-050 Enhanced Player Projection Data - HITL Validation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #e4e4e7;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: #10b981;
+            margin-bottom: 10px;
+            font-size: 2.5rem;
+        }
+
+        .header p {
+            color: #a1a1aa;
+            font-size: 1.1rem;
+        }
+
+        .validation-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .section-title {
+            color: #3b82f6;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #3b82f6;
+            padding-bottom: 10px;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+        }
+
+        .btn.success {
+            background: linear-gradient(135deg, #10b981, #047857);
+        }
+
+        .btn.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        .data-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .player-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+        }
+
+        .player-card:hover {
+            border-color: #3b82f6;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .player-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .player-name {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #f3f4f6;
+        }
+
+        .position-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+
+        .position-qb { background: #10b981; color: white; }
+        .position-rb { background: #3b82f6; color: white; }
+        .position-wr { background: #8b5cf6; color: white; }
+        .position-te { background: #f59e0b; color: white; }
+        .position-k { background: #ef4444; color: white; }
+        .position-dst { background: #6b7280; color: white; }
+
+        .player-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .stat-group {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .stat-group h4 {
+            color: #3b82f6;
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 0.9rem;
+        }
+
+        .stat-label {
+            color: #a1a1aa;
+        }
+
+        .stat-value {
+            color: #f3f4f6;
+            font-weight: 600;
+            font-family: 'SF Mono', Monaco, monospace;
+        }
+
+        .projection-range {
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444, #f59e0b, #10b981);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-pass { background: #10b981; }
+        .status-warning { background: #f59e0b; }
+        .status-fail { background: #ef4444; }
+
+        .result-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .result-card h3 {
+            margin-bottom: 10px;
+            color: #f3f4f6;
+        }
+
+        .result-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .pass { color: #10b981; }
+        .warning { color: #f59e0b; }
+        .fail { color: #ef4444; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #a1a1aa;
+        }
+
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 T-050 Enhanced Player Projection Data</h1>
+            <p>HITL Validation - Testing enhanced projection data structure with position-specific stats</p>
+        </div>
+
+        <!-- Test Controls Section -->
+        <div class="validation-section">
+            <h2 class="section-title">Test Controls</h2>
+            <div class="test-controls">
+                <button class="btn" onclick="generateSampleData()">Generate Sample Data</button>
+                <button class="btn secondary" onclick="importFakeProjections()">Import Fake Projections</button>
+                <button class="btn success" onclick="validateAllPlayers()">Validate All Players</button>
+                <button class="btn warning" onclick="testProjectionCalculations()">Test Calculations</button>
+                <button class="btn" onclick="simulateScoreRecalc()">Simulate Score Recalc</button>
+                <button class="btn secondary" onclick="clearData()">Clear All Data</button>
+            </div>
+        </div>
+
+        <!-- Data Structure Validation -->
+        <div class="validation-section">
+            <h2 class="section-title">Data Structure Validation</h2>
+            <div id="validationResults">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Click "Generate Sample Data" to begin validation testing</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Showcase -->
+        <div class="validation-section">
+            <h2 class="section-title">Enhanced Player Data Showcase</h2>
+            <div id="playerShowcase">
+                <p style="text-align: center; color: #a1a1aa; padding: 40px;">
+                    Generate sample data to see enhanced player projection display
+                </p>
+            </div>
+        </div>
+
+        <!-- Performance Metrics -->
+        <div class="validation-section">
+            <h2 class="section-title">Performance Metrics</h2>
+            <div id="performanceMetrics">
+                <div class="result-summary">
+                    <div class="result-card">
+                        <h3>Calculation Time</h3>
+                        <div class="result-number pass" id="calcTime">-</div>
+                        <p>milliseconds</p>
+                    </div>
+                    <div class="result-card">
+                        <h3>Players Processed</h3>
+                        <div class="result-number" id="playerCount">-</div>
+                        <p>total players</p>
+                    </div>
+                    <div class="result-card">
+                        <h3>Validation Errors</h3>
+                        <div class="result-number fail" id="errorCount">-</div>
+                        <p>errors found</p>
+                    </div>
+                    <div class="result-card">
+                        <h3>Data Quality</h3>
+                        <div class="result-number pass" id="dataQuality">-</div>
+                        <p>% valid</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Enhanced Player Data Structure (simulating the new interfaces)
+        class EnhancedPlayer {
+            constructor(data) {
+                this.id = data.id;
+                this.name = data.name;
+                this.position = data.position;
+                this.team = data.team;
+                this.drafted = false;
+                this.injuryStatus = data.injuryStatus || 0;
+                this.adp = data.adp;
+                this.byeWeek = data.byeWeek;
+                
+                // Enhanced projection system
+                this.projections = {
+                    points: data.points || 0,
+                    pointsHigh: data.pointsHigh,
+                    pointsLow: data.pointsLow,
+                    confidence: data.confidence || 0.5,
+                    source: data.source || 'custom',
+                    lastUpdated: Date.now()
+                };
+                
+                // Position-specific stats
+                this.stats = this.createPositionStats(data.position, data.rawStats || {});
+                
+                // Calculated fields
+                this.points = this.projections.points;
+                this.vbd = data.vbd || 0;
+                this.tier = data.tier;
+                this.valueScore = data.valueScore;
+            }
+            
+            createPositionStats(position, rawStats) {
+                const baseStats = { type: position };
+                
+                switch (position) {
+                    case 'QB':
+                        return {
+                            ...baseStats,
+                            passYds: rawStats.passYds || Math.random() * 4000 + 1000,
+                            passAtt: rawStats.passAtt || Math.random() * 600 + 300,
+                            passCmp: rawStats.passCmp || Math.random() * 400 + 200,
+                            passTDs: rawStats.passTDs || Math.random() * 35 + 15,
+                            passInt: rawStats.passInt || Math.random() * 15 + 5,
+                            rushYds: rawStats.rushYds || Math.random() * 500,
+                            rushAtt: rawStats.rushAtt || Math.random() * 100,
+                            rushTDs: rawStats.rushTDs || Math.random() * 8,
+                            fumbles: rawStats.fumbles || Math.random() * 5
+                        };
+                    case 'RB':
+                        return {
+                            ...baseStats,
+                            rushYds: rawStats.rushYds || Math.random() * 1200 + 300,
+                            rushAtt: rawStats.rushAtt || Math.random() * 300 + 100,
+                            rushTDs: rawStats.rushTDs || Math.random() * 12 + 3,
+                            rec: rawStats.rec || Math.random() * 60 + 20,
+                            recYds: rawStats.recYds || Math.random() * 600 + 100,
+                            recTDs: rawStats.recTDs || Math.random() * 6 + 1,
+                            fumbles: rawStats.fumbles || Math.random() * 3
+                        };
+                    case 'WR':
+                        return {
+                            ...baseStats,
+                            rec: rawStats.rec || Math.random() * 100 + 40,
+                            recYds: rawStats.recYds || Math.random() * 1400 + 600,
+                            recTDs: rawStats.recTDs || Math.random() * 12 + 4,
+                            rushYds: rawStats.rushYds || Math.random() * 100,
+                            rushAtt: rawStats.rushAtt || Math.random() * 20,
+                            rushTDs: rawStats.rushTDs || Math.random() * 2,
+                            fumbles: rawStats.fumbles || Math.random() * 2
+                        };
+                    case 'TE':
+                        return {
+                            ...baseStats,
+                            rec: rawStats.rec || Math.random() * 80 + 30,
+                            recYds: rawStats.recYds || Math.random() * 900 + 400,
+                            recTDs: rawStats.recTDs || Math.random() * 10 + 3,
+                            fumbles: rawStats.fumbles || Math.random() * 2
+                        };
+                    case 'K':
+                        return {
+                            ...baseStats,
+                            fg: rawStats.fg || Math.random() * 30 + 15,
+                            fga: rawStats.fga || Math.random() * 35 + 20,
+                            fg_0019: rawStats.fg_0019 || Math.random() * 5,
+                            fg_2029: rawStats.fg_2029 || Math.random() * 8 + 2,
+                            fg_3039: rawStats.fg_3039 || Math.random() * 10 + 5,
+                            fg_4049: rawStats.fg_4049 || Math.random() * 8 + 3,
+                            fg_50: rawStats.fg_50 || Math.random() * 5 + 1,
+                            xp: rawStats.xp || Math.random() * 40 + 20
+                        };
+                    case 'DST':
+                        return {
+                            ...baseStats,
+                            sacks: rawStats.sacks || Math.random() * 50 + 20,
+                            int: rawStats.int || Math.random() * 20 + 5,
+                            fumbleRec: rawStats.fumbleRec || Math.random() * 15 + 5,
+                            fumbleForced: rawStats.fumbleForced || Math.random() * 20 + 10,
+                            td: rawStats.td || Math.random() * 4 + 1,
+                            safety: rawStats.safety || Math.random() * 2,
+                            pointsAllowed: rawStats.pointsAllowed || Math.random() * 100 + 250,
+                            yardsAllowed: rawStats.yardsAllowed || Math.random() * 1000 + 4500
+                        };
+                    default:
+                        return baseStats;
+                }
+            }
+        }
+        
+        // Sample data and functions
+        let players = [];
+        let validationResults = [];
+        
+        const samplePlayerData = [
+            { id: 1, name: 'Josh Allen', position: 'QB', team: 'BUF', points: 376.1, pointsHigh: 410.5, pointsLow: 341.8, confidence: 0.75, source: 'FFA', adp: 8, byeWeek: 12, vbd: 45.2 },
+            { id: 2, name: 'Christian McCaffrey', position: 'RB', team: 'SF', points: 298.5, pointsHigh: 325.0, pointsLow: 272.1, confidence: 0.68, source: 'FPs', adp: 3, byeWeek: 9, vbd: 52.1 },
+            { id: 3, name: 'Tyreek Hill', position: 'WR', team: 'MIA', points: 275.8, pointsHigh: 305.2, pointsLow: 246.4, confidence: 0.71, source: 'FFA', adp: 12, byeWeek: 6, vbd: 38.9 },
+            { id: 4, name: 'Travis Kelce', position: 'TE', team: 'KC', points: 245.6, pointsHigh: 268.9, pointsLow: 222.3, confidence: 0.73, source: 'FPs', adp: 15, byeWeek: 10, vbd: 87.4 },
+            { id: 5, name: 'Justin Tucker', position: 'K', team: 'BAL', points: 141.6, pointsHigh: 157.0, pointsLow: 126.2, confidence: 0.65, source: 'custom', adp: 145, byeWeek: 14, vbd: 15.3 },
+            { id: 6, name: 'San Francisco', position: 'DST', team: 'SF', points: 116.3, pointsHigh: 135.8, pointsLow: 96.8, confidence: 0.58, source: 'FFA', adp: 156, byeWeek: 9, vbd: 22.1 }
+        ];
+        
+        function generateSampleData() {
+            const startTime = performance.now();
+            
+            players = samplePlayerData.map(data => new EnhancedPlayer(data));
+            
+            const calcTime = performance.now() - startTime;
+            updatePerformanceMetrics(calcTime, players.length, 0, 100);
+            
+            displayValidationResults();
+            displayPlayerShowcase();
+            
+            console.log('Generated sample players:', players);
+        }
+        
+        function importFakeProjections() {
+            const startTime = performance.now();
+            
+            // Simulate importing projections with some variance
+            players.forEach(player => {
+                const variance = Math.random() * 0.2 - 0.1; // ±10% variance
+                player.projections.points *= (1 + variance);
+                player.projections.pointsHigh = player.projections.points * 1.15;
+                player.projections.pointsLow = player.projections.points * 0.85;
+                player.projections.confidence = Math.random() * 0.4 + 0.4; // 0.4-0.8
+                player.projections.lastUpdated = Date.now();
+                player.points = player.projections.points;
+            });
+            
+            const calcTime = performance.now() - startTime;
+            updatePerformanceMetrics(calcTime, players.length, 0, 100);
+            
+            displayPlayerShowcase();
+            alert('✅ Fake projections imported successfully!');
+        }
+        
+        function validateAllPlayers() {
+            const startTime = performance.now();
+            validationResults = [];
+            let errorCount = 0;
+            
+            players.forEach(player => {
+                const errors = validatePlayer(player);
+                validationResults.push({ player: player.name, errors });
+                errorCount += errors.length;
+            });
+            
+            const calcTime = performance.now() - startTime;
+            const quality = Math.max(0, (1 - errorCount / (players.length * 5)) * 100);
+            
+            updatePerformanceMetrics(calcTime, players.length, errorCount, quality);
+            displayValidationResults();
+            
+            if (errorCount === 0) {
+                alert('✅ All players passed validation!');
+            } else {
+                alert(`⚠️ Found ${errorCount} validation errors. Check results below.`);
+            }
+        }
+        
+        function validatePlayer(player) {
+            const errors = [];
+            
+            // Basic field validation
+            if (!player.id || player.id <= 0) errors.push('Invalid player ID');
+            if (!player.name || player.name.trim().length === 0) errors.push('Missing player name');
+            if (!['QB', 'RB', 'WR', 'TE', 'K', 'DST'].includes(player.position)) errors.push('Invalid position');
+            if (!player.team || player.team.trim().length === 0) errors.push('Missing team');
+            
+            // Projection validation
+            if (!player.projections) {
+                errors.push('Missing projections data');
+            } else {
+                if (typeof player.projections.points !== 'number' || player.projections.points < 0) {
+                    errors.push('Invalid projection points');
+                }
+                if (!['FFA', 'FPs', 'custom'].includes(player.projections.source)) {
+                    errors.push('Invalid projection source');
+                }
+                if (player.projections.confidence < 0 || player.projections.confidence > 1) {
+                    errors.push('Invalid confidence value');
+                }
+            }
+            
+            // Stats validation
+            if (!player.stats) {
+                errors.push('Missing stats data');
+            } else if (player.stats.type !== player.position) {
+                errors.push('Stats type mismatch with position');
+            }
+            
+            // Cross-validation
+            if (Math.abs(player.points - player.projections.points) > 0.1) {
+                errors.push('Points/projections mismatch');
+            }
+            
+            return errors;
+        }
+        
+        function testProjectionCalculations() {
+            const startTime = performance.now();
+            
+            // Simulate fantasy point calculations
+            players.forEach(player => {
+                const calculatedPoints = calculateFantasyPoints(player.stats);
+                const difference = Math.abs(calculatedPoints - player.projections.points);
+                
+                if (difference > player.projections.points * 0.1) {
+                    console.warn(`Large calculation difference for ${player.name}: ${difference.toFixed(2)} points`);
+                }
+                
+                // Update with calculated values
+                player.projections.points = calculatedPoints;
+                player.points = calculatedPoints;
+            });
+            
+            const calcTime = performance.now() - startTime;
+            updatePerformanceMetrics(calcTime, players.length, 0, 100);
+            
+            displayPlayerShowcase();
+            alert('✅ Projection calculations completed!');
+        }
+        
+        function calculateFantasyPoints(stats) {
+            // Simplified fantasy scoring
+            switch (stats.type) {
+                case 'QB':
+                    return (stats.passYds * 0.04) + (stats.passTDs * 4) - (stats.passInt * 2) + 
+                           (stats.rushYds * 0.1) + (stats.rushTDs * 6) - (stats.fumbles * 2);
+                case 'RB':
+                    return (stats.rushYds * 0.1) + (stats.rushTDs * 6) + 
+                           (stats.recYds * 0.1) + (stats.recTDs * 6) + (stats.rec * 0.5) - (stats.fumbles * 2);
+                case 'WR':
+                    return (stats.recYds * 0.1) + (stats.recTDs * 6) + (stats.rec * 0.5) +
+                           (stats.rushYds * 0.1) + (stats.rushTDs * 6) - (stats.fumbles * 2);
+                case 'TE':
+                    return (stats.recYds * 0.1) + (stats.recTDs * 6) + (stats.rec * 0.5) - (stats.fumbles * 2);
+                case 'K':
+                    return (stats.xp * 1) + (stats.fg_0019 * 3) + (stats.fg_2029 * 3) + 
+                           (stats.fg_3039 * 3) + (stats.fg_4049 * 4) + (stats.fg_50 * 5);
+                case 'DST':
+                    return (stats.sacks * 1) + (stats.int * 2) + (stats.fumbleRec * 2) + 
+                           (stats.td * 6) + (stats.safety * 2);
+                default:
+                    return 0;
+            }
+        }
+        
+        function simulateScoreRecalc() {
+            const startTime = performance.now();
+            
+            // Simulate different scoring system
+            players.forEach(player => {
+                const originalPoints = player.points;
+                const newPoints = calculateFantasyPoints(player.stats) * (0.9 + Math.random() * 0.2);
+                player.projections.points = newPoints;
+                player.points = newPoints;
+                
+                console.log(`${player.name}: ${originalPoints.toFixed(1)} → ${newPoints.toFixed(1)}`);
+            });
+            
+            const calcTime = performance.now() - startTime;
+            updatePerformanceMetrics(calcTime, players.length, 0, 100);
+            
+            displayPlayerShowcase();
+            alert('🔄 Scoring system recalculation completed!');
+        }
+        
+        function clearData() {
+            players = [];
+            validationResults = [];
+            updatePerformanceMetrics(0, 0, 0, 0);
+            
+            document.getElementById('validationResults').innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>Click "Generate Sample Data" to begin validation testing</p>
+                </div>
+            `;
+            
+            document.getElementById('playerShowcase').innerHTML = `
+                <p style="text-align: center; color: #a1a1aa; padding: 40px;">
+                    Generate sample data to see enhanced player projection display
+                </p>
+            `;
+            
+            alert('🗑️ All data cleared!');
+        }
+        
+        function updatePerformanceMetrics(calcTime, playerCount, errorCount, quality) {
+            document.getElementById('calcTime').textContent = calcTime.toFixed(2);
+            document.getElementById('playerCount').textContent = playerCount;
+            document.getElementById('errorCount').textContent = errorCount;
+            document.getElementById('dataQuality').textContent = quality.toFixed(1);
+            
+            // Update color classes based on values
+            const calcTimeEl = document.getElementById('calcTime');
+            calcTimeEl.className = 'result-number ' + (calcTime < 50 ? 'pass' : calcTime < 100 ? 'warning' : 'fail');
+            
+            const errorCountEl = document.getElementById('errorCount');
+            errorCountEl.className = 'result-number ' + (errorCount === 0 ? 'pass' : errorCount < 5 ? 'warning' : 'fail');
+            
+            const qualityEl = document.getElementById('dataQuality');
+            qualityEl.className = 'result-number ' + (quality > 90 ? 'pass' : quality > 70 ? 'warning' : 'fail');
+        }
+        
+        function displayValidationResults() {
+            if (validationResults.length === 0) {
+                document.getElementById('validationResults').innerHTML = `
+                    <div class="data-display">No validation results yet. Click "Validate All Players" to run validation.</div>
+                `;
+                return;
+            }
+            
+            let html = '<div class="data-display">';
+            html += `<h3 style="color: #3b82f6; margin-bottom: 15px;">Validation Results (${validationResults.length} players)</h3>`;
+            
+            validationResults.forEach(result => {
+                const status = result.errors.length === 0 ? 'pass' : 'fail';
+                html += `
+                    <div style="margin-bottom: 10px;">
+                        <span class="status-indicator status-${status}"></span>
+                        <strong>${result.player}</strong>: ${result.errors.length === 0 ? 'PASS' : result.errors.join(', ')}
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            document.getElementById('validationResults').innerHTML = html;
+        }
+        
+        function displayPlayerShowcase() {
+            if (players.length === 0) {
+                return;
+            }
+            
+            let html = '';
+            
+            players.forEach(player => {
+                const range = player.projections.pointsHigh !== undefined && player.projections.pointsLow !== undefined;
+                const confidencePercent = Math.round(player.projections.confidence * 100);
+                
+                html += `
+                    <div class="player-card">
+                        <div class="player-header">
+                            <div class="player-name">${player.name}</div>
+                            <div class="position-badge position-${player.position.toLowerCase()}">${player.position}</div>
+                        </div>
+                        
+                        <div class="player-stats">
+                            <div class="stat-group">
+                                <h4>Basic Info</h4>
+                                <div class="stat-row">
+                                    <span class="stat-label">Team:</span>
+                                    <span class="stat-value">${player.team}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">ADP:</span>
+                                    <span class="stat-value">${player.adp || 'N/A'}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Bye Week:</span>
+                                    <span class="stat-value">${player.byeWeek || 'N/A'}</span>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-group">
+                                <h4>Projections</h4>
+                                <div class="stat-row">
+                                    <span class="stat-label">Points:</span>
+                                    <span class="stat-value projection-range">${player.projections.points.toFixed(1)}</span>
+                                </div>
+                                ${range ? `
+                                <div class="stat-row">
+                                    <span class="stat-label">Range:</span>
+                                    <span class="stat-value">${player.projections.pointsLow.toFixed(1)} - ${player.projections.pointsHigh.toFixed(1)}</span>
+                                </div>
+                                ` : ''}
+                                <div class="stat-row">
+                                    <span class="stat-label">Source:</span>
+                                    <span class="stat-value">${player.projections.source}</span>
+                                </div>
+                                <div class="stat-row">
+                                    <span class="stat-label">Confidence:</span>
+                                    <span class="stat-value">${confidencePercent}%</span>
+                                </div>
+                                <div class="confidence-bar">
+                                    <div class="confidence-fill" style="width: ${confidencePercent}%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="stat-group">
+                                <h4>Key Stats (${player.stats.type})</h4>
+                                ${formatPositionStats(player.stats)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('playerShowcase').innerHTML = html;
+        }
+        
+        function formatPositionStats(stats) {
+            let html = '';
+            
+            switch (stats.type) {
+                case 'QB':
+                    html = `
+                        <div class="stat-row">
+                            <span class="stat-label">Pass Yds:</span>
+                            <span class="stat-value">${stats.passYds.toFixed(0)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Pass TDs:</span>
+                            <span class="stat-value">${stats.passTDs.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Interceptions:</span>
+                            <span class="stat-value">${stats.passInt.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Rush Yds:</span>
+                            <span class="stat-value">${stats.rushYds.toFixed(0)}</span>
+                        </div>
+                    `;
+                    break;
+                case 'RB':
+                    html = `
+                        <div class="stat-row">
+                            <span class="stat-label">Rush Yds:</span>
+                            <span class="stat-value">${stats.rushYds.toFixed(0)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Rush TDs:</span>
+                            <span class="stat-value">${stats.rushTDs.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Receptions:</span>
+                            <span class="stat-value">${stats.rec.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Rec Yds:</span>
+                            <span class="stat-value">${stats.recYds.toFixed(0)}</span>
+                        </div>
+                    `;
+                    break;
+                case 'WR':
+                    html = `
+                        <div class="stat-row">
+                            <span class="stat-label">Receptions:</span>
+                            <span class="stat-value">${stats.rec.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Rec Yds:</span>
+                            <span class="stat-value">${stats.recYds.toFixed(0)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Rec TDs:</span>
+                            <span class="stat-value">${stats.recTDs.toFixed(1)}</span>
+                        </div>
+                    `;
+                    break;
+                case 'TE':
+                    html = `
+                        <div class="stat-row">
+                            <span class="stat-label">Receptions:</span>
+                            <span class="stat-value">${stats.rec.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Rec Yds:</span>
+                            <span class="stat-value">${stats.recYds.toFixed(0)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Rec TDs:</span>
+                            <span class="stat-value">${stats.recTDs.toFixed(1)}</span>
+                        </div>
+                    `;
+                    break;
+                case 'K':
+                    html = `
+                        <div class="stat-row">
+                            <span class="stat-label">FG Made:</span>
+                            <span class="stat-value">${stats.fg.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">FG 40-49:</span>
+                            <span class="stat-value">${stats.fg_4049.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">FG 50+:</span>
+                            <span class="stat-value">${stats.fg_50.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Extra Points:</span>
+                            <span class="stat-value">${stats.xp.toFixed(1)}</span>
+                        </div>
+                    `;
+                    break;
+                case 'DST':
+                    html = `
+                        <div class="stat-row">
+                            <span class="stat-label">Sacks:</span>
+                            <span class="stat-value">${stats.sacks.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Interceptions:</span>
+                            <span class="stat-value">${stats.int.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Fumble Rec:</span>
+                            <span class="stat-value">${stats.fumbleRec.toFixed(1)}</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">TDs:</span>
+                            <span class="stat-value">${stats.td.toFixed(1)}</span>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            return html;
+        }
+        
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('T-050 Projection Data Validation Page Loaded');
+        });
+    </script>
+</body>
+</html>

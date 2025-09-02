@@ -284,4 +284,4 @@ export function useDraftCalculations() {
 }
 
 // Export all hooks for easy importing
-export * from './useCanvas';
+// Additional hooks can be exported here as they are created

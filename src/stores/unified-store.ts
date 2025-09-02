@@ -20,8 +20,17 @@ import {
   StateMetadata,
   ValidationResult,
   PerformanceEntry,
-  StorageAdapter
+  StorageAdapter,
+  ProjectionImportResult,
+  PositionStats,
+  LegacyPlayer
 } from '../types/data-contracts';
+import { 
+  recalculateAllProjections, 
+  calculateFantasyPoints, 
+  updatePlayerProjection
+} from '../core/projections';
+import { ProjectionImporter, migrateLegacyPlayer } from '../adapters/projections-import';
 import { createStorageAdapter } from '../adapters/storage';
 import { validateApplicationState, createInitialState } from '../utils/state-validation';
 
@@ -96,7 +105,7 @@ function logAction(action: Action, state: ApplicationState) {
 
 // Error handling and recovery
 interface StoreError {
-  type: 'validation' | 'persistence' | 'action' | 'recovery';
+  type: 'validation' | 'persistence' | 'action' | 'recovery' | 'projection';
   message: string;
   timestamp: number;
   context?: any;
@@ -134,9 +143,12 @@ export interface UnifiedStoreState extends ApplicationState {
   
   // Player management
   importPlayers: (players: Player[]) => void;
+  importProjections: (ffaData: any[], fpsData: Map<string, any[]>) => Promise<ProjectionImportResult>;
+  updatePlayerProjections: (scoring?: ScoringSystem) => void;
   selectPlayer: (player: Player | null) => void;
   draftPlayer: (player: Player, teamId: number, price: number) => void;
   undraftPlayer: (pickIndex: number) => void;
+  migrateLegacyPlayers: () => void;
   
   // Settings management  
   updateSettings: (settings: Partial<LeagueSettings>) => void;
@@ -144,6 +156,7 @@ export interface UnifiedStoreState extends ApplicationState {
   assignKeeper: (keeper: Keeper) => void;
   removeKeeper: (keeperId: string) => void;
   startDraft: () => void;
+  resetDraft: () => void;
   
   // UI state management
   setSearchTerm: (term: string) => void;
@@ -416,6 +429,37 @@ export const useUnifiedStore = create<UnifiedStoreState>()(
               };
               break;
               
+            case 'PROJECTIONS_UPDATE':
+              const { players: updatedPlayers, importResult } = action.payload;
+              newState = {
+                players: updatedPlayers || currentState.players,
+                metadata: {
+                  ...currentState.metadata,
+                  lastModified: Date.now(),
+                  dataSource: importResult?.source || 'projection-update'
+                }
+              };
+              // Log import results
+              if (importResult && !importResult.success) {
+                logError('projection', 'Projection import had errors', importResult.errors);
+              }
+              break;
+              
+            case 'PROJECTIONS_RECALC':
+              const { scoring } = action.payload;
+              const recalculatedPlayers = recalculateAllProjections(
+                currentState.players, 
+                scoring || currentState.settings.scoring
+              );
+              newState = {
+                players: recalculatedPlayers,
+                metadata: {
+                  ...currentState.metadata,
+                  lastModified: Date.now()
+                }
+              };
+              break;
+              
             case 'PICK_REMOVE':
               const { pickIndex } = action.payload;
               const removedPick = currentState.picks[pickIndex];
@@ -427,6 +471,17 @@ export const useUnifiedStore = create<UnifiedStoreState>()(
                 ),
                 metadata: {
                   ...currentState.metadata,
+                  lastModified: Date.now()
+                }
+              };
+              break;
+              
+            case 'STATE_RESET':
+              const initialState = createInitialState();
+              newState = {
+                ...initialState,
+                metadata: {
+                  ...initialState.metadata,
                   lastModified: Date.now()
                 }
               };
@@ -460,6 +515,86 @@ export const useUnifiedStore = create<UnifiedStoreState>()(
         store.dispatch({ type: 'PLAYERS_IMPORT', payload: players });
       },
       
+      importProjections: async (ffaData: any[], fpsData: Map<string, any[]>): Promise<ProjectionImportResult> => {
+        const startTime = performance.now();
+        
+        try {
+          const importer = new ProjectionImporter();
+          
+          // Import data from both sources
+          await importer.importFFAData(ffaData);
+          await importer.importFPsData(fpsData);
+          
+          // Merge and create enhanced player objects
+          const enhancedPlayers = importer.mergeProjections();
+          
+          // Update store with new players
+          const importResult = importer.getImportResult(enhancedPlayers);
+          store.dispatch({
+            type: 'PROJECTIONS_UPDATE',
+            payload: { players: enhancedPlayers, importResult }
+          });
+          
+          const duration = performance.now() - startTime;
+          logPerformance('UnifiedStore', 'importProjections', duration, {
+            playersImported: enhancedPlayers.length,
+            ffaCount: ffaData.length,
+            fpsSheets: fpsData.size
+          });
+          
+          return importResult;
+        } catch (error) {
+          logError('projection', 'Failed to import projections', error);
+          return {
+            success: false,
+            playersImported: 0,
+            errors: [String(error)],
+            warnings: [],
+            source: 'FFA',
+            timestamp: Date.now()
+          };
+        }
+      },
+      
+      updatePlayerProjections: (scoring?: ScoringSystem) => {
+        const currentState = get();
+        const scoringToUse = scoring || currentState.settings.scoring;
+        
+        store.dispatch({
+          type: 'PROJECTIONS_RECALC',
+          payload: { scoring: scoringToUse }
+        });
+      },
+      
+      migrateLegacyPlayers: () => {
+        const currentState = get();
+        
+        // Check if any players need migration (don't have projections/stats)
+        const playersNeedingMigration = currentState.players.filter(player => 
+          !player.projections || !player.stats
+        );
+        
+        if (playersNeedingMigration.length === 0) {
+          console.log('No players need migration');
+          return;
+        }
+        
+        console.log(`Migrating ${playersNeedingMigration.length} legacy players`);
+        
+        const migratedPlayers = currentState.players.map(player => {
+          if (!player.projections || !player.stats) {
+            const legacyPlayer = player as any as LegacyPlayer;
+            return migrateLegacyPlayer(legacyPlayer);
+          }
+          return player;
+        });
+        
+        store.dispatch({
+          type: 'PLAYERS_IMPORT',
+          payload: migratedPlayers
+        });
+      },
+      
       selectPlayer: (player: Player | null) => {
         store.dispatch({ type: 'PLAYER_SELECT', payload: player });
       },
@@ -490,6 +625,12 @@ export const useUnifiedStore = create<UnifiedStoreState>()(
       
       startDraft: () => {
         store.dispatch({ type: 'DRAFT_START', payload: {} });
+        
+        // Trigger VBD recalculation when draft starts
+        const currentState = get();
+        if (currentState.players.length > 0) {
+          store.updatePlayerProjections();
+        }
       },
       
       setSearchTerm: (term: string) => {

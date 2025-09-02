@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T-058: Beer Sheet Draft Integration Validation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #e4e6ea;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            color: #4fa8d8;
+            margin-bottom: 8px;
+            font-size: 28px;
+        }
+
+        .header p {
+            color: #b8bcc8;
+            line-height: 1.5;
+        }
+
+        .validation-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .validation-section h2 {
+            color: #4fa8d8;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .test-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .test-steps li {
+            counter-increment: step-counter;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-left: 3px solid #4fa8d8;
+            border-radius: 4px;
+            position: relative;
+        }
+
+        .test-steps li::before {
+            content: counter(step-counter);
+            position: absolute;
+            left: -15px;
+            top: 12px;
+            background: #4fa8d8;
+            color: #1a1a2e;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        .test-steps li strong {
+            color: #ffffff;
+        }
+
+        .expected {
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 2px solid #4caf50;
+            border-radius: 4px;
+        }
+
+        .expected::before {
+            content: "Expected: ";
+            font-weight: bold;
+            color: #4caf50;
+        }
+
+        .warning {
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            padding: 12px;
+            border-radius: 6px;
+            margin: 16px 0;
+        }
+
+        .warning::before {
+            content: "⚠️ ";
+            font-weight: bold;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .feature-card h3 {
+            color: #4fa8d8;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: #4caf50;
+            font-weight: bold;
+        }
+
+        .code-block {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 12px 0;
+            overflow-x: auto;
+        }
+
+        .performance-targets {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .performance-target {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 12px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .performance-target .metric {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4fa8d8;
+        }
+
+        .performance-target .label {
+            font-size: 12px;
+            color: #b8bcc8;
+            margin-top: 4px;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-pending { background: #ff9800; }
+        .status-pass { background: #4caf50; }
+        .status-fail { background: #f44336; }
+
+        .validation-checklist {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .validation-checklist h3 {
+            color: #4fa8d8;
+            margin-bottom: 16px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 4px;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            margin-right: 12px;
+            transform: scale(1.2);
+        }
+
+        .launch-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #4fa8d8, #2196f3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: transform 0.2s ease;
+            margin: 16px 0;
+        }
+
+        .launch-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 168, 216, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>T-058: Beer Sheet Draft Integration Validation</h1>
+            <p>Comprehensive testing of real-time draft tracking, VAL% recalculation, and visual state management in the Beer Sheet widget. This validation ensures seamless draft experience with <100ms response time.</p>
+        </div>
+
+        <div class="validation-section">
+            <h2>🚀 Setup Instructions</h2>
+            <ol class="test-steps">
+                <li>
+                    <strong>Start Development Server</strong>
+                    <div class="code-block">npm run dev</div>
+                    <div class="expected">Dev server should start on http://localhost:5173</div>
+                </li>
+                <li>
+                    <strong>Load Test Data</strong>
+                    Import sample projection data or use existing player database in the application
+                    <div class="expected">At least 50+ players across QB, RB, WR, TE positions should be available</div>
+                </li>
+                <li>
+                    <strong>Access Application</strong>
+                    <a href="http://localhost:5173" class="launch-button" target="_blank">Launch FFB App</a>
+                    <div class="expected">Application loads successfully with Beer Sheet widget visible</div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>🎯 Core Draft Integration</h3>
+                <ul class="feature-list">
+                    <li>Real-time draft state synchronization</li>
+                    <li>Cross-widget draft event propagation</li>
+                    <li>Instant visual updates on draft actions</li>
+                    <li>Draft confirmation dialogs</li>
+                    <li>Undo last draft functionality</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>📊 VAL% Recalculation</h3>
+                <ul class="feature-list">
+                    <li>Position-specific VAL% updates</li>
+                    <li>Baseline recalculation on drafts</li>
+                    <li>Table resorting after updates</li>
+                    <li>Overall ranking adjustments</li>
+                    <li>Performance-optimized incremental updates</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>🎨 Visual State Management</h3>
+                <ul class="feature-list">
+                    <li>Drafted player visual indicators</li>
+                    <li>Animation on recent draft actions</li>
+                    <li>Position scarcity indicators</li>
+                    <li>Hide/show drafted players toggle</li>
+                    <li>Draft statistics display</li>
+                </ul>
+            </div>
+
+            <div class="feature-card">
+                <h3>⚡ Performance Features</h3>
+                <ul class="feature-list">
+                    <li>Sub-100ms update response time</li>
+                    <li>Intelligent caching and memoization</li>
+                    <li>Batch update optimizations</li>
+                    <li>Memory leak prevention</li>
+                    <li>Performance monitoring and logging</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="validation-section">
+            <h2>🧪 Draft Integration Testing</h2>
+            <ol class="test-steps">
+                <li>
+                    <strong>Basic Draft Action</strong>
+                    Click on any player row in any position table (QB, RB, WR, TE)
+                    <div class="expected">Draft confirmation dialog appears with player details</div>
+                </li>
+                <li>
+                    <strong>Confirm Draft</strong>
+                    Click "Draft Player" in the confirmation dialog
+                    <div class="expected">Player row shows drafted state (grayed out, strikethrough), draft animation plays briefly</div>
+                </li>
+                <li>
+                    <strong>VAL% Recalculation Verification</strong>
+                    Observe VAL% values for remaining players in the same position
+                    <div class="expected">VAL% values update instantly, maintaining relative rankings based on new baseline</div>
+                </li>
+                <li>
+                    <strong>Overall Table Updates</strong>
+                    Check the Overall rankings table on the right
+                    <div class="expected">Drafted player is removed from available rankings, remaining players re-ranked</div>
+                </li>
+                <li>
+                    <strong>Draft Statistics</strong>
+                    Observe the draft statistics in the controls bar
+                    <div class="expected">"Drafted" count increases, "Available" count decreases</div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="validation-section">
+            <h2>🔄 Advanced Features Testing</h2>
+            <ol class="test-steps">
+                <li>
+                    <strong>Undo Last Draft</strong>
+                    Click the "Undo" button in the controls bar
+                    <div class="expected">Last drafted player returns to available state, VAL% recalculates, statistics update</div>
+                </li>
+                <li>
+                    <strong>Hide Drafted Players</strong>
+                    Click "Hide Drafted" toggle button
+                    <div class="expected">All drafted players disappear from tables, available players remain visible</div>
+                </li>
+                <li>
+                    <strong>Position Scarcity Indicators</strong>
+                    Draft multiple players from the same position and observe scarcity dots
+                    <div class="expected">Scarcity indicators change color (green → yellow → red) as position becomes more scarce</div>
+                </li>
+                <li>
+                    <strong>Cross-Widget Synchronization</strong>
+                    If other draft widgets are open, draft a player from Beer Sheet
+                    <div class="expected">All widgets update simultaneously to reflect the draft</div>
+                </li>
+                <li>
+                    <strong>Search Integration</strong>
+                    Use the search functionality while players are drafted
+                    <div class="expected">Search highlights work correctly, drafted state persists through search operations</div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="validation-section">
+            <h2>⚡ Performance Validation</h2>
+            <div class="warning">
+                Open browser DevTools Console to monitor performance logs during testing
+            </div>
+            
+            <div class="performance-targets">
+                <div class="performance-target">
+                    <div class="metric">&lt;100ms</div>
+                    <div class="label">Draft Response Time</div>
+                </div>
+                <div class="performance-target">
+                    <div class="metric">&lt;50ms</div>
+                    <div class="label">VAL% Recalculation</div>
+                </div>
+                <div class="performance-target">
+                    <div class="metric">&lt;10ms</div>
+                    <div class="label">Search Highlighting</div>
+                </div>
+                <div class="performance-target">
+                    <div class="metric">&lt;5ms</div>
+                    <div class="label">Visual Updates</div>
+                </div>
+            </div>
+
+            <ol class="test-steps">
+                <li>
+                    <strong>Rapid Draft Sequence</strong>
+                    Draft 10+ players in quick succession
+                    <div class="expected">Each draft completes in <100ms, no UI lag or stutter</div>
+                </li>
+                <li>
+                    <strong>Large Dataset Performance</strong>
+                    Test with 300+ player dataset if available
+                    <div class="expected">All operations remain responsive, performance logs show acceptable timings</div>
+                </li>
+                <li>
+                    <strong>Memory Management</strong>
+                    Check browser memory usage over extended testing session
+                    <div class="expected">No significant memory leaks, stable memory usage</div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="validation-section">
+            <h2>🐛 Edge Cases & Error Handling</h2>
+            <ol class="test-steps">
+                <li>
+                    <strong>Double-Click Prevention</strong>
+                    Try to draft the same player multiple times quickly
+                    <div class="expected">Only one draft action processes, subsequent clicks ignored</div>
+                </li>
+                <li>
+                    <strong>Already Drafted Players</strong>
+                    Click on a player row that's already drafted
+                    <div class="expected">No action occurs, cursor shows "not-allowed"</div>
+                </li>
+                <li>
+                    <strong>Empty State Handling</strong>
+                    Test behavior with no players imported
+                    <div class="expected">Appropriate empty state message displays</div>
+                </li>
+                <li>
+                    <strong>Undo with No Drafts</strong>
+                    Try to undo when no players have been drafted
+                    <div class="expected">Undo button is disabled, tooltip shows "No drafts to undo"</div>
+                </li>
+                <li>
+                    <strong>Browser Tab Synchronization</strong>
+                    Open the app in multiple browser tabs, draft in one tab
+                    <div class="expected">Draft state synchronizes across tabs (if implemented)</div>
+                </li>
+            </ol>
+        </div>
+
+        <div class="validation-checklist">
+            <h3>📋 Validation Checklist</h3>
+            <div class="checklist-item">
+                <input type="checkbox" id="draft-integration">
+                <label for="draft-integration">Real-time draft integration works correctly</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="val-recalc">
+                <label for="val-recalc">VAL% recalculation updates position tables accurately</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="visual-states">
+                <label for="visual-states">Visual state changes (drafting, animations) work smoothly</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="performance">
+                <label for="performance">All operations complete within performance targets</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="controls">
+                <label for="controls">Draft controls (undo, hide/show, statistics) function correctly</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="scarcity">
+                <label for="scarcity">Position scarcity indicators update appropriately</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="error-handling">
+                <label for="error-handling">Edge cases and error conditions handled gracefully</label>
+            </div>
+            <div class="checklist-item">
+                <input type="checkbox" id="cross-widget">
+                <label for="cross-widget">Cross-widget draft synchronization works (if applicable)</label>
+            </div>
+        </div>
+
+        <div class="validation-section">
+            <h2>✅ Pass Criteria</h2>
+            <p><strong>This validation PASSES if:</strong></p>
+            <ul class="feature-list" style="margin-top: 12px;">
+                <li>All draft actions complete in <100ms with visual feedback</li>
+                <li>VAL% recalculation updates correctly for affected positions</li>
+                <li>Draft state persists and synchronizes across all views</li>
+                <li>Visual animations and state changes work smoothly</li>
+                <li>All controls (undo, hide/show, etc.) function correctly</li>
+                <li>Performance targets are met consistently</li>
+                <li>No console errors or warnings during normal operation</li>
+                <li>Edge cases are handled gracefully without crashes</li>
+            </ul>
+
+            <div class="warning">
+                <strong>Report any issues found during validation:</strong> Include specific steps to reproduce, expected vs actual behavior, and any console errors or performance issues.
+            </div>
+        </div>
+
+        <div class="validation-section">
+            <h2>📁 Implementation Files</h2>
+            <div class="code-block">
+Enhanced Files:
+• /src/components/widgets/BeerSheetWidget.tsx - Main widget with draft integration
+• /src/core/beer-sheet.ts - Core processing with VAL% recalculation
+• /src/stores/unified-store.ts - Draft state management (existing)
+
+Key Features Added:
+• Real-time draft event handling with <100ms response
+• Position-specific VAL% recalculation on drafts
+• Visual state management with animations
+• Draft confirmation dialogs and undo functionality
+• Performance-optimized incremental updates
+• Cross-widget synchronization events
+• Position scarcity indicators
+• Comprehensive error handling
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-check items as validation progresses
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.validation-checklist input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const checkedCount = document.querySelectorAll('.validation-checklist input[type="checkbox"]:checked').length;
+                    const totalCount = checkboxes.length;
+                    
+                    console.log(`Validation Progress: ${checkedCount}/${totalCount} criteria met`);
+                    
+                    if (checkedCount === totalCount) {
+                        console.log('🎉 All validation criteria completed!');
+                        document.body.style.background = 'linear-gradient(135deg, #1a2e1a, #0e3e16)';
+                    }
+                });
+            });
+            
+            // Log validation start
+            console.log('🧪 Beer Sheet Draft Integration Validation Started');
+            console.log('Monitor this console for performance metrics during testing');
+        });
+    </script>
+</body>
+</html>

@@ -86,7 +86,7 @@ export function useLayoutPresets(
   const isPresetActive = useCallback((presetId: PresetId): boolean => ctx.isPresetActive(presetId), [ctx]);
 
   /**
-   * Set up keyboard event listeners for preset shortcuts (1, 2, 3)
+   * Set up keyboard event listeners for preset shortcuts (1, 2, 3, 4)
    */
   // Keyboard handling is done in provider; no-op here
 
@@ -116,7 +116,7 @@ export function useLayoutPresetShortcuts(
 ): void {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key >= '1' && event.key <= '3') {
+      if (event.key >= '1' && event.key <= '4') {
         // Only prevent default and handle shortcut if focus is not guarded
         if (!isFocusGuarded()) {
           event.preventDefault();

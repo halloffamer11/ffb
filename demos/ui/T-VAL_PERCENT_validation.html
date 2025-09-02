@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VAL% Calculation System Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .test-container {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        .test-pass { border-color: #10b981; background-color: #f0fdf4; }
+        .test-fail { border-color: #ef4444; background-color: #fef2f2; }
+        .test-pending { border-color: #f59e0b; background-color: #fffbeb; }
+        
+        .position-QB { background-color: #10b981; }
+        .position-RB { background-color: #3b82f6; }
+        .position-WR { background-color: #8b5cf6; }
+        .position-TE { background-color: #f59e0b; }
+        .position-K { background-color: #ef4444; }
+        .position-DST { background-color: #6b7280; }
+    </style>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">VAL% Calculation System Validation</h1>
+            <p class="text-gray-600">
+                This page tests the VAL% (Value Percentage) calculation system implementation.
+                VAL% represents each player's share of positive VBD at their position.
+            </p>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Test Controls -->
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Test Controls</h2>
+                
+                <div class="space-y-4">
+                    <button id="runBasicTest" class="w-full bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600">
+                        Run Basic VAL% Test
+                    </button>
+                    
+                    <button id="runEdgeCaseTest" class="w-full bg-purple-500 text-white py-2 px-4 rounded hover:bg-purple-600">
+                        Run Edge Case Tests
+                    </button>
+                    
+                    <button id="runPerformanceTest" class="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600">
+                        Run Performance Test
+                    </button>
+                    
+                    <button id="runIntegrationTest" class="w-full bg-orange-500 text-white py-2 px-4 rounded hover:bg-orange-600">
+                        Run Full Integration Test
+                    </button>
+                    
+                    <button id="clearResults" class="w-full bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600">
+                        Clear All Results
+                    </button>
+                </div>
+                
+                <div class="mt-6">
+                    <h3 class="text-lg font-medium mb-2">Expected Outcomes</h3>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>• VAL% values should sum to 100% per position</li>
+                        <li>• Drafted players should have 0 VAL%</li>
+                        <li>• Negative VBD players should have 0 VAL%</li>
+                        <li>• Values should be rounded to 1 decimal place</li>
+                        <li>• Performance should be &lt;100ms for 300 players</li>
+                    </ul>
+                </div>
+            </section>
+
+            <!-- Test Results -->
+            <section class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4">Test Results</h2>
+                <div id="testResults" class="space-y-4">
+                    <p class="text-gray-500">Run tests to see results...</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Player Data Table -->
+        <section class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4">Sample Player Data</h2>
+            <div class="overflow-x-auto">
+                <table class="min-w-full table-auto" id="playerTable">
+                    <thead>
+                        <tr class="bg-gray-50">
+                            <th class="px-4 py-2 text-left">Name</th>
+                            <th class="px-4 py-2 text-left">Pos</th>
+                            <th class="px-4 py-2 text-right">Points</th>
+                            <th class="px-4 py-2 text-right">VBD</th>
+                            <th class="px-4 py-2 text-right">VAL%</th>
+                            <th class="px-4 py-2 text-center">Drafted</th>
+                        </tr>
+                    </thead>
+                    <tbody id="playerTableBody">
+                        <tr>
+                            <td colspan="6" class="text-center text-gray-500 py-4">
+                                Run tests to populate player data...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Position Summary -->
+        <section class="bg-white rounded-lg shadow-md p-6 mt-6">
+            <h2 class="text-xl font-semibold mb-4">Position VAL% Summary</h2>
+            <div id="positionSummary" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div class="text-center text-gray-500">Run tests to see position totals...</div>
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        // Import the VAL% calculation functions
+        import { 
+            calculateValuePercentages, 
+            calculatePlayerVBDWithValPercent 
+        } from '/src/core/vbd.js';
+
+        // Test data
+        const mockLeagueSettings = {
+            teams: 12,
+            starters: {
+                QB: 1, RB: 2, WR: 2, TE: 1, K: 1, DST: 1, FLEX: 1
+            }
+        };
+
+        const samplePlayersWithVBD = [
+            { id: 1, name: 'Josh Allen', position: 'QB', points: 350, vbd: 50.0, drafted: false },
+            { id: 2, name: 'Joe Burrow', position: 'QB', points: 320, vbd: 20.0, drafted: false },
+            { id: 3, name: 'Kirk Cousins', position: 'QB', points: 280, vbd: -20.0, drafted: false },
+            
+            { id: 4, name: 'Christian McCaffrey', position: 'RB', points: 380, vbd: 100.0, drafted: false },
+            { id: 5, name: 'Saquon Barkley', position: 'RB', points: 320, vbd: 40.0, drafted: false },
+            { id: 6, name: 'Drafted RB', position: 'RB', points: 300, vbd: 20.0, drafted: true },
+            
+            { id: 7, name: 'Tyreek Hill', position: 'WR', points: 350, vbd: 80.0, drafted: false },
+            { id: 8, name: 'Stefon Diggs', position: 'WR', points: 310, vbd: 40.0, drafted: false },
+            { id: 9, name: 'Mike Evans', position: 'WR', points: 280, vbd: 10.0, drafted: false },
+            
+            { id: 10, name: 'Travis Kelce', position: 'TE', points: 300, vbd: 60.0, drafted: false },
+            { id: 11, name: 'Mark Andrews', position: 'TE', points: 250, vbd: 10.0, drafted: false },
+            
+            { id: 12, name: 'Justin Tucker', position: 'K', points: 150, vbd: 5.0, drafted: false },
+            { id: 13, name: 'Bills DST', position: 'DST', points: 140, vbd: 3.0, drafted: false }
+        ];
+
+        // Helper functions
+        function addTestResult(testName, passed, message, duration) {
+            const resultsDiv = document.getElementById('testResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = `test-container ${passed ? 'test-pass' : 'test-fail'}`;
+            
+            testDiv.innerHTML = `
+                <h3 class="font-semibold ${passed ? 'text-green-800' : 'text-red-800'}">
+                    ${passed ? '✅' : '❌'} ${testName}
+                </h3>
+                <p class="text-sm mt-1">${message}</p>
+                ${duration ? `<p class="text-xs text-gray-600 mt-1">Duration: ${duration.toFixed(2)}ms</p>` : ''}
+            `;
+            
+            resultsDiv.appendChild(testDiv);
+        }
+
+        function updatePlayerTable(players) {
+            const tbody = document.getElementById('playerTableBody');
+            tbody.innerHTML = '';
+            
+            players.slice(0, 15).forEach(player => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-4 py-2">
+                        <span class="inline-block w-2 h-2 rounded-full mr-2 position-${player.position}"></span>
+                        ${player.name}
+                    </td>
+                    <td class="px-4 py-2 font-mono text-sm">${player.position}</td>
+                    <td class="px-4 py-2 text-right font-mono">${player.points}</td>
+                    <td class="px-4 py-2 text-right font-mono ${player.vbd >= 0 ? 'text-green-600' : 'text-red-600'}">
+                        ${player.vbd?.toFixed(1) || '0.0'}
+                    </td>
+                    <td class="px-4 py-2 text-right font-mono text-blue-600">
+                        ${player.valPercent?.toFixed(1) || '0.0'}%
+                    </td>
+                    <td class="px-4 py-2 text-center">
+                        ${player.drafted ? '✓' : ''}
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updatePositionSummary(players) {
+            const summary = document.getElementById('positionSummary');
+            const positions = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
+            
+            summary.innerHTML = '';
+            
+            positions.forEach(position => {
+                const positionPlayers = players.filter(p => p.position === position && !p.drafted && p.vbd > 0);
+                const total = positionPlayers.reduce((sum, p) => sum + (p.valPercent || 0), 0);
+                const count = positionPlayers.length;
+                
+                const div = document.createElement('div');
+                div.className = `bg-gray-50 p-4 rounded text-center`;
+                div.innerHTML = `
+                    <div class="text-xs text-gray-500 mb-1">${position}</div>
+                    <div class="text-lg font-bold ${Math.abs(total - 100) < 0.5 ? 'text-green-600' : 'text-orange-600'}">
+                        ${total.toFixed(1)}%
+                    </div>
+                    <div class="text-xs text-gray-500">${count} players</div>
+                `;
+                summary.appendChild(div);
+            });
+        }
+
+        // Test functions
+        function runBasicTest() {
+            const start = performance.now();
+            try {
+                const result = calculateValuePercentages(samplePlayersWithVBD, mockLeagueSettings);
+                const end = performance.now();
+                
+                // Verify Josh Allen VAL%
+                const joshAllen = result.find(p => p.name === 'Josh Allen');
+                const expectedJosh = 71.4; // 50 / (50 + 20) * 100
+                const joshError = Math.abs(joshAllen.valPercent - expectedJosh);
+                
+                if (joshError > 0.5) {
+                    throw new Error(`Josh Allen VAL% expected ~${expectedJosh}%, got ${joshAllen.valPercent}%`);
+                }
+                
+                // Verify drafted player has 0 VAL%
+                const draftedRb = result.find(p => p.name === 'Drafted RB');
+                if (draftedRb.valPercent !== 0) {
+                    throw new Error(`Drafted player should have 0 VAL%, got ${draftedRb.valPercent}%`);
+                }
+                
+                updatePlayerTable(result);
+                updatePositionSummary(result);
+                addTestResult('Basic VAL% Test', true, 
+                    `All calculations correct. Josh Allen: ${joshAllen.valPercent.toFixed(1)}%`, 
+                    end - start);
+                    
+            } catch (error) {
+                addTestResult('Basic VAL% Test', false, `Error: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        function runEdgeCaseTests() {
+            const start = performance.now();
+            let passed = 0;
+            let total = 0;
+            const messages = [];
+            
+            try {
+                // Test 1: Empty array
+                total++;
+                const emptyResult = calculateValuePercentages([], mockLeagueSettings);
+                if (emptyResult.length === 0) {
+                    passed++;
+                    messages.push('Empty array test passed');
+                } else {
+                    messages.push('Empty array test failed');
+                }
+                
+                // Test 2: All drafted players
+                total++;
+                const allDrafted = samplePlayersWithVBD.map(p => ({...p, drafted: true}));
+                const draftedResult = calculateValuePercentages(allDrafted, mockLeagueSettings);
+                const allZeroValPercent = draftedResult.every(p => p.valPercent === 0);
+                if (allZeroValPercent) {
+                    passed++;
+                    messages.push('All drafted players test passed');
+                } else {
+                    messages.push('All drafted players test failed');
+                }
+                
+                // Test 3: Single player per position
+                total++;
+                const singleQB = samplePlayersWithVBD.filter(p => p.position !== 'QB')
+                    .concat([{id: 100, name: 'Solo QB', position: 'QB', points: 300, vbd: 30.0, drafted: false}]);
+                const singleResult = calculateValuePercentages(singleQB, mockLeagueSettings);
+                const soloQb = singleResult.find(p => p.name === 'Solo QB');
+                if (Math.abs(soloQb.valPercent - 100.0) < 0.1) {
+                    passed++;
+                    messages.push('Single player test passed');
+                } else {
+                    messages.push(`Single player test failed: expected 100%, got ${soloQb.valPercent}%`);
+                }
+                
+                const end = performance.now();
+                addTestResult('Edge Case Tests', passed === total, 
+                    `${passed}/${total} tests passed: ${messages.join(', ')}`, 
+                    end - start);
+                    
+            } catch (error) {
+                addTestResult('Edge Case Tests', false, `Error: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        function runPerformanceTest() {
+            const start = performance.now();
+            try {
+                // Generate large dataset
+                const largeDataset = [];
+                for (let i = 0; i < 300; i++) {
+                    largeDataset.push({
+                        id: i,
+                        name: `Player ${i}`,
+                        position: ['QB', 'RB', 'WR', 'TE', 'K', 'DST'][i % 6],
+                        points: Math.random() * 400,
+                        vbd: (Math.random() - 0.3) * 100,
+                        drafted: Math.random() < 0.3
+                    });
+                }
+                
+                const calcStart = performance.now();
+                const result = calculateValuePercentages(largeDataset, mockLeagueSettings);
+                const calcEnd = performance.now();
+                const duration = calcEnd - calcStart;
+                
+                if (duration > 100) {
+                    throw new Error(`Performance too slow: ${duration.toFixed(2)}ms (should be <100ms)`);
+                }
+                
+                if (result.length !== largeDataset.length) {
+                    throw new Error('Result length mismatch');
+                }
+                
+                addTestResult('Performance Test', true, 
+                    `${largeDataset.length} players processed in ${duration.toFixed(2)}ms`, 
+                    performance.now() - start);
+                    
+            } catch (error) {
+                addTestResult('Performance Test', false, `Error: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        function runIntegrationTest() {
+            const start = performance.now();
+            try {
+                // Test full pipeline with raw players
+                const rawPlayers = [
+                    { id: 1, name: 'Josh Allen', position: 'QB', points: 350, drafted: false, injuryStatus: 0 },
+                    { id: 2, name: 'Joe Burrow', position: 'QB', points: 320, drafted: false, injuryStatus: 0 },
+                    { id: 3, name: 'Kirk Cousins', position: 'QB', points: 280, drafted: false, injuryStatus: 0 },
+                    { id: 15, name: 'QB Baseline', position: 'QB', points: 250, drafted: false, injuryStatus: 0 },
+                    
+                    { id: 4, name: 'Christian McCaffrey', position: 'RB', points: 380, drafted: false, injuryStatus: 0 },
+                    { id: 5, name: 'Saquon Barkley', position: 'RB', points: 320, drafted: false, injuryStatus: 0 },
+                    { id: 14, name: 'RB Baseline', position: 'RB', points: 250, drafted: false, injuryStatus: 0 },
+                    
+                    { id: 6, name: 'Tyreek Hill', position: 'WR', points: 350, drafted: false, injuryStatus: 0 },
+                    { id: 7, name: 'Stefon Diggs', position: 'WR', points: 310, drafted: false, injuryStatus: 0 },
+                    { id: 13, name: 'WR Baseline', position: 'WR', points: 240, drafted: false, injuryStatus: 0 },
+                    
+                    { id: 8, name: 'Travis Kelce', position: 'TE', points: 300, drafted: false, injuryStatus: 0 },
+                    { id: 9, name: 'Mark Andrews', position: 'TE', points: 250, drafted: false, injuryStatus: 0 },
+                    { id: 12, name: 'TE Baseline', position: 'TE', points: 200, drafted: false, injuryStatus: 0 }
+                ];
+                
+                const result = calculatePlayerVBDWithValPercent(rawPlayers, mockLeagueSettings);
+                
+                // Verify all fields present
+                for (const player of result) {
+                    if (player.vbd === undefined || player.valPercent === undefined) {
+                        throw new Error(`Missing calculated fields for ${player.name}`);
+                    }
+                }
+                
+                // Verify position totals
+                const positions = ['QB', 'RB', 'WR', 'TE'];
+                const positionTotals = [];
+                
+                for (const position of positions) {
+                    const posPlayers = result.filter(p => p.position === position && !p.drafted && p.vbd > 0);
+                    if (posPlayers.length > 0) {
+                        const total = posPlayers.reduce((sum, p) => sum + p.valPercent, 0);
+                        positionTotals.push(`${position}: ${total.toFixed(1)}%`);
+                        
+                        if (Math.abs(total - 100) > 0.5) {
+                            throw new Error(`${position} VAL% sum should be ~100%, got ${total.toFixed(1)}%`);
+                        }
+                    }
+                }
+                
+                updatePlayerTable(result);
+                updatePositionSummary(result);
+                
+                const end = performance.now();
+                addTestResult('Full Integration Test', true, 
+                    `Full pipeline successful. Position totals: ${positionTotals.join(', ')}`, 
+                    end - start);
+                    
+            } catch (error) {
+                addTestResult('Full Integration Test', false, `Error: ${error.message}`, performance.now() - start);
+            }
+        }
+
+        function clearResults() {
+            document.getElementById('testResults').innerHTML = '<p class="text-gray-500">Run tests to see results...</p>';
+            document.getElementById('playerTableBody').innerHTML = '<tr><td colspan="6" class="text-center text-gray-500 py-4">Run tests to populate player data...</td></tr>';
+            document.getElementById('positionSummary').innerHTML = '<div class="text-center text-gray-500">Run tests to see position totals...</div>';
+        }
+
+        // Event listeners
+        document.getElementById('runBasicTest').addEventListener('click', runBasicTest);
+        document.getElementById('runEdgeCaseTest').addEventListener('click', runEdgeCaseTests);
+        document.getElementById('runPerformanceTest').addEventListener('click', runPerformanceTest);
+        document.getElementById('runIntegrationTest').addEventListener('click', runIntegrationTest);
+        document.getElementById('clearResults').addEventListener('click', clearResults);
+        
+        console.log('VAL% Validation Page Loaded');
+    </script>
+</body>
+</html>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Sheet Layout Improvements - HITL Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 20px;
+            margin: -30px -30px 30px -30px;
+            border-radius: 8px 8px 0 0;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        h2 {
+            color: #2563eb;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #059669;
+            margin-top: 25px;
+        }
+        .feature-list {
+            background: #f8fafc;
+            padding: 20px;
+            border-left: 4px solid #2563eb;
+            margin: 15px 0;
+        }
+        .test-step {
+            background: #ecfdf5;
+            padding: 15px;
+            border-left: 4px solid #059669;
+            margin: 10px 0;
+        }
+        .expected {
+            background: #fef3c7;
+            padding: 10px;
+            border-left: 4px solid #f59e0b;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        .code {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .files-changed {
+            background: #f0f9ff;
+            padding: 20px;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .pass-criteria {
+            background: #dcfce7;
+            padding: 20px;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .warning {
+            background: #fef2f2;
+            padding: 15px;
+            border: 1px solid #fecaca;
+            border-radius: 6px;
+            margin: 15px 0;
+            color: #991b1b;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .implemented { background: #059669; }
+        .pending { background: #f59e0b; }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍺 Beer Sheet Layout Improvements - HITL Validation</h1>
+            <p>Validation page for compact Beer Sheet widget with configurable player limits</p>
+        </div>
+
+        <h2>📋 Implementation Summary</h2>
+        <div class="feature-list">
+            <h3>Purpose</h3>
+            <p>Transform the Beer Sheet widget from its original layout to a more compact, data-dense format with configurable player count limits for better draft preparation.</p>
+            
+            <h3>Code Changes</h3>
+            <ul>
+                <li><span class="status implemented">✓</span> Reduced padding throughout all components (controls, headers, cells)</li>
+                <li><span class="status implemented">✓</span> Expanded column widths from 720px to 860px total width</li>
+                <li><span class="status implemented">✓</span> Added configurable player limit dropdowns in each position header</li>
+                <li><span class="status implemented">✓</span> Updated data processing to apply player limits</li>
+                <li><span class="status implemented">✓</span> Implemented localStorage persistence for user preferences</li>
+                <li><span class="status implemented">✓</span> Fixed dropdown reactivity (playerLimits in useMemo dependency)</li>
+                <li><span class="status implemented">✓</span> Increased Name column width to prevent overlap</li>
+                <li><span class="status implemented">✓</span> Removed VBD decimal display (now integers)</li>
+                <li><span class="status implemented">✓</span> Changed column headers to compact "$", "L", "H" format</li>
+            </ul>
+
+            <h3>Integration</h3>
+            <p>Integrates with the existing unified store system and preserves all existing functionality while adding new customization options.</p>
+        </div>
+
+        <h2>🧪 Validation Instructions</h2>
+
+        <h3>1. Setup</h3>
+        <div class="test-step">
+            <strong>Action:</strong> Start the development server and load the application
+            <div class="code">npm run dev</div>
+            <div class="expected">Expected: Server starts on http://localhost:5173</div>
+        </div>
+
+        <h3>2. Access Application</h3>
+        <div class="test-step">
+            <strong>Action:</strong> Open http://localhost:5173 in your browser
+            <div class="expected">Expected: FFB application loads with dashboard</div>
+        </div>
+
+        <h3>3. Navigate to Beer Sheet Widget</h3>
+        <div class="test-step">
+            <strong>Action:</strong> 
+            <ul>
+                <li>Press keyboard shortcut '4' to switch to Custom layout</li>
+                <li>Locate and resize the Beer Sheet widget if needed</li>
+            </ul>
+            <div class="expected">Expected: Beer Sheet widget displays in compact layout with all 5 columns visible</div>
+        </div>
+
+        <h2>🔍 Test Scenarios</h2>
+
+        <h3>Scenario A: Visual Layout Improvements (UPDATED)</h3>
+        <div class="test-step">
+            <strong>Step 1:</strong> Observe overall layout compactness
+            <div class="expected">Expected: Significant reduction in whitespace, more data visible</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 2:</strong> Check column widths and name/team separation (FIXED)
+            <div class="expected">Expected: Player names fully visible with no overlap between Name and Team columns</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 3:</strong> Verify VBD shows as integers (FIXED)
+            <div class="expected">Expected: VBD column displays whole numbers (45, 38, 22) not decimals (45.2, 38.1)</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 4:</strong> Check compact column headers (UPDATED)
+            <div class="expected">Expected: Headers show "$", "L", "H" instead of "$", "Min", "Max"</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 5:</strong> Verify 5-column layout structure
+            <div class="expected">Expected: QB/TE stacked (left), RB (middle-left), WR (middle-right), Overall (right)</div>
+        </div>
+
+        <h3>Scenario B: Player Limit Configuration (FIXED)</h3>
+        <div class="test-step">
+            <strong>Step 1:</strong> Locate dropdown in QB header
+            <div class="expected">Expected: Small dropdown showing "30" (default value)</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 2:</strong> Change QB limit from 30 to 20
+            <div class="expected">Expected: QB column immediately updates to show only 20 players (FIXED - now works!)</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 3:</strong> Test other position dropdowns (TE: 28, RB: 60, WR: 60)
+            <div class="expected">Expected: Each dropdown updates respective column player count</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 4:</strong> Test Overall dropdown (default: 60)
+            <div class="expected">Expected: Overall column updates to show selected limit</div>
+        </div>
+
+        <h3>Scenario C: Persistence Testing</h3>
+        <div class="test-step">
+            <strong>Step 1:</strong> Set custom limits (e.g., QB: 25, TE: 20, RB: 50, WR: 50, Overall: 80)
+            <div class="expected">Expected: All columns update to show new limits</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 2:</strong> Refresh the page (F5 or Ctrl+R)
+            <div class="expected">Expected: Custom limits are preserved and restored</div>
+        </div>
+
+        <h3>Scenario D: Responsive Behavior</h3>
+        <div class="test-step">
+            <strong>Step 1:</strong> Resize the Beer Sheet widget to different sizes
+            <div class="expected">Expected: Layout adapts without breaking, scrollbars appear if needed</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 2:</strong> Test at different browser zoom levels (90%, 110%, 125%)
+            <div class="expected">Expected: Widget remains usable and readable at all zoom levels</div>
+        </div>
+
+        <h2>✅ Pass Criteria</h2>
+        <div class="pass-criteria">
+            <h3>Must Pass All:</h3>
+            <ul>
+                <li><strong>Layout Compactness:</strong> Visibly reduced padding/margins throughout</li>
+                <li><strong>Data Visibility:</strong> No truncated player names or data</li>
+                <li><strong>Position Structure:</strong> QB/TE stacked on left, correct column arrangement</li>
+                <li><strong>Dropdown Functionality:</strong> All 5 dropdowns work and update data immediately</li>
+                <li><strong>Default Values:</strong> QB: 30, TE: 28, RB: 60, WR: 60, Overall: 60</li>
+                <li><strong>Persistence:</strong> Settings survive page refresh</li>
+                <li><strong>Performance:</strong> No noticeable lag when changing limits</li>
+                <li><strong>Responsive Design:</strong> Widget works at different sizes and zoom levels</li>
+            </ul>
+        </div>
+
+        <div class="files-changed">
+            <h3>📁 Files Modified</h3>
+            <ul>
+                <li><strong>src/core/beer-sheet.ts</strong> - Added limit parameters to data processing functions</li>
+                <li><strong>src/components/widgets/BeerSheetWidget.tsx</strong> - Updated UI layout, added dropdowns and styling</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ Important:</strong> This validation page is for human verification. Please test all scenarios above and confirm that the Beer Sheet widget meets all pass criteria before marking the task as complete.
+        </div>
+
+        <h2>🎯 Next Steps After Validation</h2>
+        <p>Once all scenarios pass:</p>
+        <ol>
+            <li>Confirm: "HITL validation passed"</li>
+            <li>Continue with remaining layout optimizations if needed</li>
+            <li>Consider additional responsive testing at various screen sizes</li>
+        </ol>
+    </div>
+</body>
+</html>
