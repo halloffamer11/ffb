@@ -8,7 +8,7 @@ import { theme } from "../../utils/styledHelpers";
 // ============================================================================
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
   size?: 'sm' | 'base' | 'lg';
   active?: boolean;
   loading?: boolean;
@@ -16,7 +16,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 const StyledButton = styled.button<{
-  $variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  $variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'destructive';
   $size?: 'sm' | 'base' | 'lg';
   $active?: boolean;
   $loading?: boolean;
@@ -102,6 +102,24 @@ const StyledButton = styled.button<{
           &:hover:not(:disabled) {
             background: ${theme('states.hover.background')};
             color: ${theme('colors.text1')};
+          }
+        `;
+      
+      case 'destructive':
+        return `
+          background: ${theme('colors.negative')};
+          color: white;
+          border-color: ${theme('colors.negative')};
+          
+          &:hover:not(:disabled) {
+            background: ${theme('colors.negative')}dd;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px ${theme('colors.negative')}40;
+          }
+          
+          &:active {
+            transform: translateY(0);
+            transition: transform ${theme('transitions.micro')};
           }
         `;
         

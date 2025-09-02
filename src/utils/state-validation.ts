@@ -18,8 +18,12 @@ import {
   ValidationResult,
   ValidationError,
   Position,
-  InjuryStatus
+  InjuryStatus,
+  LegacyPlayer,
+  PositionStats,
+  ProjectionData
 } from '../types/data-contracts';
+import { validateProjectionData } from '../core/projections';
 
 // Validation schemas
 const VALID_POSITIONS: Position[] = ['QB', 'RB', 'WR', 'TE', 'K', 'DST'];
@@ -144,13 +148,20 @@ export function createInitialState(): ApplicationState {
 }
 
 /**
- * Validate a player object
+ * Check if player is legacy format (missing new fields)
+ */
+function isLegacyPlayer(player: any): boolean {
+  return !player?.projections || !player?.stats;
+}
+
+/**
+ * Validate a player object (enhanced version with backward compatibility)
  */
 export function validatePlayer(player: any, index?: number): ValidationError[] {
   const errors: ValidationError[] = [];
   const context = index !== undefined ? `player[${index}]` : 'player';
   
-  // Required fields
+  // Basic required fields (both legacy and enhanced)
   if (typeof player?.id !== 'number' || player.id <= 0) {
     errors.push({
       field: `${context}.id`,
@@ -242,6 +253,94 @@ export function validatePlayer(player: any, index?: number): ValidationError[] {
       severity: 'warning',
       code: 'INVALID_BYE_WEEK'
     });
+  }
+  
+  // Enhanced validation for new format
+  if (isLegacyPlayer(player)) {
+    errors.push({
+      field: `${context}`,
+      message: 'Player uses legacy format and should be migrated',
+      severity: 'warning',
+      code: 'LEGACY_PLAYER_FORMAT'
+    });
+  } else {
+    // Validate projections
+    if (!player.projections) {
+      errors.push({
+        field: `${context}.projections`,
+        message: 'Player must have projection data',
+        severity: 'error',
+        code: 'MISSING_PROJECTIONS'
+      });
+    } else {
+      if (typeof player.projections.points !== 'number' || player.projections.points < 0) {
+        errors.push({
+          field: `${context}.projections.points`,
+          message: 'Projection points must be a non-negative number',
+          severity: 'error',
+          code: 'INVALID_PROJECTION_POINTS'
+        });
+      }
+      
+      if (!['FFA', 'FPs', 'custom'].includes(player.projections.source)) {
+        errors.push({
+          field: `${context}.projections.source`,
+          message: 'Projection source must be FFA, FPs, or custom',
+          severity: 'warning',
+          code: 'INVALID_PROJECTION_SOURCE'
+        });
+      }
+    }
+    
+    // Validate stats
+    if (!player.stats) {
+      errors.push({
+        field: `${context}.stats`,
+        message: 'Player must have stats data',
+        severity: 'error',
+        code: 'MISSING_STATS'
+      });
+    } else if (player.stats.type !== player.position) {
+      errors.push({
+        field: `${context}.stats.type`,
+        message: `Stats type (${player.stats.type}) must match position (${player.position})`,
+        severity: 'error',
+        code: 'STATS_POSITION_MISMATCH'
+      });
+    }
+    
+    // Cross-validation
+    if (player.points !== player.projections?.points) {
+      errors.push({
+        field: `${context}.points`,
+        message: 'Player points should match projection points',
+        severity: 'warning',
+        code: 'POINTS_PROJECTION_MISMATCH'
+      });
+    }
+    
+    // Use core projection validation
+    try {
+      const projectionValidation = validateProjectionData(player as Player);
+      if (!projectionValidation.isValid) {
+        for (const error of projectionValidation.errors) {
+          errors.push({
+            field: `${context}`,
+            message: error,
+            severity: 'error',
+            code: 'PROJECTION_VALIDATION_FAILED'
+          });
+        }
+      }
+    } catch (error) {
+      // Handle validation errors gracefully
+      errors.push({
+        field: `${context}`,
+        message: `Projection validation failed: ${error}`,
+        severity: 'warning',
+        code: 'PROJECTION_VALIDATION_ERROR'
+      });
+    }
   }
   
   return errors;

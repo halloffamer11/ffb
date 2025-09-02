@@ -4,11 +4,15 @@ import { theme } from "../../utils/styledHelpers";
 import {
   useReactTable,
   getCoreRowModel,
+  getSortedRowModel,
   flexRender,
   createColumnHelper,
   ColumnDef,
+  SortingState,
 } from '@tanstack/react-table';
 import { useUnifiedStore } from '../../stores/unified-store';
+import type { Player } from '../../types/data-contracts';
+import { calculateProjectionRange } from '../../core/projections';
 import { FuzzySearch } from '../../core/search';
 import WidgetContainer from './WidgetContainer';
 import { 
@@ -429,6 +433,43 @@ const VBDValue = styled.span<{ $value: number }>`
   transition: ${props => theme('animations.valueUpdate')};
 `;
 
+const ProjectionRange = styled.span`
+  font-weight: ${props => theme('typography.fontWeight.medium')};
+  ${props => theme('typography.fontFeatures.tabularNums')};
+  color: ${props => theme('colors.text1')};
+  font-size: ${props => theme('typography.fontSize.sm')};
+  
+  &:hover {
+    cursor: help;
+  }
+`;
+
+const ProjectionSource = styled.span<{ $source: string }>`
+  font-size: ${props => theme('typography.fontSize.xs')};
+  font-weight: ${props => theme('typography.fontWeight.bold')};
+  text-transform: uppercase;
+  padding: 2px 4px;
+  border-radius: 3px;
+  
+  color: ${props => {
+    switch (props.$source) {
+      case 'FFA': return theme('colors.accent');
+      case 'FPs': return theme('colors.positive');
+      case 'custom': return theme('colors.warning');
+      default: return theme('colors.text2');
+    }
+  }};
+  
+  background: ${props => {
+    switch (props.$source) {
+      case 'FFA': return theme('colors.accentAlpha');
+      case 'FPs': return theme('colors.positiveAlpha');
+      case 'custom': return theme('colors.warningAlpha');
+      default: return theme('colors.surface2');
+    }
+  }};
+`;
+
 const EmptyState = styled.div`
   padding: ${props => theme('spacing')['5xl']} ${props => theme('spacing')['2xl']};
   text-align: center;
@@ -503,22 +544,6 @@ const INJURY_LABELS = {
 
 // Removed duplicate useDebounce - using the one from hooks
 
-// Player type definition
-interface Player {
-  id: number;
-  name: string;
-  position: string;
-  team: string;
-  points?: number;
-  vbd?: number;
-  drafted?: boolean;
-  injuryStatus?: number;
-  adp?: number;
-  marketData?: {
-    adp?: number;
-  };
-}
-
 const columnHelper = createColumnHelper<Player>();
 
 // Props interface
@@ -539,6 +564,7 @@ const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSea
   
   // Local state
   const [searchTerm, setSearchTerm] = useState('');
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [positionFilters, setPositionFilters] = useState<Set<string>>(new Set());
   const [showAllPositions, setShowAllPositions] = useState(true);
   const [showDrafted, setShowDrafted] = useState(false);
@@ -673,6 +699,53 @@ const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSea
         return a - b;
       }
     }),
+    columnHelper.accessor('projections', {
+      header: 'Range',
+      cell: info => {
+        const projections = info.getValue();
+        if (!projections) return <span data-numeric="true">-</span>;
+        
+        try {
+          const range = calculateProjectionRange(projections);
+          const hasRange = Math.abs(range.high - range.low) > 0.1;
+          
+          return (
+            <ProjectionRange data-numeric="true" title={`Confidence: ${Math.round(range.confidence * 100)}%`}>
+              {hasRange ? (
+                <span>
+                  {range.low.toFixed(1)}-{range.high.toFixed(1)}
+                </span>
+              ) : (
+                <span>{projections.points.toFixed(1)}</span>
+              )}
+            </ProjectionRange>
+          );
+        } catch (error) {
+          return <span data-numeric="true">{projections?.points?.toFixed(1) || '-'}</span>;
+        }
+      },
+      size: 90,
+      sortingFn: (rowA, rowB, columnId) => {
+        const a = rowA.original.projections?.points || 0;
+        const b = rowB.original.projections?.points || 0;
+        return a - b;
+      }
+    }),
+    columnHelper.accessor(row => row.projections?.source, {
+      id: 'source',
+      header: 'Src',
+      cell: info => {
+        const source = info.getValue();
+        if (!source) return <span>-</span>;
+        
+        return (
+          <ProjectionSource $source={source}>
+            {source}
+          </ProjectionSource>
+        );
+      },
+      size: 50
+    }),
     columnHelper.accessor('injuryStatus', {
       header: 'Status',
       cell: info => {
@@ -691,7 +764,13 @@ const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSea
   const table = useReactTable({
     data: searchResults,
     columns,
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    enableSortingRemoval: true, // Allow removing sort by clicking header again
   });
   
   // Handle player selection
@@ -853,13 +932,38 @@ const PlayerSearchWidget = React.memo(({ editMode = false, onRemove }: PlayerSea
                     {headerGroup.headers.map(header => (
                       <HeaderCell 
                         key={header.id} 
-                        style={{ width: header.getSize() }}
+                        style={{ 
+                          width: header.getSize(),
+                          cursor: header.column.getCanSort() ? 'pointer' : 'default'
+                        }}
                         role="columnheader"
                         scope="col"
-                        tabIndex={0}
-                        aria-sort="none"
+                        tabIndex={header.column.getCanSort() ? 0 : -1}
+                        aria-sort={
+                          header.column.getIsSorted() === 'asc' ? 'ascending' :
+                          header.column.getIsSorted() === 'desc' ? 'descending' : 'none'
+                        }
+                        onClick={header.column.getToggleSortingHandler()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            header.column.getToggleSortingHandler()?.(e);
+                          }
+                        }}
                       >
-                        {flexRender(header.column.columnDef.header, header.getContext())}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          {flexRender(header.column.columnDef.header, header.getContext())}
+                          {header.column.getCanSort() && (
+                            <span style={{ 
+                              marginLeft: '4px', 
+                              fontSize: '10px',
+                              opacity: header.column.getIsSorted() ? 1 : 0.5
+                            }}>
+                              {header.column.getIsSorted() === 'asc' ? '▲' :
+                               header.column.getIsSorted() === 'desc' ? '▼' : '⇅'}
+                            </span>
+                          )}
+                        </div>
                       </HeaderCell>
                     ))}
                   </tr>

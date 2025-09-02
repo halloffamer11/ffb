@@ -1,7 +1,7 @@
 import { logStructured, logTiming } from '../app/logger.js';
 import { createStorageAdapter } from '../adapters/storage.js';
 import { autoConfigure, calculatePoints } from './scoring.js';
-import { calculatePlayerVBD } from './vbd.js';
+import { calculatePlayerVBDWithValPercent } from './vbd.js';
 import { computeTiers } from './tiers.js';
 
 const storage = createStorageAdapter({ namespace: 'workspace', version: '1.0.0' });
@@ -67,17 +67,22 @@ export async function recalcAll() {
 
     const t2 = performance.now();
     const leagueForVbd = normalizeLeagueForVbd(league);
-    const withVbd = calculatePlayerVBD(withPoints, leagueForVbd);
+    const withVbdAndValPercent = calculatePlayerVBDWithValPercent(withPoints, leagueForVbd);
     const t3 = performance.now();
-    logTiming('recalc.vbd', t2, t3);
+    logTiming('recalc.vbd_valpercent', t2, t3);
     
-    // Debug: Log VBD calculation results
-    const vbdSample = withVbd.slice(0, 3).map(p => ({ name: p.name, points: p.points, vbd: p.vbd }));
-    logStructured('info', 'vbd:calculated', { samplePlayers: vbdSample, leagueSettings: leagueForVbd });
+    // Debug: Log VBD and VAL% calculation results
+    const vbdSample = withVbdAndValPercent.slice(0, 3).map(p => ({ 
+      name: p.name, 
+      points: p.points, 
+      vbd: p.vbd,
+      valPercent: p.valPercent 
+    }));
+    logStructured('info', 'vbd_valpercent:calculated', { samplePlayers: vbdSample, leagueSettings: leagueForVbd });
 
     const t4 = performance.now();
     const byPos = new Map();
-    for (const p of withVbd) {
+    for (const p of withVbdAndValPercent) {
       const list = byPos.get(p.position) || [];
       list.push(p);
       byPos.set(p.position, list);
@@ -86,17 +91,17 @@ export async function recalcAll() {
     const t5 = performance.now();
     logTiming('recalc.tiers', t4, t5);
 
-    // Persist updated players (points, vbd) and a lightweight tiers summary
+    // Persist updated players (points, vbd, valPercent) and a lightweight tiers summary
     try {
-      storage.set('players', withVbd);
+      storage.set('players', withVbdAndValPercent);
       storage.set('tiers', serializeTiers(tiers));
       
       // CRITICAL: Also update the unified store with recalculated data
       try {
         const { useUnifiedStore } = await import('../stores/unified-store.ts');
         const store = useUnifiedStore.getState();
-        store.importPlayers(withVbd); // This will trigger React re-renders
-        console.log('✅ Updated unified store with recalculated VBD data');
+        store.importPlayers(withVbdAndValPercent); // This will trigger React re-renders
+        console.log('✅ Updated unified store with recalculated VBD and VAL% data');
       } catch (storeError) {
         console.warn('Failed to update unified store:', storeError);
       }
@@ -107,7 +112,7 @@ export async function recalcAll() {
 
     const tEnd = performance.now();
     logTiming('recalc.total', tStart, tEnd);
-    logStructured('info', 'recalc:complete', { players: withVbd.length });
+    logStructured('info', 'recalc:complete', { players: withVbdAndValPercent.length });
   } catch (err) {
     logStructured('error', 'recalc:error', { error: String(err && err.message || err) });
   }
@@ -121,11 +126,25 @@ export function attachRecalcListeners() {
 }
 
 function normalizeLeagueForVbd(league) {
-  const teams = Number(league?.teams || (league?.owners?.length || 12));
-  const r = league?.roster || {};
+  // Fix: teams can be an array (Team[]) or a number - handle both cases
+  let teams;
+  if (Array.isArray(league?.teams)) {
+    teams = league.teams.length;
+  } else if (typeof league?.teamCount === 'number') {
+    teams = league.teamCount;
+  } else if (typeof league?.teams === 'number') {
+    teams = league.teams;
+  } else if (Array.isArray(league?.owners)) {
+    teams = league.owners.length;
+  } else {
+    teams = 12; // Default fallback
+  }
+  
+  // Fix: Use settings.positions instead of league.roster
+  const positions = league?.positions || {};
   
   // Default roster for standard fantasy leagues if no settings
-  const defaultRoster = {
+  const defaultPositions = {
     QB: 1,
     RB: 2,
     WR: 2,
@@ -139,18 +158,22 @@ function normalizeLeagueForVbd(league) {
   const normalized = {
     teams,
     starters: {
-      QB: Number(r.QB ?? defaultRoster.QB),
-      RB: Number(r.RB ?? defaultRoster.RB),
-      WR: Number(r.WR ?? defaultRoster.WR),
-      TE: Number(r.TE ?? defaultRoster.TE),
-      K: Number(r.K ?? defaultRoster.K),
-      DST: Number(r.DST ?? defaultRoster.DST),
-      FLEX: Number(r.FLEX ?? defaultRoster.FLEX)
-    }
+      QB: Number(positions.QB ?? defaultPositions.QB),
+      RB: Number(positions.RB ?? defaultPositions.RB),
+      WR: Number(positions.WR ?? defaultPositions.WR),
+      TE: Number(positions.TE ?? defaultPositions.TE),
+      K: Number(positions.K ?? defaultPositions.K),
+      DST: Number(positions.DST ?? defaultPositions.DST),
+      FLEX: Number(positions.FLEX ?? defaultPositions.FLEX)
+    },
+    // Fix: Pass through flexConfig for proper FLEX baseline calculation
+    flexConfig: league?.flexConfig
   };
   
   // Debug log to see what settings are being used
   console.log('VBD League Settings:', normalized);
+  console.log('Original league.teams:', league?.teams, 'Array?', Array.isArray(league?.teams));
+  console.log('Computed teams:', teams);
   
   return normalized;
 }

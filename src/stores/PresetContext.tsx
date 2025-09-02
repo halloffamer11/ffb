@@ -114,7 +114,7 @@ export function PresetProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!isFocusGuarded()) {
-        if (event.key >= '1' && event.key <= '3') {
+        if (event.key >= '1' && event.key <= '4') {
           event.preventDefault();
           switchToPresetByShortcut(event.key);
         } else if (event.key === 'n') {

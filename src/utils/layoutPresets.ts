@@ -9,7 +9,7 @@
 
 import { getOptimalWidgetSizes, dimensionsToGridItem, type WidgetType } from './widgetSizing';
 
-export type PresetId = 'pre-draft' | 'nomination' | 'player-analytics';
+export type PresetId = 'pre-draft' | 'nomination' | 'player-analytics' | 'custom';
 
 export interface LayoutPreset {
   id: PresetId;
@@ -85,6 +85,10 @@ const preDraftPreset: LayoutPreset = {
       
       // Bottom: DraftLedger
       { i: 'draft-ledger', x: 0, y: 9, w: 6, h: 6, minW: 4, maxW: 12, minH: 4 },
+      
+      // Additional widgets for complete preset coverage
+      { i: 'team-roster-overview', x: 0, y: 15, w: 24, h: 6, minW: 24, maxW: 24, minH: 4 },
+      { i: 'beer-sheet', x: 0, y: 21, w: 12, h: 10, minW: 8, maxW: 24, minH: 6 },
     ],
     md: [
       // Top row: PlayerSearch + PlayerAnalysis
@@ -99,6 +103,10 @@ const preDraftPreset: LayoutPreset = {
       // Bottom row: Draft tools
       { i: 'draft-entry', x: 0, y: 26, w: 8, h: 6, minW: 2, maxW: 10, minH: 4 },
       { i: 'draft-ledger', x: 8, y: 26, w: 6, h: 6, minW: 3, maxW: 10, minH: 4 },
+      
+      // Additional widgets for complete preset coverage
+      { i: 'team-roster-overview', x: 0, y: 32, w: 20, h: 6, minW: 20, maxW: 20, minH: 4 },
+      { i: 'beer-sheet', x: 0, y: 38, w: 10, h: 8, minW: 8, maxW: 20, minH: 6 },
     ],
     sm: [
       // Stacked mobile layout
@@ -109,6 +117,10 @@ const preDraftPreset: LayoutPreset = {
       { i: 'roster', x: 0, y: 42, w: 4, h: 6, minW: 2, maxW: 6, minH: 6 },
       { i: 'draft-entry', x: 0, y: 48, w: 2, h: 5, minW: 2, maxW: 6, minH: 4 },
       { i: 'draft-ledger', x: 0, y: 53, w: 3, h: 5, minW: 2, maxW: 6, minH: 4 },
+      
+      // Additional widgets for complete preset coverage
+      { i: 'team-roster-overview', x: 0, y: 58, w: 16, h: 6, minW: 16, maxW: 16, minH: 4 },
+      { i: 'beer-sheet', x: 0, y: 64, w: 8, h: 8, minW: 6, maxW: 16, minH: 6 },
     ]
   }
 };
@@ -147,6 +159,10 @@ const nominationPreset: LayoutPreset = {
       // Bottom: PlayerAnalysis + DraftLedger (supporting info)
       dimensionsToGridItem('player-analysis', { ...optimalSizes['player-analysis'].lg, width: 8, height: 8 }, { x: 8, y: 22 }),
       dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].lg, width: 10, height: 8 }, { x: 14, y: 22 }),
+      
+      // Additional widgets for complete preset coverage
+      dimensionsToGridItem('team-roster-overview', { ...optimalSizes['team-roster-overview'].lg, height: 6 }, { x: 0, y: 30 }),
+      dimensionsToGridItem('beer-sheet', { ...optimalSizes['beer-sheet'].lg, height: 10 }, { x: 0, y: 36 }),
     ],
     md: [
       // Top row: DraftEntry + BudgetTracker
@@ -163,6 +179,10 @@ const nominationPreset: LayoutPreset = {
       // Bottom: Analysis tools
       dimensionsToGridItem('player-analysis', { ...optimalSizes['player-analysis'].md, width: 8, height: 6 }, { x: 8, y: 19 }),
       dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].md, width: 8, height: 6 }, { x: 0, y: 23 }),
+      
+      // Additional widgets for complete preset coverage
+      dimensionsToGridItem('team-roster-overview', { ...optimalSizes['team-roster-overview'].md, height: 6 }, { x: 0, y: 29 }),
+      dimensionsToGridItem('beer-sheet', { ...optimalSizes['beer-sheet'].md, height: 8 }, { x: 0, y: 35 }),
     ],
     sm: [
       // Mobile: Draft tools first, then supporting info
@@ -173,6 +193,10 @@ const nominationPreset: LayoutPreset = {
       dimensionsToGridItem('vbd-scatter', { ...optimalSizes['vbd-scatter'].sm, height: 10 }, { x: 0, y: 38 }),
       dimensionsToGridItem('player-analysis', { ...optimalSizes['player-analysis'].sm, height: 6 }, { x: 0, y: 48 }),
       dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].sm, height: 6 }, { x: 0, y: 54 }),
+      
+      // Additional widgets for complete preset coverage
+      dimensionsToGridItem('team-roster-overview', { ...optimalSizes['team-roster-overview'].sm, height: 6 }, { x: 0, y: 60 }),
+      dimensionsToGridItem('beer-sheet', { ...optimalSizes['beer-sheet'].sm, height: 8 }, { x: 0, y: 66 }),
     ]
   }
 };
@@ -210,6 +234,10 @@ const playerAnalyticsPreset: LayoutPreset = {
       dimensionsToGridItem('roster', { ...optimalSizes.roster.lg, width: 6, height: 8 }, { x: 18, y: 18 }),
       dimensionsToGridItem('draft-entry', { ...optimalSizes['draft-entry'].lg, width: 6, height: 4 }, { x: 12, y: 18 }),
       dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].lg, width: 6, height: 4 }, { x: 12, y: 22 }),
+      
+      // Additional widgets for complete preset coverage
+      dimensionsToGridItem('team-roster-overview', { ...optimalSizes['team-roster-overview'].lg, height: 6 }, { x: 0, y: 26 }),
+      dimensionsToGridItem('beer-sheet', { ...optimalSizes['beer-sheet'].lg, height: 10 }, { x: 0, y: 32 }),
     ],
     md: [
       // VBDScatter large
@@ -226,6 +254,10 @@ const playerAnalyticsPreset: LayoutPreset = {
       dimensionsToGridItem('roster', { ...optimalSizes.roster.md, width: 6, height: 6 }, { x: 14, y: 16 }),
       dimensionsToGridItem('draft-entry', { ...optimalSizes['draft-entry'].md, width: 5, height: 4 }, { x: 10, y: 16 }),
       dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].md, width: 5, height: 4 }, { x: 10, y: 20 }),
+      
+      // Additional widgets for complete preset coverage
+      dimensionsToGridItem('team-roster-overview', { ...optimalSizes['team-roster-overview'].md, height: 6 }, { x: 0, y: 24 }),
+      dimensionsToGridItem('beer-sheet', { ...optimalSizes['beer-sheet'].md, height: 8 }, { x: 0, y: 30 }),
     ],
     sm: [
       // Mobile: Analytics first, then tools
@@ -236,6 +268,39 @@ const playerAnalyticsPreset: LayoutPreset = {
       dimensionsToGridItem('roster', { ...optimalSizes.roster.sm, height: 6 }, { x: 0, y: 40 }),
       dimensionsToGridItem('draft-entry', { ...optimalSizes['draft-entry'].sm, height: 4 }, { x: 0, y: 46 }),
       dimensionsToGridItem('draft-ledger', { ...optimalSizes['draft-ledger'].sm, height: 4 }, { x: 0, y: 50 }),
+      
+      // Additional widgets for complete preset coverage
+      dimensionsToGridItem('team-roster-overview', { ...optimalSizes['team-roster-overview'].sm, height: 6 }, { x: 0, y: 54 }),
+      dimensionsToGridItem('beer-sheet', { ...optimalSizes['beer-sheet'].sm, height: 8 }, { x: 0, y: 60 }),
+    ]
+  }
+};
+
+/**
+ * Custom Layout: Empty Canvas for User Control
+ * 
+ * Primary workflow: Complete user customization without restrictions
+ * Key widgets: None by default - user adds what they need
+ * Layout: Empty - allows unlimited flexibility
+ * 
+ * Visual hierarchy: User-defined, unrestricted widget placement
+ */
+const customPreset: LayoutPreset = {
+  id: 'custom',
+  name: 'Custom Layout',
+  description: 'Empty canvas for unlimited widget customization and arrangement',
+  shortcut: '4',
+  icon: '🎨',
+  workflow: 'User-defined with complete flexibility',
+  layouts: {
+    lg: [
+      // Empty by default - widgets added by user with optimal sizing
+    ],
+    md: [
+      // Empty by default - widgets added by user with optimal sizing
+    ],
+    sm: [
+      // Empty by default - widgets added by user with optimal sizing
     ]
   }
 };
@@ -247,6 +312,7 @@ export const layoutPresets: Record<PresetId, LayoutPreset> = {
   'pre-draft': preDraftPreset,
   'nomination': nominationPreset,
   'player-analytics': playerAnalyticsPreset,
+  'custom': customPreset,
 };
 
 /**
@@ -305,5 +371,11 @@ export const presetMetadata = {
     workflow: ['Deep Analysis', 'Data Visualization', 'Player Insights'],
     keyFeatures: ['Dominant Charts', 'Statistical Focus', 'Visual Analysis'],
     bestFor: 'In-depth player analysis and data exploration'
+  },
+  'custom': {
+    primaryColor: '#10B981', // Green - Flexibility/Freedom
+    workflow: ['Complete Customization', 'Unrestricted Layout', 'Personal Workflow'],
+    keyFeatures: ['Empty Canvas', 'Unlimited Flexibility', 'User Control'],
+    bestFor: 'Creating personalized layouts without constraints'
   }
 } as const;

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Import Validation - FFB</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+        }
+        .success { border-left-color: #28a745; }
+        .warning { border-left-color: #ffc107; }
+        .error { border-left-color: #dc3545; }
+        
+        .file-info {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 10px 10px 10px 0;
+            border: none;
+            cursor: pointer;
+        }
+        .button:hover { background: #0056b3; }
+        .button.secondary { background: #6c757d; }
+        .button.secondary:hover { background: #545b62; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Excel Import Validation - FFB Data Management</h1>
+        
+        <div class="section">
+            <h2>🎯 Test Objective</h2>
+            <p>Validate that the enhanced Data Management page can successfully import Excel files containing FFA raw stats and FantasyPros projections.</p>
+        </div>
+
+        <div class="section">
+            <h2>📋 Validation Instructions</h2>
+            
+            <div class="test-step">
+                <h3>Step 1: Access Data Management</h3>
+                <p>Start the dev server and navigate to the data management page:</p>
+                <pre>npm run dev</pre>
+                <a href="http://localhost:5173/data-management" class="button" target="_blank">Open Data Management Page</a>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 2: Test Excel File Detection</h3>
+                <p>Verify the page accepts both CSV and Excel files:</p>
+                <ul>
+                    <li>Drop zone should show "Drop CSV or Excel file here"</li>
+                    <li>File input should accept ".csv,.xlsx"</li>
+                    <li>Interface should handle both file types gracefully</li>
+                </ul>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 3: Test FFA Excel Import</h3>
+                <p>Upload the FFA raw stats file:</p>
+                <div class="file-info">
+                    <strong>File:</strong> demos/data/LIVE/FFA_raw_stats_2025_wk0.xlsx<br>
+                    <strong>Expected:</strong> File type detected as "FFA"<br>
+                    <strong>Should contain:</strong> Player stats with position-specific columns
+                </div>
+                <p><strong>Validation Criteria:</strong></p>
+                <ul>
+                    <li>✅ File loads without errors</li>
+                    <li>✅ File type correctly identified as "FFA"</li>
+                    <li>✅ Sheet information displays correctly</li>
+                    <li>✅ Import processes and creates enhanced player objects</li>
+                    <li>✅ VBD calculations trigger after import</li>
+                </ul>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 4: Test FPs Excel Import</h3>
+                <p>Upload the FantasyPros projections file:</p>
+                <div class="file-info">
+                    <strong>File:</strong> demos/data/LIVE/FPs_2025_projections_FULL.xlsx<br>
+                    <strong>Expected:</strong> File type detected as "FPs"<br>
+                    <strong>Should contain:</strong> Multiple position sheets (QB, RB, WR, TE, K, DST)
+                </div>
+                <p><strong>Validation Criteria:</strong></p>
+                <ul>
+                    <li>✅ File loads without errors</li>
+                    <li>✅ File type correctly identified as "FPs"</li>
+                    <li>✅ Multiple position sheets detected and listed</li>
+                    <li>✅ Import merges projection data correctly</li>
+                    <li>✅ High/low projections preserved where available</li>
+                </ul>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 5: Verify Data Integration</h3>
+                <p>After successful import, return to dashboard:</p>
+                <ul>
+                    <li>✅ Players appear in player table with enhanced stats</li>
+                    <li>✅ Projections show appropriate confidence intervals</li>
+                    <li>✅ VBD values calculated correctly</li>
+                    <li>✅ Position-specific stats available</li>
+                    <li>✅ Injury statuses imported correctly</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🔧 Implementation Summary</h2>
+            <p>The following components were added/modified to enable Excel import:</p>
+            
+            <h3>New Files Created:</h3>
+            <ul>
+                <li><code>src/utils/excel-parser.ts</code> - Excel parsing utilities using SheetJS</li>
+            </ul>
+
+            <h3>Modified Files:</h3>
+            <ul>
+                <li><code>src/pages/DataManagementPage.tsx</code> - Added Excel support, enhanced preview, connected to ProjectionImporter</li>
+                <li><code>package.json</code> - Added xlsx dependency</li>
+            </ul>
+
+            <h3>Key Features Added:</h3>
+            <ul>
+                <li>Excel file type auto-detection (FFA vs FPs)</li>
+                <li>Multi-sheet parsing for FantasyPros format</li>
+                <li>Enhanced data validation and error handling</li>
+                <li>Integration with existing ProjectionImporter system</li>
+                <li>Unified store compatibility maintained</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>⚠️ Known Limitations</h2>
+            <ul>
+                <li>Excel preview shows limited data (full preview available after import)</li>
+                <li>File type detection relies on filename and sheet structure</li>
+                <li>Large Excel files (>10MB) not supported</li>
+                <li>Only XLSX format supported (not XLS)</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🚀 Quick Test Links</h2>
+            <a href="http://localhost:5173/data-management" class="button" target="_blank">Data Management Page</a>
+            <a href="http://localhost:5173/" class="button secondary" target="_blank">Dashboard</a>
+            <a href="http://localhost:5173/developer" class="button secondary" target="_blank">Developer Tools</a>
+        </div>
+    </div>
+</body>
+</html>

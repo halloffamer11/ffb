@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Sheet Widget Integration - HITL Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #e9ecef;
+        }
+        h1 {
+            color: #2c3e50;
+            margin: 0 0 10px 0;
+        }
+        .status-badge {
+            display: inline-block;
+            background: #ffc107;
+            color: #000;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+        }
+        .section h2 {
+            color: #495057;
+            margin-top: 0;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 10px;
+        }
+        .test-step {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+            border-radius: 0 4px 4px 0;
+        }
+        .test-step h3 {
+            margin: 0 0 10px 0;
+            color: #007bff;
+            font-size: 16px;
+        }
+        .expected-result {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .expected-result strong {
+            color: #0c5d2a;
+        }
+        .code {
+            background: #f1f3f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            border: 1px solid #bee5eb;
+            color: #0c5460;
+            padding: 12px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .file-list {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #e9ecef;
+        }
+        .file-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .file-list li {
+            margin: 5px 0;
+            font-family: monospace;
+            font-size: 14px;
+        }
+        .criteria {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        .criteria h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        .criteria ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .navigation-link {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 5px;
+            transition: background-color 0.2s;
+        }
+        .navigation-link:hover {
+            background: #0056b3;
+            color: white;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Beer Sheet Widget Integration</h1>
+            <span class="status-badge">HITL VALIDATION REQUIRED</span>
+            <p>Task: Integrate BeerSheetWidget into the widget grid system</p>
+        </div>
+
+        <div class="section">
+            <h2>🎯 Implementation Summary</h2>
+            <p><strong>Purpose:</strong> Integrate the BeerSheetWidget into the main application's widget grid system to make it available as a dashboard widget alongside other draft tools.</p>
+            
+            <div class="file-list">
+                <h4>Code Added/Modified:</h4>
+                <ul>
+                    <li><strong>/src/utils/widgetSizing.ts</strong> - Added 'beer-sheet' to WidgetType union and sizing calculations</li>
+                    <li><strong>/src/components/widgets/WidgetGrid.tsx</strong> - Imported BeerSheetWidget and added to all registration systems</li>
+                </ul>
+            </div>
+            
+            <div class="info">
+                <strong>Integration:</strong> The Beer Sheet widget is now fully integrated into the widget management system with appropriate sizing (12 columns wide to accommodate the 5-column layout), proper event handling for draft actions, and inclusion in all widget discovery mechanisms.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>🧪 Validation Instructions</h2>
+            
+            <div class="warning">
+                <strong>Setup Required:</strong> Ensure the dev server is running and test data is loaded.
+            </div>
+            
+            <div class="test-step">
+                <h3>Step 1: Start Development Environment</h3>
+                <p>Start the development server:</p>
+                <code>npm run dev</code>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Server starts on http://localhost:5173 with no compilation errors related to Beer Sheet widget integration.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 2: Load Test Data</h3>
+                <p>Navigate to Data Management page and load sample projection data if not already loaded.</p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Player data is available for the Beer Sheet to process and display.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 3: Access Dashboard</h3>
+                <p>Navigate to the main Dashboard page: <a href="http://localhost:5173" class="navigation-link">http://localhost:5173</a></p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Dashboard loads with all widgets including the new Beer Sheet widget if it's in the default layout.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 4: Test Widget Discovery (Edit Mode)</h3>
+                <p>1. Click "Edit Layout" button in the left sidebar or use keyboard shortcut<br>
+                   2. Look for the Beer Sheet widget in the available widgets list</p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Beer Sheet appears as "Beer Sheet" in the add widget menu when in edit mode. The widget should be available if it's not currently visible on the dashboard.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 5: Add Beer Sheet Widget (if hidden)</h3>
+                <p>Click the "Beer Sheet" button in the edit mode widget menu to add it to the dashboard.</p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Beer Sheet widget appears on the dashboard with proper sizing (wide layout to accommodate 5 columns). Widget should show position tables for QB/TE, RB, WR, and Overall rankings.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 6: Test Widget Functionality</h3>
+                <p>1. Verify all 5 columns (QB/TE, RB, WR, Overall) are visible and properly formatted<br>
+                   2. Test the "Hide Drafted" toggle button<br>
+                   3. Test player search highlighting<br>
+                   4. Try clicking a player to draft them</p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> All Beer Sheet features work normally within the widget container. Player tables display properly, controls function correctly, and draft actions work with confirmation dialog.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 7: Test Widget Grid Integration</h3>
+                <p>1. Try dragging the Beer Sheet widget to different positions (in edit mode)<br>
+                   2. Try resizing the widget using resize handles<br>
+                   3. Test removing the widget using the × button</p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Widget can be moved and resized properly. Minimum width prevents crushing the 5-column layout. Widget can be removed and re-added successfully.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 8: Test Cross-Widget Integration</h3>
+                <p>1. Draft a player using the Beer Sheet widget<br>
+                   2. Check that other widgets (Budget Tracker, Draft Ledger, Roster Panel) update accordingly<br>
+                   3. Use global search to verify highlighting works in Beer Sheet</p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Draft actions from Beer Sheet propagate to other widgets. Global search highlights players in Beer Sheet tables. Real-time synchronization works across all widgets.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 9: Test Widget Pop-out (Optional)</h3>
+                <p>Click the pop-out button (if available) on the Beer Sheet widget header.</p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Beer Sheet opens in a modal overlay, maintaining full functionality in a larger view.
+                </div>
+            </div>
+
+            <div class="test-step">
+                <h3>Step 10: Test Layout Persistence</h3>
+                <p>1. Save the current layout<br>
+                   2. Refresh the browser<br>
+                   3. Verify Beer Sheet widget position and size are preserved</p>
+                <div class="expected-result">
+                    <strong>Expected:</strong> Widget layout including Beer Sheet position is restored correctly after page refresh.
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✅ Pass Criteria</h2>
+            <div class="criteria">
+                <h4>Widget Integration Requirements:</h4>
+                <ul>
+                    <li>Beer Sheet widget appears in edit mode widget menu</li>
+                    <li>Widget can be added to dashboard successfully</li>
+                    <li>Widget displays all 5 position columns properly</li>
+                    <li>Minimum width prevents layout crushing (should be ~720px minimum)</li>
+                </ul>
+            </div>
+            
+            <div class="criteria">
+                <h4>Functionality Requirements:</h4>
+                <ul>
+                    <li>All Beer Sheet features work within widget container</li>
+                    <li>Draft actions work with confirmation dialog</li>
+                    <li>Global search highlighting functions properly</li>
+                    <li>Show/Hide drafted toggle works correctly</li>
+                </ul>
+            </div>
+
+            <div class="criteria">
+                <h4>Widget System Requirements:</h4>
+                <ul>
+                    <li>Widget can be moved, resized, and removed</li>
+                    <li>Layout persistence works (save/restore)</li>
+                    <li>Cross-widget synchronization functions</li>
+                    <li>Pop-out modal works (if implemented)</li>
+                </ul>
+            </div>
+
+            <div class="criteria">
+                <h4>Performance Requirements:</h4>
+                <ul>
+                    <li>No noticeable lag when adding/removing widget</li>
+                    <li>Beer Sheet processing maintains <50ms performance target</li>
+                    <li>Widget resizing is smooth and responsive</li>
+                    <li>Multiple widgets can be active without performance issues</li>
+                </ul>
+            </div>
+
+            <div class="success">
+                <h4>Overall Success Condition:</h4>
+                <strong>Beer Sheet widget is fully functional as part of the dashboard widget system, maintaining all its ultra-compact drafting features while integrating seamlessly with the existing widget management infrastructure.</strong>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📁 Files Changed</h2>
+            <div class="file-list">
+                <ul>
+                    <li><strong>/src/utils/widgetSizing.ts</strong> - Added 'beer-sheet' widget type and sizing configuration</li>
+                    <li><strong>/src/components/widgets/WidgetGrid.tsx</strong> - Complete Beer Sheet widget integration:
+                        <ul style="margin-top: 5px;">
+                            <li>Import statement for BeerSheetWidget</li>
+                            <li>Added to ALL_WIDGETS array</li>
+                            <li>Added to default layout positions (lg, md, sm breakpoints)</li>
+                            <li>Added to widget title mapping</li>
+                            <li>Added to renderWidget and renderWidgetContent functions</li>
+                            <li>Added to widget names mapping for add menu</li>
+                        </ul>
+                    </li>
+                    <li><strong>/src/core/beer-sheet.ts</strong> - Fixed syntax error (extra quote and brace)</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ CRITICAL:</strong> Please confirm validation results before proceeding. The Beer Sheet widget integration requires thorough testing to ensure it works properly within the widget grid system while maintaining its ultra-compact, high-performance characteristics.
+        </div>
+
+        <div class="info">
+            <strong>🔍 Key Integration Points:</strong>
+            <ul>
+                <li><strong>Sizing:</strong> 12 columns wide (lg), with minimum 8 columns to prevent layout crushing</li>
+                <li><strong>Height:</strong> ~10 grid units (500px) for adequate table space</li>
+                <li><strong>Features:</strong> All original Beer Sheet functionality preserved</li>
+                <li><strong>Integration:</strong> Full widget system compatibility (move, resize, remove, persist)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

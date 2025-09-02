@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beer Sheet Final Fixes - HITL Validation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f5f5f5;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: #059669;
+            color: white;
+            padding: 20px;
+            margin: -30px -30px 30px -30px;
+            border-radius: 8px 8px 0 0;
+        }
+        h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        h2 {
+            color: #059669;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #0f766e;
+            margin-top: 25px;
+        }
+        .feature-list {
+            background: #f0fdfa;
+            padding: 20px;
+            border-left: 4px solid #059669;
+            margin: 15px 0;
+        }
+        .test-step {
+            background: #ecfdf5;
+            padding: 15px;
+            border-left: 4px solid #10b981;
+            margin: 10px 0;
+        }
+        .expected {
+            background: #fef3c7;
+            padding: 10px;
+            border-left: 4px solid #f59e0b;
+            margin-top: 5px;
+            font-style: italic;
+        }
+        .code {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .files-changed {
+            background: #f0f9ff;
+            padding: 20px;
+            border: 1px solid #bfdbfe;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .pass-criteria {
+            background: #dcfce7;
+            padding: 20px;
+            border: 1px solid #86efac;
+            border-radius: 6px;
+            margin: 15px 0;
+        }
+        .critical {
+            background: #fef2f2;
+            padding: 15px;
+            border: 1px solid #fca5a5;
+            border-radius: 6px;
+            margin: 15px 0;
+            color: #991b1b;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+        }
+        .fixed { background: #059669; }
+        .new { background: #0f766e; }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        li {
+            margin: 8px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🍺✨ Beer Sheet Final Fixes - HITL Validation</h1>
+            <p>Critical fixes for column truncation, player focus, and click behavior</p>
+        </div>
+
+        <h2>📋 Implementation Summary</h2>
+        <div class="feature-list">
+            <h3>Purpose</h3>
+            <p>Fix the final three critical issues with the Beer Sheet widget to complete the optimization:</p>
+            <ul>
+                <li><strong>H Column Truncation:</strong> Ensure the High price column displays fully</li>
+                <li><strong>Player Focus Integration:</strong> Highlight focused players from other widgets</li>
+                <li><strong>Click Behavior:</strong> Change from draft dialog to focus selection for cross-widget sync</li>
+            </ul>
+            
+            <h3>Code Changes</h3>
+            <ul>
+                <li><span class="status fixed">✓</span> Increased H column width from 24px to 30px</li>
+                <li><span class="status fixed">✓</span> Added focused player highlighting logic in highlightedData</li>
+                <li><span class="status fixed">✓</span> Replaced handleDraftPlayer with handlePlayerFocus</li>
+                <li><span class="status fixed">✓</span> Removed all draft dialog UI and confirmation code</li>
+                <li><span class="status fixed">✓</span> Updated tooltips from "Click to draft" to "Click to focus"</li>
+                <li><span class="status new">★</span> Players now use store.selectPlayer() for cross-widget sync</li>
+            </ul>
+
+            <h3>Integration</h3>
+            <p>Full integration with unified store's selectedPlayer system for seamless cross-widget player focus synchronization.</p>
+        </div>
+
+        <h2>🧪 Validation Instructions</h2>
+
+        <h3>1. Setup</h3>
+        <div class="test-step">
+            <strong>Action:</strong> Start development server and open application
+            <div class="code">npm run dev</div>
+            <div class="expected">Expected: Server running at http://localhost:5173</div>
+        </div>
+
+        <h3>2. Access Custom Layout</h3>
+        <div class="test-step">
+            <strong>Action:</strong> Press keyboard shortcut '4' to switch to Custom layout
+            <div class="expected">Expected: Beer Sheet widget visible and resizable</div>
+        </div>
+
+        <h2>🔍 Critical Test Scenarios</h2>
+
+        <h3>Scenario A: H Column Display Fix</h3>
+        <div class="test-step">
+            <strong>Step 1:</strong> Examine the column headers in all position tables
+            <div class="expected">Expected: Headers clearly show "$", "L", "H" with H column fully visible</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 2:</strong> Check High price values are not truncated
+            <div class="expected">Expected: All High price values display completely (e.g., "45", "38", "22")</div>
+        </div>
+
+        <h3>Scenario B: Cross-Widget Player Focus (CRITICAL)</h3>
+        <div class="test-step">
+            <strong>Step 1:</strong> Open Player Search widget alongside Beer Sheet
+            <div class="expected">Expected: Both widgets visible simultaneously</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 2:</strong> Search for a player in Player Search widget and select them
+            <div class="expected">Expected: Selected player highlights in BOTH widgets</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 3:</strong> Click a different player in Beer Sheet widget
+            <div class="expected">Expected: That player becomes highlighted in BOTH widgets (no draft dialog!)</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 4:</strong> Verify multiple widgets sync to same focused player
+            <div class="expected">Expected: All widgets show the same player as focused/selected</div>
+        </div>
+
+        <div class="critical">
+            <strong>🚨 CRITICAL:</strong> Clicking players in Beer Sheet must NOT open draft dialog. It should only change the focused player across all widgets.
+        </div>
+
+        <h3>Scenario C: Click Behavior Change</h3>
+        <div class="test-step">
+            <strong>Step 1:</strong> Hover over any player in Beer Sheet
+            <div class="expected">Expected: Tooltip shows "Click to focus [Player Name]" (not "Click to draft")</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 2:</strong> Click various players in Beer Sheet
+            <div class="expected">Expected: No popup dialogs appear, only player focus changes</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 3:</strong> Try clicking drafted players
+            <div class="expected">Expected: Tooltip shows "Drafted player", clicking still changes focus</div>
+        </div>
+
+        <h3>Scenario D: Dropdown Functionality Maintained</h3>
+        <div class="test-step">
+            <strong>Step 1:</strong> Test all position dropdowns still work
+            <div class="expected">Expected: QB, TE, RB, WR, Overall dropdowns immediately update player counts</div>
+        </div>
+        <div class="test-step">
+            <strong>Step 2:</strong> Verify settings persist across page refresh
+            <div class="expected">Expected: Custom limits are remembered after F5 refresh</div>
+        </div>
+
+        <h2>✅ Pass Criteria</h2>
+        <div class="pass-criteria">
+            <h3>Must Pass All - Zero Tolerance:</h3>
+            <ul>
+                <li><strong>H Column Visibility:</strong> High price column completely visible in all tables</li>
+                <li><strong>Cross-Widget Focus:</strong> Selecting player in any widget highlights same player everywhere</li>
+                <li><strong>No Draft Dialog:</strong> Clicking Beer Sheet players NEVER opens draft confirmation</li>
+                <li><strong>Focus Tooltips:</strong> All tooltips show "Click to focus" instead of "Click to draft"</li>
+                <li><strong>Bi-directional Sync:</strong> Focus works both FROM Beer Sheet to other widgets AND vice versa</li>
+                <li><strong>Dropdown Preservation:</strong> All existing functionality (limits, persistence) still works</li>
+                <li><strong>Visual Highlighting:</strong> Focused players are clearly highlighted with existing search highlighting styles</li>
+            </ul>
+        </div>
+
+        <div class="files-changed">
+            <h3>📁 Files Modified</h3>
+            <ul>
+                <li><strong>src/components/widgets/BeerSheetWidget.tsx</strong> - Complete behavior overhaul:
+                    <ul>
+                        <li>Line 626: Increased H column width to 30px</li>
+                        <li>Lines 879-917: Added focused player highlighting logic</li>
+                        <li>Lines 919-925: Replaced draft handler with focus handler</li>
+                        <li>Removed: All draft dialog code, confirmation flows, overlay UI</li>
+                        <li>Updated: All tooltips and click behaviors</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+
+        <div class="critical">
+            <strong>⚠️ Critical Testing Note:</strong> The click behavior change is fundamental. If clicking Beer Sheet players opens ANY dialog or popup, the implementation has failed. Players should only change focus/selection state for cross-widget synchronization.
+        </div>
+
+        <h2>🎯 Success Definition</h2>
+        <p><strong>Complete Success:</strong> When you can seamlessly select players across multiple widgets (Player Search, Beer Sheet, VBD Scatter, etc.) and they all highlight the same focused player simultaneously, with no unexpected dialogs or interruptions.</p>
+
+        <div class="code">
+# Test Flow Example:
+1. Open Player Search widget
+2. Search for "Mahomes" and click him
+3. Beer Sheet immediately highlights Mahomes  
+4. Click a different player in Beer Sheet (e.g., "Jefferson")
+5. Player Search selection updates to Jefferson
+6. All widgets now show Jefferson as focused
+7. No dialogs appeared at any point
+        </div>
+
+        <h2>🚀 Next Steps After Validation</h2>
+        <p>Once all scenarios pass:</p>
+        <ol>
+            <li>Confirm: "HITL validation passed for Beer Sheet fixes"</li>
+            <li>Beer Sheet widget optimization is complete</li>
+            <li>Cross-widget player focus system is fully functional</li>
+        </ol>
+    </div>
+</body>
+</html>

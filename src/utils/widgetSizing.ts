@@ -35,7 +35,8 @@ export type WidgetType =
   | 'budget'
   | 'roster'
   | 'draft-ledger'
-  | 'team-roster-overview';
+  | 'team-roster-overview'
+  | 'beer-sheet';
 
 // Grid configuration constants
 const GRID_ROW_HEIGHT = 50; // pixels per grid unit (increased for better drag targets)
@@ -238,6 +239,23 @@ function calculateContentSize(
       });
       break;
       
+    case 'beer-sheet':
+      // Beer Sheet: Ultra-compact 5-column drafting cheat sheet
+      // Needs enough width for QB/TE + RB + WR + Overall columns (~720px minimum)
+      // Height should accommodate reasonable number of players per position
+      const beerSheetHeight = 
+        CONTENT_CONSTANTS.widgetHeaderHeight +
+        CONTENT_CONSTANTS.formFieldHeight + // Controls bar
+        400 + // Main table content area (compact)
+        CONTENT_CONSTANTS.widgetPadding;
+      
+      baseWidth = Math.floor(12 * multiplier); // Wide: needs space for 5 columns
+      baseHeight = pixelsToGridUnits(beerSheetHeight);
+      minW = Math.floor(8 * multiplier); // Minimum to prevent crushing layout
+      maxW = maxCols; // Can expand full width
+      minH = pixelsToGridUnits(300); // Minimum height for usable tables
+      break;
+      
     default:
       // Fallback for unknown widget types
       baseWidth = Math.floor(6 * multiplier);
@@ -281,7 +299,7 @@ export function calculateWidgetDimensions(
 export function getOptimalWidgetSizes(): Record<WidgetType, Record<BreakpointKey, WidgetDimensions>> {
   const widgetTypes: WidgetType[] = [
     'search', 'draft-entry', 'player-analysis', 'vbd-scatter', 
-    'budget', 'roster', 'draft-ledger', 'team-roster-overview'
+    'budget', 'roster', 'draft-ledger', 'team-roster-overview', 'beer-sheet'
   ];
   
   const result = {} as Record<WidgetType, Record<BreakpointKey, WidgetDimensions>>;

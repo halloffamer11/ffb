@@ -4,7 +4,8 @@ import { theme } from '../utils/styledHelpers';
 import { Button } from '../components/ui/Button';
 import { useNavigate } from 'react-router-dom';
 import { useUnifiedStore } from '../stores/unified-store';
-import { Team, Keeper, Player, ScoringSystem } from '../types/data-contracts';
+import { Team, Keeper, Player, ScoringSystem, FlexSpot } from '../types/data-contracts';
+import { getAvailablePresets, getPresetById, detectMatchingPreset, generateDefaultTeams } from '../config/league-presets';
 
 const PageContainer = styled.div`
   height: 100vh;
@@ -339,6 +340,54 @@ const LockNotice = styled.div`
   font-weight: ${props => theme('typography.fontWeight.medium')};
 `;
 
+const FlexTable = styled.div`
+  border: 1px solid ${props => theme('colors.border1')};
+  border-radius: ${props => theme('borderRadius.base')};
+  overflow: hidden;
+  margin-top: ${props => theme('spacing.md')};
+`;
+
+const FlexRow = styled.div<{ $isHeader?: boolean }>`
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: ${props => theme('spacing.md')};
+  padding: ${props => theme('spacing.md')};
+  border-bottom: 1px solid ${props => theme('colors.border1')};
+  background: ${props => props.$isHeader ? theme('colors.surface3') : 'transparent'};
+  font-weight: ${props => props.$isHeader ? theme('typography.fontWeight.semibold') : 'normal'};
+  align-items: center;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const FlexPositionGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: ${props => theme('spacing.md')};
+  align-items: center;
+`;
+
+const CheckboxContainer = styled.label`
+  display: flex;
+  align-items: center;
+  gap: ${props => theme('spacing.xs')};
+  cursor: pointer;
+  font-size: ${props => theme('typography.fontSize.sm')};
+  color: ${props => theme('colors.text2')};
+  
+  &:hover {
+    color: ${props => theme('colors.text1')};
+  }
+`;
+
+const Checkbox = styled.input`
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+`;
+
 export default function LeagueSettingsPage() {
   const navigate = useNavigate();
   const { 
@@ -367,6 +416,8 @@ export default function LeagueSettingsPage() {
   const [draggedTeamIndex, setDraggedTeamIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [scoringExpanded, setScoringExpanded] = useState<boolean>(false);
+  const [flexSpots, setFlexSpots] = useState<FlexSpot[]>([]);
+  const [availablePresets] = useState(getAvailablePresets());
 
   // Search for players when typing
   useEffect(() => {
@@ -408,6 +459,43 @@ export default function LeagueSettingsPage() {
     }
   }, [settings.budget, keepers, updateTeams]);
 
+  // Initialize and sync flex spots with FLEX count
+  useEffect(() => {
+    const flexCount = settings.positions.FLEX;
+    
+    // Initialize from settings if available
+    if (settings.flexConfig?.spots && flexSpots.length === 0) {
+      setFlexSpots(settings.flexConfig.spots);
+      return;
+    }
+    
+    // Create new flex spots array
+    const newFlexSpots: FlexSpot[] = [];
+    for (let i = 0; i < flexCount; i++) {
+      const existingSpot = flexSpots[i] || settings.flexConfig?.spots?.[i];
+      newFlexSpots.push(existingSpot || {
+        id: `flex-${i + 1}`,
+        allowedPositions: {
+          QB: false,
+          RB: true,
+          WR: true,
+          TE: true
+        }
+      });
+    }
+    
+    if (JSON.stringify(newFlexSpots) !== JSON.stringify(flexSpots)) {
+      setFlexSpots(newFlexSpots);
+      
+      // Update settings with flex configuration
+      updateSettings({
+        flexConfig: {
+          spots: newFlexSpots
+        }
+      });
+    }
+  }, [settings.positions.FLEX, settings.flexConfig, flexSpots, updateSettings]);
+
   const handleScoringPresetChange = (preset: ScoringSystem['preset']) => {
     const presetValues = {
       standard: { ...settings.scoring.values, receptions: 0 },
@@ -416,21 +504,111 @@ export default function LeagueSettingsPage() {
       custom: settings.scoring.values
     };
     
-    updateSettings({
+    const newScoringSettings = {
       scoring: {
         preset,
         values: presetValues[preset]
       }
-    });
+    };
+    
+    updateSettings(newScoringSettings);
+    
+    // Check if this change breaks preset compatibility
+    setTimeout(() => {
+      const matchingPreset = detectMatchingPreset({ ...settings, ...newScoringSettings });
+      if (matchingPreset !== settings.selectedPreset) {
+        updateSettings({ selectedPreset: matchingPreset || 'custom' });
+      }
+    }, 100);
   };
 
   const handleScoringValueChange = (field: keyof ScoringSystem['values'], value: number) => {
-    updateSettings({
+    const newScoringSettings = {
       scoring: {
-        preset: 'custom', // Automatically switch to custom when values are changed
+        preset: 'custom' as const, // Automatically switch to custom when values are changed
         values: { ...settings.scoring.values, [field]: value }
       }
-    });
+    };
+    
+    updateSettings(newScoringSettings);
+    
+    // Check if this change breaks preset compatibility
+    setTimeout(() => {
+      const matchingPreset = detectMatchingPreset({ ...settings, ...newScoringSettings });
+      if (matchingPreset !== settings.selectedPreset) {
+        updateSettings({ selectedPreset: matchingPreset || 'custom' });
+      }
+    }, 100);
+  };
+
+  const handleFlexPositionChange = (flexIndex: number, position: keyof FlexSpot['allowedPositions'], checked: boolean) => {
+    const updatedFlexSpots = [...flexSpots];
+    updatedFlexSpots[flexIndex] = {
+      ...updatedFlexSpots[flexIndex],
+      allowedPositions: {
+        ...updatedFlexSpots[flexIndex].allowedPositions,
+        [position]: checked
+      }
+    };
+    
+    setFlexSpots(updatedFlexSpots);
+    
+    // Update settings and check if it still matches a preset
+    const newSettings = {
+      flexConfig: {
+        spots: updatedFlexSpots
+      }
+    };
+    
+    updateSettings(newSettings);
+    
+    // Check for preset match after a brief delay to allow state to update
+    setTimeout(() => {
+      const matchingPreset = detectMatchingPreset({ ...settings, ...newSettings });
+      if (matchingPreset !== settings.selectedPreset) {
+        updateSettings({ selectedPreset: matchingPreset || 'custom' });
+      }
+    }, 100);
+  };
+
+  const handlePresetSelection = (presetId: string) => {
+    if (presetId === 'custom') {
+      updateSettings({ selectedPreset: 'custom' });
+      return;
+    }
+    
+    const preset = getPresetById(presetId);
+    if (!preset) return;
+    
+    // Keep existing team names/owners if they exist and team count matches
+    const existingTeams = settings.teams;
+    const newTeamCount = preset.settings.teamCount;
+    
+    let newTeams;
+    if (existingTeams.length === newTeamCount) {
+      // Keep existing team data, just update budgets
+      newTeams = existingTeams.map(team => ({
+        ...team,
+        budget: preset.settings.budget
+      }));
+    } else {
+      // Generate new teams
+      newTeams = generateDefaultTeams(newTeamCount, preset.settings.budget);
+    }
+    
+    // Apply all preset settings
+    const newSettings = {
+      ...preset.settings,
+      teams: newTeams,
+      userTeamId: settings.userTeamId && settings.userTeamId <= newTeamCount ? settings.userTeamId : null,
+      selectedPreset: presetId,
+      leagueName: settings.leagueName // Preserve league name
+    };
+    
+    updateSettings(newSettings);
+    setFlexSpots(preset.settings.flexConfig?.spots || []);
+    
+    setStatusMessage({ type: 'success', message: `Loaded ${preset.name} preset successfully!` });
   };
 
   const handleTeamChange = (teamId: number, field: keyof Team, value: any) => {
@@ -576,6 +754,48 @@ export default function LeagueSettingsPage() {
         <SettingsGrid>
           {/* Left Column: Basic Settings + Roster */}
           <div>
+            {/* League Preset Selection */}
+            <SettingsCard style={{ marginBottom: '16px' }}>
+              <CardTitle>
+                🏈 League Template
+              </CardTitle>
+              <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+                Choose a preset to quickly configure your league settings, or select Custom to manually configure everything.
+              </p>
+              
+              <FormGroup>
+                <Label htmlFor="leaguePreset">League Template</Label>
+                <Select
+                  id="leaguePreset"
+                  value={settings.selectedPreset || 'custom'}
+                  disabled={settings.isDraftStarted}
+                  onChange={(e) => handlePresetSelection(e.target.value)}
+                >
+                  <option value="custom">Custom League</option>
+                  {availablePresets.map(preset => (
+                    <option key={preset.id} value={preset.id}>
+                      {preset.name} - {preset.description}
+                    </option>
+                  ))}
+                </Select>
+              </FormGroup>
+              
+              {settings.selectedPreset && settings.selectedPreset !== 'custom' && (
+                <div style={{
+                  background: 'var(--color-surface-3)',
+                  padding: '12px',
+                  borderRadius: '6px',
+                  fontSize: '13px',
+                  color: 'var(--color-text-2)',
+                  marginTop: '8px'
+                }}>
+                  <strong>Template Active:</strong> Settings are loaded from {availablePresets.find(p => p.id === settings.selectedPreset)?.name}. 
+                  You can customize team names and keepers without affecting the template. 
+                  Changing roster positions or scoring will switch to "Custom League".
+                </div>
+              )}
+            </SettingsCard>
+
             {/* Basic Settings */}
             <SettingsCard style={{ marginBottom: '16px' }}>
             <CardTitle>
@@ -595,32 +815,40 @@ export default function LeagueSettingsPage() {
 
             <FormGroup>
               <Label htmlFor="teamCount">Team Count</Label>
-              <Select
+              <Input
                 id="teamCount"
+                type="number"
+                min="4"
+                max="20"
+                step="1"
                 value={settings.teamCount}
                 disabled={settings.isDraftStarted}
                 onChange={(e) => {
                   const newCount = parseInt(e.target.value);
-                  const newTeams = [];
-                  for (let i = 0; i < newCount; i++) {
-                    const existingTeam = settings.teams[i];
-                    newTeams.push(existingTeam || {
-                      id: i + 1,
-                      teamName: `Team ${i + 1}`,
-                      ownerName: `Owner ${i + 1}`,
-                      budget: settings.budget
-                    });
+                  if (newCount >= 4 && newCount <= 20) {
+                    const newTeams = [];
+                    for (let i = 0; i < newCount; i++) {
+                      const existingTeam = settings.teams[i];
+                      newTeams.push(existingTeam || {
+                        id: i + 1,
+                        teamName: `Team ${i + 1}`,
+                        ownerName: `Owner ${i + 1}`,
+                        budget: settings.budget
+                      });
+                    }
+                    updateSettings({ teamCount: newCount });
+                    updateTeams(newTeams);
+                    
+                    // Check for preset compatibility
+                    setTimeout(() => {
+                      const matchingPreset = detectMatchingPreset({ ...settings, teamCount: newCount, teams: newTeams });
+                      if (matchingPreset !== settings.selectedPreset) {
+                        updateSettings({ selectedPreset: matchingPreset || 'custom' });
+                      }
+                    }, 100);
                   }
-                  updateSettings({ teamCount: newCount });
-                  updateTeams(newTeams);
                 }}
-              >
-                <option value="8">8 Teams</option>
-                <option value="10">10 Teams</option>
-                <option value="12">12 Teams</option>
-                <option value="14">14 Teams</option>
-                <option value="16">16 Teams</option>
-              </Select>
+              />
             </FormGroup>
 
             <FormGroup>
@@ -633,7 +861,18 @@ export default function LeagueSettingsPage() {
                 step="10"
                 value={settings.budget}
                 disabled={settings.isDraftStarted}
-                onChange={(e) => updateSettings({ budget: parseInt(e.target.value) })}
+                onChange={(e) => {
+                  const newBudget = parseInt(e.target.value);
+                  updateSettings({ budget: newBudget });
+                  
+                  // Check for preset compatibility
+                  setTimeout(() => {
+                    const matchingPreset = detectMatchingPreset({ ...settings, budget: newBudget });
+                    if (matchingPreset !== settings.selectedPreset) {
+                      updateSettings({ selectedPreset: matchingPreset || 'custom' });
+                    }
+                  }, 100);
+                }}
               />
             </FormGroup>
 
@@ -786,16 +1025,75 @@ export default function LeagueSettingsPage() {
                     max="5"
                     value={count}
                     disabled={settings.isDraftStarted}
-                    onChange={(e) => updateSettings({ 
-                      positions: { 
+                    onChange={(e) => {
+                      const newPositions = { 
                         ...settings.positions, 
                         [position]: parseInt(e.target.value) 
-                      } 
-                    })}
+                      };
+                      updateSettings({ positions: newPositions });
+                      
+                      // Check for preset compatibility
+                      setTimeout(() => {
+                        const matchingPreset = detectMatchingPreset({ ...settings, positions: newPositions });
+                        if (matchingPreset !== settings.selectedPreset) {
+                          updateSettings({ selectedPreset: matchingPreset || 'custom' });
+                        }
+                      }, 100);
+                    }}
                   />
                 </FormGroup>
               ))}
             </RosterGrid>
+
+            {/* Flex Configuration */}
+            {settings.positions.FLEX > 0 && (
+              <>
+                <div style={{ 
+                  fontSize: '16px', 
+                  fontWeight: '600', 
+                  color: 'var(--color-text-1)',
+                  marginTop: '24px',
+                  marginBottom: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}>
+                  🔀 Flex Position Configuration
+                </div>
+                
+                <p style={{ fontSize: '14px', color: 'var(--color-text-muted)', marginBottom: '16px' }}>
+                  Configure which positions are allowed in each flex spot.
+                </p>
+
+                <FlexTable>
+                  <FlexRow $isHeader>
+                    <div>Flex Spot</div>
+                    <div>Allowed Positions</div>
+                  </FlexRow>
+                  
+                  {flexSpots.map((spot, index) => (
+                    <FlexRow key={spot.id}>
+                      <div style={{ fontWeight: '500' }}>
+                        Flex {index + 1}
+                      </div>
+                      <FlexPositionGrid>
+                        {(['QB', 'RB', 'WR', 'TE'] as const).map(position => (
+                          <CheckboxContainer key={position}>
+                            <Checkbox
+                              type="checkbox"
+                              checked={spot.allowedPositions[position]}
+                              disabled={settings.isDraftStarted}
+                              onChange={(e) => handleFlexPositionChange(index, position, e.target.checked)}
+                            />
+                            {position}
+                          </CheckboxContainer>
+                        ))}
+                      </FlexPositionGrid>
+                    </FlexRow>
+                  ))}
+                </FlexTable>
+              </>
+            )}
           </SettingsCard>
           </div>
 
@@ -1016,7 +1314,7 @@ export default function LeagueSettingsPage() {
                 onClick={handleStartDraft}
                 disabled={loading || settings.teams.length === 0}
               >
-                Start Draft
+                Lock Settings
               </Button>
               {canUndo() && (
                 <Button
@@ -1026,7 +1324,6 @@ export default function LeagueSettingsPage() {
                     setStatusMessage({ type: 'success', message: 'Draft state restored.' });
                   }}
                   disabled={loading}
-                  style={{ fontSize: '13px', padding: '6px 12px' }}
                 >
                   Undo Reset
                 </Button>
@@ -1040,15 +1337,14 @@ export default function LeagueSettingsPage() {
               <Button
                 variant="destructive"
                 onClick={() => {
-                  if (window.confirm('⚠️ This will reset the draft and unlock settings. All picks and nominations will be cleared. This action can be undone. Are you sure?')) {
+                  if (window.confirm('⚠️ Unlocking settings will delete all draft data including picks and nominations. This action cannot be undone. Continue?')) {
                     resetDraft();
-                    setStatusMessage({ type: 'success', message: 'Draft reset successfully. Use Undo to restore if needed.' });
+                    setStatusMessage({ type: 'success', message: 'Settings unlocked. All draft data has been cleared.' });
                   }
                 }}
                 disabled={loading}
-                style={{ fontSize: '13px', padding: '6px 12px' }}
               >
-                Reset Draft
+                Unlock Settings
               </Button>
             </div>
           )}

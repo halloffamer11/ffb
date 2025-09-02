@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VBD Calculation Fix - Validation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .debug-section {
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen p-4">
+    <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-8">
+            <h1 class="text-4xl font-bold text-white mb-2">VBD Calculation Fix Validation</h1>
+            <p class="text-white/80">Testing that VBD baselines correctly reflect league settings</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- League Settings Panel -->
+            <div class="glass-card rounded-xl p-6">
+                <h2 class="text-xl font-semibold text-white mb-4">League Settings</h2>
+                <div class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-white/80 text-sm mb-1">Teams</label>
+                            <input type="number" id="teamCount" value="10" min="8" max="16" 
+                                class="w-full px-3 py-2 bg-white/10 text-white rounded border border-white/20 focus:border-blue-400">
+                        </div>
+                        <div>
+                            <label class="block text-white/80 text-sm mb-1">QB Starters</label>
+                            <input type="number" id="qbCount" value="1" min="0" max="3"
+                                class="w-full px-3 py-2 bg-white/10 text-white rounded border border-white/20 focus:border-blue-400">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-4 gap-2">
+                        <div>
+                            <label class="block text-white/80 text-sm mb-1">RB</label>
+                            <input type="number" id="rbCount" value="2" min="0" max="5"
+                                class="w-full px-3 py-2 bg-white/10 text-white rounded border border-white/20 focus:border-blue-400">
+                        </div>
+                        <div>
+                            <label class="block text-white/80 text-sm mb-1">WR</label>
+                            <input type="number" id="wrCount" value="2" min="0" max="5"
+                                class="w-full px-3 py-2 bg-white/10 text-white rounded border border-white/20 focus:border-blue-400">
+                        </div>
+                        <div>
+                            <label class="block text-white/80 text-sm mb-1">TE</label>
+                            <input type="number" id="teCount" value="1" min="0" max="3"
+                                class="w-full px-3 py-2 bg-white/10 text-white rounded border border-white/20 focus:border-blue-400">
+                        </div>
+                        <div>
+                            <label class="block text-white/80 text-sm mb-1">FLEX</label>
+                            <input type="number" id="flexCount" value="1" min="0" max="3"
+                                class="w-full px-3 py-2 bg-white/10 text-white rounded border border-white/20 focus:border-blue-400">
+                        </div>
+                    </div>
+                    <button id="updateSettings" 
+                        class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition-colors">
+                        Update VBD Calculation
+                    </button>
+                </div>
+            </div>
+
+            <!-- VBD Baselines Panel -->
+            <div class="glass-card rounded-xl p-6">
+                <h2 class="text-xl font-semibold text-white mb-4">Calculated Baselines</h2>
+                <div id="baselinesDisplay" class="space-y-3 text-white">
+                    <p class="text-white/60">Configure league settings and click "Update VBD Calculation" to see baselines</p>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/20">
+                    <h3 class="text-lg font-medium text-white mb-2">Expected Logic</h3>
+                    <div class="text-sm text-white/80 space-y-1">
+                        <p>• Baseline Rank = Teams × Starters</p>
+                        <p>• QB baseline (10 teams, 1 starter): QB #10</p>
+                        <p>• RB baseline (10 teams, 2 starters): RB #20</p>
+                        <p>• FLEX uses highest of position/FLEX baselines</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Player Analysis Panel -->
+        <div class="glass-card rounded-xl p-6 mb-8">
+            <h2 class="text-xl font-semibold text-white mb-4">Player VBD Analysis</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div>
+                    <h3 class="text-lg font-medium text-white mb-3">Top 10 Players by VBD</h3>
+                    <div id="topPlayersDisplay" class="debug-section bg-black/20 rounded p-4 text-green-400 h-64 overflow-y-auto">
+                        <div class="text-white/60">Configure league settings to see VBD rankings</div>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-lg font-medium text-white mb-3">Baseline Players</h3>
+                    <div id="baselinePlayersDisplay" class="debug-section bg-black/20 rounded p-4 text-yellow-400 h-64 overflow-y-auto">
+                        <div class="text-white/60">Shows replacement-level players (VBD ≈ 0)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Debug Panel -->
+        <div class="glass-card rounded-xl p-6">
+            <h2 class="text-xl font-semibold text-white mb-4">Debug Information</h2>
+            <div class="debug-section">
+                <div id="debugOutput" class="bg-black/20 rounded p-4 text-gray-300 h-40 overflow-y-auto">
+                    <div class="text-white/60">Debug output will appear here...</div>
+                </div>
+            </div>
+            <div class="mt-4 flex gap-2">
+                <button id="testDraftPlayer"
+                    class="bg-orange-500 hover:bg-orange-600 text-white font-medium py-2 px-4 rounded transition-colors">
+                    Draft Top Player (Test Recalc)
+                </button>
+                <button id="resetDraft"
+                    class="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded transition-colors">
+                    Reset Draft
+                </button>
+                <button id="clearDebug"
+                    class="bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded transition-colors">
+                    Clear Debug
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import VBD calculation functions
+        import { calculatePlayerVBDWithValPercent, calculateBaselines } from '../../src/core/vbd.js';
+
+        // Sample player data for testing
+        const samplePlayers = [
+            // QBs - varying points to test baseline
+            { id: 'qb1', name: 'Josh Allen', position: 'QB', points: 350, team: 'BUF' },
+            { id: 'qb2', name: 'Lamar Jackson', position: 'QB', points: 340, team: 'BAL' },
+            { id: 'qb3', name: 'Jalen Hurts', position: 'QB', points: 330, team: 'PHI' },
+            { id: 'qb4', name: 'Patrick Mahomes', position: 'QB', points: 325, team: 'KC' },
+            { id: 'qb5', name: 'Joe Burrow', position: 'QB', points: 320, team: 'CIN' },
+            { id: 'qb6', name: 'Dak Prescott', position: 'QB', points: 310, team: 'DAL' },
+            { id: 'qb7', name: 'Tua Tagovailoa', position: 'QB', points: 300, team: 'MIA' },
+            { id: 'qb8', name: 'Trevor Lawrence', position: 'QB', points: 290, team: 'JAX' },
+            { id: 'qb9', name: 'Justin Herbert', position: 'QB', points: 285, team: 'LAC' },
+            { id: 'qb10', name: 'Russell Wilson', position: 'QB', points: 280, team: 'DEN' },
+            { id: 'qb11', name: 'Aaron Rodgers', position: 'QB', points: 275, team: 'NYJ' },
+            { id: 'qb12', name: 'Kirk Cousins', position: 'QB', points: 270, team: 'ATL' },
+            // RBs
+            { id: 'rb1', name: 'Christian McCaffrey', position: 'RB', points: 320, team: 'SF' },
+            { id: 'rb2', name: 'Austin Ekeler', position: 'RB', points: 300, team: 'LAC' },
+            { id: 'rb3', name: 'Derrick Henry', position: 'RB', points: 290, team: 'TEN' },
+            { id: 'rb4', name: 'Josh Jacobs', position: 'RB', points: 285, team: 'LV' },
+            { id: 'rb5', name: 'Nick Chubb', position: 'RB', points: 280, team: 'CLE' },
+            { id: 'rb6', name: 'Saquon Barkley', position: 'RB', points: 275, team: 'NYG' },
+            { id: 'rb7', name: 'Tony Pollard', position: 'RB', points: 270, team: 'DAL' },
+            { id: 'rb8', name: 'Joe Mixon', position: 'RB', points: 265, team: 'CIN' },
+            { id: 'rb9', name: 'Alvin Kamara', position: 'RB', points: 260, team: 'NO' },
+            { id: 'rb10', name: 'Kenneth Walker III', position: 'RB', points: 255, team: 'SEA' },
+            { id: 'rb11', name: 'Aaron Jones', position: 'RB', points: 250, team: 'GB' },
+            { id: 'rb12', name: 'Travis Etienne', position: 'RB', points: 245, team: 'JAX' },
+            { id: 'rb13', name: 'Najee Harris', position: 'RB', points: 240, team: 'PIT' },
+            { id: 'rb14', name: 'Breece Hall', position: 'RB', points: 235, team: 'NYJ' },
+            { id: 'rb15', name: 'Rhamondre Stevenson', position: 'RB', points: 230, team: 'NE' },
+            { id: 'rb16', name: 'Miles Sanders', position: 'RB', points: 225, team: 'CAR' },
+            { id: 'rb17', name: 'Dameon Pierce', position: 'RB', points: 220, team: 'HOU' },
+            { id: 'rb18', name: 'Alexander Mattison', position: 'RB', points: 215, team: 'MIN' },
+            { id: 'rb19', name: 'Isiah Pacheco', position: 'RB', points: 210, team: 'KC' },
+            { id: 'rb20', name: 'James Conner', position: 'RB', points: 205, team: 'ARI' },
+            { id: 'rb21', name: 'David Montgomery', position: 'RB', points: 200, team: 'DET' },
+            { id: 'rb22', name: 'Antonio Gibson', position: 'RB', points: 195, team: 'WAS' },
+            // WRs
+            { id: 'wr1', name: 'Cooper Kupp', position: 'WR', points: 310, team: 'LAR' },
+            { id: 'wr2', name: 'Davante Adams', position: 'WR', points: 305, team: 'LV' },
+            { id: 'wr3', name: 'Tyreek Hill', position: 'WR', points: 300, team: 'MIA' },
+            { id: 'wr4', name: 'Stefon Diggs', position: 'WR', points: 295, team: 'BUF' },
+            { id: 'wr5', name: 'DeAndre Hopkins', position: 'WR', points: 290, team: 'TEN' },
+            { id: 'wr6', name: 'A.J. Brown', position: 'WR', points: 285, team: 'PHI' },
+            { id: 'wr7', name: 'DK Metcalf', position: 'WR', points: 280, team: 'SEA' },
+            { id: 'wr8', name: 'CeeDee Lamb', position: 'WR', points: 275, team: 'DAL' },
+            { id: 'wr9', name: 'Ja\'Marr Chase', position: 'WR', points: 270, team: 'CIN' },
+            { id: 'wr10', name: 'Mike Evans', position: 'WR', points: 265, team: 'TB' },
+            { id: 'wr11', name: 'Keenan Allen', position: 'WR', points: 260, team: 'LAC' },
+            { id: 'wr12', name: 'Amari Cooper', position: 'WR', points: 255, team: 'CLE' },
+            { id: 'wr13', name: 'Tee Higgins', position: 'WR', points: 250, team: 'CIN' },
+            { id: 'wr14', name: 'Terry McLaurin', position: 'WR', points: 245, team: 'WAS' },
+            { id: 'wr15', name: 'Calvin Ridley', position: 'WR', points: 240, team: 'JAX' },
+            { id: 'wr16', name: 'Chris Olave', position: 'WR', points: 235, team: 'NO' },
+            { id: 'wr17', name: 'Garrett Wilson', position: 'WR', points: 230, team: 'NYJ' },
+            { id: 'wr18', name: 'Jaylen Waddle', position: 'WR', points: 225, team: 'MIA' },
+            { id: 'wr19', name: 'Michael Pittman Jr.', position: 'WR', points: 220, team: 'IND' },
+            { id: 'wr20', name: 'Courtland Sutton', position: 'WR', points: 215, team: 'DEN' },
+            { id: 'wr21', name: 'DJ Moore', position: 'WR', points: 210, team: 'CHI' },
+            { id: 'wr22', name: 'Christian Kirk', position: 'WR', points: 205, team: 'JAX' },
+            // TEs  
+            { id: 'te1', name: 'Travis Kelce', position: 'TE', points: 250, team: 'KC' },
+            { id: 'te2', name: 'Mark Andrews', position: 'TE', points: 220, team: 'BAL' },
+            { id: 'te3', name: 'T.J. Hockenson', position: 'TE', points: 200, team: 'MIN' },
+            { id: 'te4', name: 'George Kittle', position: 'TE', points: 195, team: 'SF' },
+            { id: 'te5', name: 'Kyle Pitts', position: 'TE', points: 190, team: 'ATL' },
+            { id: 'te6', name: 'Dallas Goedert', position: 'TE', points: 185, team: 'PHI' },
+            { id: 'te7', name: 'Evan Engram', position: 'TE', points: 180, team: 'JAX' },
+            { id: 'te8', name: 'Pat Freiermuth', position: 'TE', points: 175, team: 'PIT' },
+            { id: 'te9', name: 'Tyler Higbee', position: 'TE', points: 170, team: 'LAR' },
+            { id: 'te10', name: 'Darren Waller', position: 'TE', points: 165, team: 'NYG' },
+            { id: 'te11', name: 'David Njoku', position: 'TE', points: 160, team: 'CLE' },
+            { id: 'te12', name: 'Gerald Everett', position: 'TE', points: 155, team: 'LAC' },
+        ];
+
+        let currentPlayers = [...samplePlayers];
+
+        // Debug logging helper
+        function logDebug(message) {
+            const debugOutput = document.getElementById('debugOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            debugOutput.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            debugOutput.scrollTop = debugOutput.scrollHeight;
+        }
+
+        // Get current league settings from form
+        function getLeagueSettings() {
+            return {
+                teamCount: parseInt(document.getElementById('teamCount').value),
+                teams: Array(parseInt(document.getElementById('teamCount').value)).fill().map((_, i) => ({ id: i + 1, name: `Team ${i + 1}` })),
+                positions: {
+                    QB: parseInt(document.getElementById('qbCount').value),
+                    RB: parseInt(document.getElementById('rbCount').value),
+                    WR: parseInt(document.getElementById('wrCount').value),
+                    TE: parseInt(document.getElementById('teCount').value),
+                    FLEX: parseInt(document.getElementById('flexCount').value),
+                    K: 1,
+                    DST: 1
+                },
+                flexConfig: {
+                    spots: [{
+                        id: 'flex-1',
+                        allowedPositions: { QB: false, RB: true, WR: true, TE: true }
+                    }]
+                }
+            };
+        }
+
+        // Update VBD calculations and display
+        function updateVBDCalculation() {
+            const settings = getLeagueSettings();
+            
+            logDebug('Updating VBD calculation...');
+            logDebug(`Settings: ${settings.teamCount} teams, QB:${settings.positions.QB} RB:${settings.positions.RB} WR:${settings.positions.WR} TE:${settings.positions.TE} FLEX:${settings.positions.FLEX}`);
+
+            // Calculate baselines
+            const baselines = calculateBaselines(currentPlayers, {
+                teams: settings.teamCount,
+                starters: settings.positions,
+                flexConfig: settings.flexConfig
+            });
+
+            // Display baselines
+            const baselinesDisplay = document.getElementById('baselinesDisplay');
+            let baselinesHtml = '';
+            
+            for (const [position, baseline] of baselines.entries()) {
+                const startersRequired = settings.positions[position] || 0;
+                const baselineRank = settings.teamCount * startersRequired;
+                baselinesHtml += `
+                    <div class="flex justify-between items-center py-2 border-b border-white/10">
+                        <div>
+                            <span class="font-medium">${position}</span>
+                            <span class="text-sm text-white/60 ml-2">(${settings.teamCount} × ${startersRequired} = #${baselineRank})</span>
+                        </div>
+                        <span class="font-mono text-lg">${baseline.toFixed(1)} pts</span>
+                    </div>
+                `;
+                logDebug(`${position} baseline: ${baseline.toFixed(1)} pts (rank #${baselineRank})`);
+            }
+            baselinesDisplay.innerHTML = baselinesHtml;
+
+            // Calculate VBD for all players
+            const playersWithVBD = calculatePlayerVBDWithValPercent(currentPlayers, {
+                teams: settings.teamCount,
+                starters: settings.positions,
+                flexConfig: settings.flexConfig
+            });
+
+            // Display top players by VBD
+            const topPlayers = playersWithVBD
+                .filter(p => !p.drafted && p.vbd > 0)
+                .sort((a, b) => b.vbd - a.vbd)
+                .slice(0, 10);
+
+            const topPlayersDisplay = document.getElementById('topPlayersDisplay');
+            let topPlayersHtml = topPlayers.map((p, i) => 
+                `<div>${i + 1}. ${p.name} (${p.position}) - ${p.points} pts → VBD: ${p.vbd.toFixed(1)}</div>`
+            ).join('');
+            topPlayersDisplay.innerHTML = topPlayersHtml || '<div class="text-white/60">No positive VBD players found</div>';
+
+            // Display baseline players (VBD near 0)
+            const baselinePlayers = playersWithVBD
+                .filter(p => !p.drafted && Math.abs(p.vbd) < 5) // Within 5 points of baseline
+                .sort((a, b) => Math.abs(a.vbd) - Math.abs(b.vbd))
+                .slice(0, 10);
+
+            const baselinePlayersDisplay = document.getElementById('baselinePlayersDisplay');
+            let baselinePlayersHtml = baselinePlayers.map((p, i) => 
+                `<div>${p.name} (${p.position}) - ${p.points} pts → VBD: ${p.vbd >= 0 ? '+' : ''}${p.vbd.toFixed(1)}</div>`
+            ).join('');
+            baselinePlayersDisplay.innerHTML = baselinePlayersHtml || '<div class="text-white/60">No replacement-level players found</div>';
+
+            logDebug(`Calculated VBD for ${playersWithVBD.length} players`);
+            logDebug(`Top VBD: ${topPlayers[0]?.name} (${topPlayers[0]?.vbd.toFixed(1)})`);
+        }
+
+        // Draft the top player (for testing recalculation)
+        function draftTopPlayer() {
+            const topPlayer = currentPlayers
+                .filter(p => !p.drafted)
+                .sort((a, b) => (b.points || 0) - (a.points || 0))[0];
+
+            if (topPlayer) {
+                topPlayer.drafted = true;
+                logDebug(`Drafted ${topPlayer.name} (${topPlayer.position}) - ${topPlayer.points} pts`);
+                updateVBDCalculation();
+            } else {
+                logDebug('No undrafted players available');
+            }
+        }
+
+        // Reset all drafted players
+        function resetDraft() {
+            currentPlayers.forEach(p => p.drafted = false);
+            logDebug('Reset all players to undrafted');
+            updateVBDCalculation();
+        }
+
+        // Clear debug output
+        function clearDebug() {
+            document.getElementById('debugOutput').innerHTML = '<div class="text-white/60">Debug output cleared...</div>';
+        }
+
+        // Event listeners
+        document.getElementById('updateSettings').addEventListener('click', updateVBDCalculation);
+        document.getElementById('testDraftPlayer').addEventListener('click', draftTopPlayer);
+        document.getElementById('resetDraft').addEventListener('click', resetDraft);
+        document.getElementById('clearDebug').addEventListener('click', clearDebug);
+
+        // Auto-update on input changes
+        ['teamCount', 'qbCount', 'rbCount', 'wrCount', 'teCount', 'flexCount'].forEach(id => {
+            document.getElementById(id).addEventListener('change', updateVBDCalculation);
+        });
+
+        // Initial calculation
+        logDebug('VBD Fix Validation Page loaded');
+        logDebug('Sample data includes 12 QBs, 22 RBs, 22 WRs, 12 TEs');
+        updateVBDCalculation();
+    </script>
+</body>
+</html>
