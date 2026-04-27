@@ -4,6 +4,8 @@ A React/TypeScript draft-day decision support system built between June and Augu
 
 This repo is the August 31, 2025 snapshot — the version that ran the auction. `main` has been frozen since.
 
+![FFB draft helper interface — Beer Sheet view with QB/RB/WR/Overall rankings (VBD scores, dollar values, low/high bid ranges from Monte Carlo), live budget tracker, player search, and roster panel](./docs/screenshot.png)
+
 ## What it does
 
 A live-draft tool for fantasy football auction and snake formats:
